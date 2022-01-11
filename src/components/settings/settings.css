@@ -1,0 +1,11 @@
+.settings-form {
+  padding: 20px;
+}
+
+.currency-inline {
+  margin: 6px;
+}
+
+.settings-wrapper {
+  overflow-y: auto;
+}

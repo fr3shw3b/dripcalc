@@ -1,0 +1,13 @@
+.help-container {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+
+.help-button-wrapper {
+  padding-left: 7px;
+}
+
+.help-content > p {
+  margin: 0;
+}

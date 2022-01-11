@@ -1,0 +1,12 @@
+.dashboard {
+  height: calc(100vh - 50px);
+  padding: 20px 20px;
+  overflow: hidden;
+  position: relative;
+}
+
+.settings-button {
+  position: absolute;
+  top: 25px;
+  right: 20px;
+}

@@ -1,0 +1,15 @@
+.overview-container {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+}
+
+.overview-card {
+  width: calc(50% - 2em);
+  margin: 1em;
+  padding: 30px;
+}
+
+.overview-button {
+  margin-left: 10px;
+}
