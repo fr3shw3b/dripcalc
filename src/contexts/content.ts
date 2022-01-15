@@ -31,6 +31,16 @@ export type WalletsContent = {
   newWalletNameFieldLabel: string;
   newWalletDateFieldName: string;
   newWalletDateHelpText: string;
+  depositsButtonText: string;
+  reinvestButtonText: string;
+  depositsAddNewText: string;
+  depositsAmountInCurrencyLabel: (currency: string) => string;
+  depositAmountInCurrencyHelpText: (currency: string) => string;
+  depositsChangeDateText: string;
+  depositsTypeLabel: string;
+  depositsTypeHelpText: string;
+  depositTypes: Record<string, string>;
+  depositsChangeDateCollapseText: string;
 };
 
 export function content(): Content {
@@ -80,6 +90,22 @@ export function content(): Content {
       newWalletDateFieldName: "Start Date",
       newWalletDateHelpText:
         "The date on which the new wallet starts, this is the month you make your first deposit in the new wallet.",
+      depositsButtonText: "deposits",
+      reinvestButtonText: "reinvestment plan",
+      depositsAddNewText: "new deposit",
+      depositsAmountInCurrencyLabel: (currency: string) =>
+        `Deposit amount in ${currency}`,
+      depositAmountInCurrencyHelpText: (currency: string) =>
+        `The amount of the deposit in ${currency}, fees and the DRIP deposit tax will be subtracted before the deposit is added to the faucet deposit balance.`,
+      depositsChangeDateText: "change date",
+      depositsChangeDateCollapseText: "hide date picker",
+      depositsTypeLabel: "Choose deposit type",
+      depositsTypeHelpText:
+        "You can either choose a monthly deposit up to a specified date or an isolated one-off deposit",
+      depositTypes: {
+        monthly: "Monthly deposits",
+        oneOff: "One off deposit",
+      },
     },
   };
 }

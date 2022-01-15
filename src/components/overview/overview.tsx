@@ -15,7 +15,7 @@ function Overview() {
         elevation={Elevation.TWO}
       >
         <Help helpContent={<>Content</>}>
-          <h3>Total Claimed by December 2028</h3>
+          <h3>Total Rewards Consumed by December 2028</h3>
         </Help>
         <p>
           <strong>DRIP: </strong>
@@ -31,7 +31,7 @@ function Overview() {
         elevation={Elevation.TWO}
       >
         <Help helpContent={<>Content</>}>
-          <h3>Net Claimed by December 2028</h3>
+          <h3>Total Claimed by December 2028</h3>
         </Help>
         <p>
           <strong>DRIP: </strong>

@@ -29,3 +29,11 @@ code {
 .block {
   margin-top: 10px;
 }
+
+.block-bottom {
+  margin-bottom: 10px;
+}
+
+.block-bottom-lg {
+  margin-bottom: 40px;
+}

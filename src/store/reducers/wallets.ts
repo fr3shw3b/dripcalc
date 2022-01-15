@@ -5,6 +5,8 @@ import {
   UpdateCurrentWalletAction,
   UpdateWalletAction,
   UPDATE_WALLET,
+  UpdateWalletMonthInputsAction,
+  UPDATE_WALLET_MONTH_INPUTS,
 } from "../actions/wallets";
 
 export type WalletsState = {
@@ -25,6 +27,17 @@ export type MonthInput = {
   dripValue: number;
   // Fraction from 0 to 1.
   reinvest: number;
+  deposits: Deposit[];
+};
+
+export type Deposit = {
+  dayOfMonth: number;
+  amountInCurrency: number;
+  // Multiple deposits will have the same ID when a part of a monthly
+  // deposit range!
+  depositId: string;
+  // Mostly useful for transforming deposit data to be presented in the deposit editor.
+  timestamp: number;
 };
 
 export function initialState(): WalletsState {
@@ -41,9 +54,10 @@ export function initialState(): WalletsState {
   };
 }
 
-type WalletsAction =
+export type WalletsAction =
   | AddWalletAction
   | UpdateCurrentWalletAction
+  | UpdateWalletMonthInputsAction
   | UpdateWalletAction;
 
 function reducer(state = initialState(), action: WalletsAction): WalletsState {
@@ -84,6 +98,27 @@ const reducers = {
       wallets: [
         ...state.wallets.slice(0, toUpdateIndex),
         updatedWallet,
+        ...state.wallets.slice(toUpdateIndex + 1),
+      ],
+    };
+  },
+  [UPDATE_WALLET_MONTH_INPUTS]: (
+    state: WalletsState,
+    action: WalletsAction
+  ): WalletsState => {
+    const toUpdateIndex = state.wallets.findIndex(
+      ({ id }) => id === (action as UpdateWalletMonthInputsAction).payload.id
+    );
+
+    return {
+      ...state,
+      wallets: [
+        ...state.wallets.slice(0, toUpdateIndex),
+        {
+          ...state.wallets[toUpdateIndex],
+          monthInputs: (action as UpdateWalletMonthInputsAction).payload
+            .monthInputs,
+        },
         ...state.wallets.slice(toUpdateIndex + 1),
       ],
     };

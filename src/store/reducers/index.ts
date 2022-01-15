@@ -3,6 +3,7 @@ import { combineReducers } from "redux";
 import views, { initialState as viewsInitialState } from "./views";
 import settings, { initialState as settingsInitialState } from "./settings";
 import wallets, { initialState as walletsInitialState } from "./wallets";
+import general, { initialState as generalInitialState } from "./general";
 import { AppState } from "../types";
 
 function createRootReducer() {
@@ -10,6 +11,7 @@ function createRootReducer() {
     views,
     settings,
     wallets,
+    general,
   });
 }
 
@@ -18,6 +20,7 @@ export function initialState(): Partial<AppState> {
     views: viewsInitialState(),
     settings: settingsInitialState(),
     wallets: walletsInitialState(),
+    general: generalInitialState(),
   };
 }
 

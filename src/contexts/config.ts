@@ -3,6 +3,7 @@ import { createContext } from "react";
 export type Config = {
   hydrateTax: number;
   depositTax: number;
+  claimTax: number;
   maxPayoutCap: number;
   dailyCompound: number;
   depositMultiplier: number;
@@ -11,6 +12,10 @@ export type Config = {
   maxDepositBalance: number;
   minWalletStartDate: string;
   maxWalletStartDate: string;
+  cexFeePercentage: number;
+  depositBufferFees: number;
+  defaultDripValue: number;
+  defaultReinvest: number;
 };
 
 const MAX_PAYOUT_CAP = 100000;
@@ -20,6 +25,7 @@ export function config(): Config {
   return {
     hydrateTax: 0.05,
     depositTax: 0.1,
+    claimTax: 0.1,
     maxPayoutCap: MAX_PAYOUT_CAP,
     dailyCompound: 0.01,
     depositMultiplier: DEPOSIT_MULTIPLIER,
@@ -40,6 +46,13 @@ export function config(): Config {
     maxDepositBalance: MAX_PAYOUT_CAP / DEPOSIT_MULTIPLIER,
     minWalletStartDate: "01/01/2022",
     maxWalletStartDate: "12/31/2032",
+    depositBufferFees: 3,
+    // Binance fee.
+    cexFeePercentage: 0.018,
+    // £50, $50 or €50 depending on the user's configured currency.
+    defaultDripValue: 50,
+    // 100% reinvest is the default value users can adjust.
+    defaultReinvest: 1,
   };
 }
 

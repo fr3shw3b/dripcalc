@@ -1,8 +1,14 @@
-import { MiddlewareAPI, Dispatch, AnyAction } from "redux";
+import { MiddlewareAPI, Dispatch, AnyAction, Action } from "redux";
+import { GeneralState } from "./reducers/general";
 
 import { SettingsState } from "./reducers/settings";
 import { ViewsState } from "./reducers/views";
 import { WalletsState } from "./reducers/wallets";
+
+export type FSA<ActionType, Meta, Payload> = Action<ActionType> & {
+  meta: Meta;
+  payload: Payload;
+};
 
 /**
  * The type of the full application state
@@ -12,6 +18,7 @@ export type AppState = {
   views: ViewsState;
   settings: SettingsState;
   wallets: WalletsState;
+  general: GeneralState;
 };
 
 export type DispatchFunction = (action: AnyAction) => void;

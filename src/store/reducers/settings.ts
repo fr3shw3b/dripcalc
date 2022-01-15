@@ -37,7 +37,7 @@ export function initialState(): SettingsState {
   };
 }
 
-type SettingsAction =
+export type SettingsAction =
   | UpdateDripValueTrendAction
   | UpdateCurrencyAction
   | UpdateUptrendMaxValueChangeAction
@@ -60,7 +60,7 @@ const reducers = {
   ): SettingsState => {
     return {
       ...state,
-      dripValueTrend: (action as UpdateDripValueTrendAction).trend,
+      dripValueTrend: (action as UpdateDripValueTrendAction).payload.trend,
     };
   },
   [UPDATE_CURRENCY]: (
@@ -69,7 +69,7 @@ const reducers = {
   ): SettingsState => {
     return {
       ...state,
-      currency: (action as UpdateCurrencyAction).currency,
+      currency: (action as UpdateCurrencyAction).payload.currency,
     };
   },
   [UPDATE_UPTREND_MAX_VALUE_CHANGE]: (
@@ -78,7 +78,8 @@ const reducers = {
   ): SettingsState => {
     return {
       ...state,
-      uptrendMaxValue: (action as UpdateUptrendMaxValueChangeAction).value,
+      uptrendMaxValue: (action as UpdateUptrendMaxValueChangeAction).payload
+        .value,
     };
   },
   [UPDATE_DOWNTREND_MIN_VALUE_CHANGE]: (
@@ -87,7 +88,8 @@ const reducers = {
   ): SettingsState => {
     return {
       ...state,
-      downtrendMinValue: (action as UpdateDowntrendMinValueChangeAction).value,
+      downtrendMinValue: (action as UpdateDowntrendMinValueChangeAction).payload
+        .value,
     };
   },
   [UPDATE_STABILISES_AT]: (
@@ -96,7 +98,7 @@ const reducers = {
   ): SettingsState => {
     return {
       ...state,
-      stabilisesAt: (action as UpdateStabilisesAtAction).value,
+      stabilisesAt: (action as UpdateStabilisesAtAction).payload.value,
     };
   },
   [UPDATE_AVERAGE_GAS_FEE]: (
@@ -105,7 +107,7 @@ const reducers = {
   ): SettingsState => {
     return {
       ...state,
-      averageGasFee: (action as UpdateAverageGasFeeAction).value,
+      averageGasFee: (action as UpdateAverageGasFeeAction).payload.value,
     };
   },
   [UPDATE_CLAIM_DAYS]: (
@@ -114,7 +116,7 @@ const reducers = {
   ): SettingsState => {
     return {
       ...state,
-      claimDays: (action as UpdateClaimDaysAction).claimDays,
+      claimDays: (action as UpdateClaimDaysAction).payload.claimDays,
     };
   },
 };

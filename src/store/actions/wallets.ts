@@ -1,4 +1,6 @@
 import { Action } from "redux";
+import { MonthInput } from "../reducers/wallets";
+import { FSA } from "../types";
 
 export const ADD_WALLET = "ADD_WALLET";
 export type AddWalletAction = Action<typeof ADD_WALLET> & {
@@ -49,5 +51,37 @@ export function updateWallet(
     id,
     label,
     startDate,
+  };
+}
+
+export const UPDATE_WALLET_MONTH_INPUTS = "UPDATE_WALLET_MONTH_INPUTS";
+export type UpdateWalletMonthInputsAction = FSA<
+  typeof UPDATE_WALLET_MONTH_INPUTS,
+  {
+    calculator: {
+      recalculate: boolean;
+    };
+  },
+  {
+    id: string;
+    monthInputs: Record<string, MonthInput>;
+  }
+>;
+
+export function updateWalletMonthInputs(
+  id: string,
+  monthInputs: Record<string, MonthInput>
+): UpdateWalletMonthInputsAction {
+  return {
+    type: UPDATE_WALLET_MONTH_INPUTS,
+    payload: {
+      id,
+      monthInputs,
+    },
+    meta: {
+      calculator: {
+        recalculate: true,
+      },
+    },
   };
 }
