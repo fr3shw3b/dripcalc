@@ -261,7 +261,7 @@ function WalletsPanel() {
         deposits: [],
       }));
     },
-    [wallets, monthInputsState.deposits]
+    [wallets, monthInputsState.deposits, dispatch]
   );
 
   const handleDepositsClose = () => {
@@ -290,7 +290,7 @@ function WalletsPanel() {
         ),
       }));
     },
-    [wallets]
+    [wallets, config]
   );
 
   const handleChangeMonthReinvestPercent = (
@@ -331,7 +331,7 @@ function WalletsPanel() {
         reinvestments: [],
       }));
     },
-    [wallets, monthInputsState.reinvestments]
+    [wallets, monthInputsState.reinvestments, dispatch]
   );
 
   const handleAddAnotherReinvestMonth = () => {
@@ -376,7 +376,7 @@ function WalletsPanel() {
         ),
       }));
     },
-    [wallets]
+    [wallets, config]
   );
 
   const handleChangeMonthDripValue = (dripValue: number, index: number) => {
@@ -414,7 +414,7 @@ function WalletsPanel() {
         dripValues: [],
       }));
     },
-    [wallets, monthInputsState.dripValues]
+    [wallets, monthInputsState.dripValues, dispatch]
   );
 
   const handleAddAnotherDripValueMonth = () => {
@@ -541,9 +541,11 @@ function depositsFromMonthInputs(wallet?: WalletState): DepositInEditor[] {
   const monthDates = Object.keys(wallet.monthInputs);
   // Make sure month dates are in order when collecting deposits for editor.
   monthDates.sort((monthAStr, monthBStr) => {
+    // eslint-disable-next-line
     const [_dayA, monthA, yearA] = monthAStr
       .split("/")
       .map((val) => Number.parseInt(val));
+    // eslint-disable-next-line
     const [_dayB, monthB, yearB] = monthBStr
       .split("/")
       .map((val) => Number.parseInt(val));

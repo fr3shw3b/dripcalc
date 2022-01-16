@@ -9,10 +9,8 @@ import {
 import { DatePicker } from "@blueprintjs/datetime";
 import React, { useContext, useState } from "react";
 
-import MomentDate from "../moment-date";
 import ContentContext from "../../contexts/content";
 import ConfigContext from "../../contexts/config";
-import { Deposit } from "../../store/reducers/wallets";
 import moment from "moment";
 import { nanoid } from "nanoid";
 import { useSelector } from "react-redux";
