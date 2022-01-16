@@ -557,7 +557,7 @@ function depositsFromMonthInputs(wallet?: WalletState): DepositInEditor[] {
   const seed: DepositInEditor[] = [];
   return monthDates.reduce(
     (depositsForEditor: DepositInEditor[], monthDate): DepositInEditor[] => {
-      const deposits = wallet.monthInputs[monthDate].deposits;
+      const deposits = wallet.monthInputs[monthDate].deposits ?? [];
       return deposits.reduce(
         (
           accumDepositsForEditor: DepositInEditor[],
