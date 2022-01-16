@@ -22,8 +22,8 @@ function dripValueProvider(): DripValueProvider {
     ): number => {
       const yearArrIndex = monthDate.getFullYear() - startDate.getFullYear();
       if (yearArrIndex > 9) {
-        throw new Error(
-          "Year out of range, the DRIP value provider can only account for 10 years after the start date"
+        console.warn(
+          "Surpassed 10 years, target value will be used (max for up trend, min for down trend and stabilise at value for the stable trend)."
         );
       }
 
@@ -35,7 +35,8 @@ function dripValueProvider(): DripValueProvider {
         );
       }
 
-      const baseValueFraction = dripTrendBaseValues[yearArrIndex][monthIndex];
+      const baseValueFraction =
+        yearArrIndex <= 9 ? dripTrendBaseValues[yearArrIndex][monthIndex] : 1;
 
       if (dripValueTrend === "downtrend") {
         const diff = startDripValue - targetDripValue;

@@ -3,6 +3,7 @@ import { composeWithDevTools } from "redux-devtools-extension/developmentOnly";
 import { config } from "../contexts/config";
 import storage from "../services/storage";
 import calculator from "./middleware/calculator";
+import { EARNINGS_CALCULATED } from "./middleware/calculator-actions";
 
 import createRootReducer, { initialState } from "./reducers";
 import type { AppState } from "./types";
@@ -20,9 +21,16 @@ export default async function configure(): Promise<Store<AppState>> {
   const preloadedState: AppState | null = await persistedStorage.readData(
     "state"
   );
+
+  const composeDevToolsEnhancer = composeWithDevTools({
+    // EARNINGS_CALCULATED is huge and causes performance issues
+    // for deserialising in devtools.
+    actionsBlacklist: [EARNINGS_CALCULATED],
+  });
+
   const enhancers =
     typeof window !== undefined
-      ? composeWithDevTools(middlewares)
+      ? composeDevToolsEnhancer(middlewares)
       : compose(middlewares);
 
   const defaultState = initialState();

@@ -11,10 +11,12 @@ import {
   REMOVE_NOTIFICATION,
   RemoveNotificationAction,
 } from "../actions/general";
+import { EarningsAndInfo } from "../middleware/shared-calculator-types";
 
 export type GeneralState = {
   notifications: Notification[];
   isCalculating: boolean;
+  calculatedEarnings?: EarningsAndInfo;
 };
 
 export type Notification = {
@@ -73,11 +75,13 @@ const reducers = {
   },
   [EARNINGS_CALCULATED]: (
     state: GeneralState,
-    _action: GeneralAction
+    action: GeneralAction
   ): GeneralState => {
     return {
       ...state,
       isCalculating: false,
+      calculatedEarnings: (action as EarningsCalculatedAction).payload
+        .earningsAndInfo,
     };
   },
   [REMOVE_NOTIFICATION]: (

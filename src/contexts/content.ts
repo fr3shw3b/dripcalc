@@ -41,6 +41,14 @@ export type WalletsContent = {
   depositsTypeHelpText: string;
   depositTypes: Record<string, string>;
   depositsChangeDateCollapseText: string;
+  customDripValuesButtonText: string;
+  monthsAddAnotherText: string;
+  monthTableColumnLabel: string;
+  yearTableColumnLabel: string;
+  reinvestColumnLabel: string;
+  reinvestmentPlanTableHelpText: string;
+  customDripValuesColumnLabel: (currency: string) => string;
+  customDripValuesTableHelpText: (currency: string) => string;
 };
 
 export function content(): Content {
@@ -56,8 +64,9 @@ export function content(): Content {
       },
       dripValueTrendLabel: "DRIP Value Trend",
       dripValueTrendHelpText:
-        "The trend of the DRIP token value from the moment you open your first wallet" +
-        " to the moment all rewards have been consumed in your last wallet.",
+        "The trend of the DRIP token value from the moment you open your first wallet " +
+        " to the moment all rewards have been consumed in your last wallet. " +
+        "When you input custom DRIP values for a wallet, the trend will begin from the date of the last custom DRIP value you enter.",
       dripValueTrendOptions: {
         downtrend: "Down Trend",
         stable: "Stable",
@@ -106,6 +115,17 @@ export function content(): Content {
         monthly: "Monthly deposits",
         oneOff: "One off deposit",
       },
+      customDripValuesButtonText: "custom drip values",
+      monthsAddAnotherText: "add another month",
+      monthTableColumnLabel: "Month",
+      yearTableColumnLabel: "Year",
+      reinvestColumnLabel: "Reinvest %",
+      reinvestmentPlanTableHelpText:
+        'Edit the "Reinvest %" column for each month and then save your changes. You can add more months if you need to.',
+      customDripValuesColumnLabel: (currency: string) =>
+        `DRIP Value ${currency}`,
+      customDripValuesTableHelpText: (currency: string) =>
+        `Edit the "DRIP Value ${currency}" column for each month and then save your changes. You can add more months if you need to.`,
     },
   };
 }

@@ -3,8 +3,10 @@ import { nanoid } from "nanoid";
 
 import React, { useCallback, useContext, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import moment from "moment";
 
 import ContentContext from "../../contexts/content";
+import ConfigContext, { Config } from "../../contexts/config";
 import {
   addWallet,
   updateCurrentWallet,
@@ -16,11 +18,14 @@ import { AppState } from "../../store/types";
 import WalletView from "../wallet-view";
 import WalletEditor from "../wallet-editor";
 import WalletDeposits from "../wallet-deposits";
+import WalletReinvestmentPlan from "../wallet-reinvestment-plan";
+import WalletCustomDripValues from "../wallet-custom-drip-values";
 
 import "./wallets-panel.css";
 import { Deposit, MonthInput, WalletState } from "../../store/reducers/wallets";
 import { DepositInEditor } from "../wallet-deposits/wallet-deposits";
-import moment from "moment";
+import { ReinvestmentInEditor } from "../wallet-reinvestment-plan/wallet-reinvestment-plan";
+import { DripValueInEditor } from "../wallet-custom-drip-values/wallet-custom-drip-values";
 
 type EditorState = {
   isOpen: boolean;
@@ -31,9 +36,11 @@ type EditorState = {
 type MonthInputsState = {
   isDepositsOpen: boolean;
   isReinvestmentPlanOpen: boolean;
+  isCustomDripValuesOpen: boolean;
   walletId: string;
   deposits: DepositInEditor[];
-  reinvestments: { timestamp: number; reinvest: number; id: string }[];
+  reinvestments: ReinvestmentInEditor[];
+  dripValues: DripValueInEditor[];
 };
 
 function WalletsPanel() {
@@ -45,15 +52,18 @@ function WalletsPanel() {
   const [monthInputsState, setMonthInputsState] = useState<MonthInputsState>({
     isDepositsOpen: false,
     isReinvestmentPlanOpen: false,
+    isCustomDripValuesOpen: false,
     walletId: "default-wallet",
     deposits: [],
     reinvestments: [],
+    dripValues: [],
   });
   const [editorWalletName, setEditorWalletName] = useState("");
   const [editorWalletDate, setEditorWalletDate] = useState(new Date());
   const dispatch = useDispatch();
   const { wallets, current } = useSelector((state: AppState) => state.wallets);
   const { wallets: walletsContent } = useContext(ContentContext);
+  const config = useContext(ConfigContext);
 
   const handleWalletChange = (newTabId: string) => {
     dispatch(updateCurrentWallet(newTabId));
@@ -261,7 +271,172 @@ function WalletsPanel() {
     }));
   };
 
-  const handleReinvestmentPlanClick = (walletId: string) => {};
+  const handleReinvestmentPlanClose = () => {
+    setMonthInputsState((prevState) => ({
+      ...prevState,
+      isReinvestmentPlanOpen: false,
+    }));
+  };
+
+  const handleReinvestmentPlanClick = useCallback(
+    (walletId: string) => {
+      setMonthInputsState((prevState) => ({
+        ...prevState,
+        isReinvestmentPlanOpen: true,
+        walletId,
+        reinvestments: reinvestmentsFromMonthInputs(
+          config,
+          wallets.find(({ id }) => id === walletId)
+        ),
+      }));
+    },
+    [wallets]
+  );
+
+  const handleChangeMonthReinvestPercent = (
+    reinvest: number,
+    index: number
+  ) => {
+    setMonthInputsState((prevState) => {
+      const reinvestment = prevState.reinvestments[index];
+      return {
+        ...prevState,
+        reinvestments: [
+          ...prevState.reinvestments.slice(0, index),
+          {
+            ...reinvestment,
+            reinvest,
+          },
+          ...prevState.reinvestments.slice(index + 1),
+        ],
+      };
+    });
+  };
+
+  const handleReinvestSaveClick = useCallback(
+    (walletId: string) => {
+      dispatch(
+        updateWalletMonthInputs(
+          walletId,
+          monthInputsFromReinvestments(
+            monthInputsState.reinvestments,
+            wallets.find(({ id }) => id === walletId)
+          )
+        )
+      );
+
+      setMonthInputsState((prevState) => ({
+        ...prevState,
+        isReinvestmentPlanOpen: false,
+        reinvestments: [],
+      }));
+    },
+    [wallets, monthInputsState.reinvestments]
+  );
+
+  const handleAddAnotherReinvestMonth = () => {
+    setMonthInputsState((prevState) => ({
+      ...prevState,
+      reinvestments: [
+        ...prevState.reinvestments,
+        {
+          reinvest: config.defaultReinvest,
+          timestamp: Number.parseInt(
+            moment(
+              new Date(
+                prevState.reinvestments[
+                  prevState.reinvestments.length - 1
+                ].timestamp
+              )
+            )
+              .add(1, "month")
+              .format("x")
+          ),
+        },
+      ],
+    }));
+  };
+
+  const handleCustomDripValuesClose = () => {
+    setMonthInputsState((prevState) => ({
+      ...prevState,
+      isCustomDripValuesOpen: false,
+    }));
+  };
+
+  const handleDripCustomValuesClick = useCallback(
+    (walletId: string) => {
+      setMonthInputsState((prevState) => ({
+        ...prevState,
+        isCustomDripValuesOpen: true,
+        walletId,
+        dripValues: dripValuesFromMonthInputs(
+          config,
+          wallets.find(({ id }) => id === walletId)
+        ),
+      }));
+    },
+    [wallets]
+  );
+
+  const handleChangeMonthDripValue = (dripValue: number, index: number) => {
+    setMonthInputsState((prevState) => {
+      const dripValueObj = prevState.dripValues[index];
+      return {
+        ...prevState,
+        dripValues: [
+          ...prevState.dripValues.slice(0, index),
+          {
+            timestamp: dripValueObj.timestamp,
+            dripValue,
+          },
+          ...prevState.dripValues.slice(index + 1),
+        ],
+      };
+    });
+  };
+
+  const handleCustomDripValuesSaveClick = useCallback(
+    (walletId: string) => {
+      dispatch(
+        updateWalletMonthInputs(
+          walletId,
+          monthInputsFromDripValues(
+            monthInputsState.dripValues,
+            wallets.find(({ id }) => id === walletId)
+          )
+        )
+      );
+
+      setMonthInputsState((prevState) => ({
+        ...prevState,
+        isCustomDripValuesOpen: false,
+        dripValues: [],
+      }));
+    },
+    [wallets, monthInputsState.dripValues]
+  );
+
+  const handleAddAnotherDripValueMonth = () => {
+    setMonthInputsState((prevState) => ({
+      ...prevState,
+      dripValues: [
+        ...prevState.dripValues,
+        {
+          dripValue: config.defaultDripValue,
+          timestamp: Number.parseInt(
+            moment(
+              new Date(
+                prevState.dripValues[prevState.dripValues.length - 1].timestamp
+              )
+            )
+              .add(1, "month")
+              .format("x")
+          ),
+        },
+      ],
+    }));
+  };
 
   const monthInputsCurrentWallet = wallets.find(
     ({ id }) => id === monthInputsState.walletId
@@ -289,6 +464,7 @@ function WalletsPanel() {
                 onEditClick={handleEditWalletClick}
                 onDepositsClick={handleDepositsClick}
                 onReinvestmentPlanClick={handleReinvestmentPlanClick}
+                onCustomDripValuesClick={handleDripCustomValuesClick}
               />
             }
           />
@@ -330,6 +506,28 @@ function WalletsPanel() {
           onDepositEndDateChange={handleDepositEndDateChange}
           onDepositAmountInCurrencyChange={handleDepositAmountInCurrencyChange}
           onRemoveDeposit={handleRemoveDeposit}
+        />
+        <WalletReinvestmentPlan
+          walletId={monthInputsState.walletId}
+          isOpen={monthInputsState.isReinvestmentPlanOpen}
+          walletName={monthInputsCurrentWallet?.label ?? ""}
+          walletStartDate={monthInputsCurrentWallet?.startDate ?? 0}
+          onClose={handleReinvestmentPlanClose}
+          reinvestments={monthInputsState.reinvestments}
+          onChangeMonthReinvestPercent={handleChangeMonthReinvestPercent}
+          onSaveClick={handleReinvestSaveClick}
+          onAddAnotherMonth={handleAddAnotherReinvestMonth}
+        />
+        <WalletCustomDripValues
+          walletId={monthInputsState.walletId}
+          isOpen={monthInputsState.isCustomDripValuesOpen}
+          walletName={monthInputsCurrentWallet?.label ?? ""}
+          walletStartDate={monthInputsCurrentWallet?.startDate ?? 0}
+          onClose={handleCustomDripValuesClose}
+          dripValues={monthInputsState.dripValues}
+          onChangeMonthDripValue={handleChangeMonthDripValue}
+          onSaveClick={handleCustomDripValuesSaveClick}
+          onAddAnotherMonth={handleAddAnotherDripValueMonth}
         />
       </Tabs>
     </>
@@ -484,6 +682,144 @@ function monthInputsFromDeposits(
     },
     seedMonthInputs
   );
+}
+
+function reinvestmentsFromMonthInputs(
+  config: Config,
+  wallet?: WalletState
+): ReinvestmentInEditor[] {
+  if (!wallet) {
+    return [];
+  }
+  const reinvestments = Object.entries(wallet.monthInputs).map(
+    ([monthKey, { reinvest }]) => {
+      return {
+        reinvest: reinvest ?? config.defaultReinvest,
+        timestamp: Number.parseInt(
+          moment(monthKey, "DD/MM/YYYY").format("x"),
+          10
+        ),
+      };
+    }
+  );
+  return reinvestments.length > 0
+    ? reinvestments
+    : // Default with a year's worth of reinvestment.
+      [...Array(12)].map((_, i) => ({
+        reinvest: config.defaultReinvest,
+        timestamp: Number.parseInt(
+          moment(new Date(wallet.startDate)).add(i, "month").format("x"),
+          10
+        ),
+      }));
+}
+
+function monthInputsFromReinvestments(
+  reinvestments: ReinvestmentInEditor[],
+  wallet?: WalletState
+): Record<string, MonthInput> {
+  if (!wallet) {
+    return {};
+  }
+
+  const seedGrouped: Record<string, number> = {};
+  const reinvestGroupedByMonth = reinvestments.reduce(
+    (accumGrouped, reinvestment) => {
+      // Super important the key format is DD/MM/YYYYY as expected in the calculator middleware.
+      const monthKeyFormatted = moment(new Date(reinvestment.timestamp)).format(
+        "01/MM/YYYY"
+      );
+
+      return {
+        ...accumGrouped,
+        [monthKeyFormatted]: reinvestment.reinvest,
+      };
+    },
+    seedGrouped
+  );
+
+  const seedMonthInputs: Record<string, MonthInput> = {};
+  return Object.entries(reinvestGroupedByMonth).reduce(
+    (monthInputs, [monthKey, reinvest]) => {
+      return {
+        ...monthInputs,
+        [monthKey]: {
+          ...(wallet.monthInputs[monthKey] ?? {}),
+          reinvest,
+        },
+      };
+    },
+    seedMonthInputs
+  );
+}
+
+function monthInputsFromDripValues(
+  dripValues: DripValueInEditor[],
+  wallet?: WalletState
+): Record<string, MonthInput> {
+  if (!wallet) {
+    return {};
+  }
+
+  const seedGrouped: Record<string, number> = {};
+  const dripValuesGroupedByMonth = dripValues.reduce(
+    (accumGrouped, dripValueObj) => {
+      // Super important the key format is DD/MM/YYYYY as expected in the calculator middleware.
+      const monthKeyFormatted = moment(new Date(dripValueObj.timestamp)).format(
+        "01/MM/YYYY"
+      );
+
+      return {
+        ...accumGrouped,
+        [monthKeyFormatted]: dripValueObj.dripValue,
+      };
+    },
+    seedGrouped
+  );
+
+  const seedMonthInputs: Record<string, MonthInput> = {};
+  return Object.entries(dripValuesGroupedByMonth).reduce(
+    (monthInputs, [monthKey, dripValue]) => {
+      return {
+        ...monthInputs,
+        [monthKey]: {
+          ...(wallet.monthInputs[monthKey] ?? {}),
+          dripValue,
+        },
+      };
+    },
+    seedMonthInputs
+  );
+}
+
+function dripValuesFromMonthInputs(
+  config: Config,
+  wallet?: WalletState
+): DripValueInEditor[] {
+  if (!wallet) {
+    return [];
+  }
+  const dripValues = Object.entries(wallet.monthInputs).map(
+    ([monthKey, { dripValue }]) => {
+      return {
+        dripValue: dripValue ?? config.defaultDripValue,
+        timestamp: Number.parseInt(
+          moment(monthKey, "DD/MM/YYYY").format("x"),
+          10
+        ),
+      };
+    }
+  );
+  return dripValues.length > 0
+    ? dripValues
+    : // Default with a year's worth of reinvestment.
+      [...Array(12)].map((_, i) => ({
+        dripValue: config.defaultDripValue,
+        timestamp: Number.parseInt(
+          moment(new Date(wallet.startDate)).add(i, "month").format("x"),
+          10
+        ),
+      }));
 }
 
 export default WalletsPanel;

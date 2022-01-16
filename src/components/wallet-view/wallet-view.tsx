@@ -15,6 +15,7 @@ type Props = {
   onEditClick: (walletId: string) => void;
   onDepositsClick: (walletId: string) => void;
   onReinvestmentPlanClick: (walletId: string) => void;
+  onCustomDripValuesClick: (walletId: string) => void;
 };
 
 function WalletView({
@@ -25,6 +26,7 @@ function WalletView({
   onEditClick,
   onDepositsClick,
   onReinvestmentPlanClick,
+  onCustomDripValuesClick,
 }: Props) {
   const { wallets: walletsContent } = useContext(ContentContext);
 
@@ -41,6 +43,11 @@ function WalletView({
   const handleReinvestmentPlanClick: React.MouseEventHandler = (evt) => {
     evt.preventDefault();
     onReinvestmentPlanClick(walletId);
+  };
+
+  const handleCustomDripValuesClick: React.MouseEventHandler = (evt) => {
+    evt.preventDefault();
+    onCustomDripValuesClick(walletId);
   };
 
   return (
@@ -66,6 +73,13 @@ function WalletView({
           small
           onClick={handleReinvestmentPlanClick}
           text={walletsContent.reinvestButtonText}
+        />
+        <Button
+          className="wallet-heading-cta"
+          icon="tint"
+          small
+          onClick={handleCustomDripValuesClick}
+          text={walletsContent.customDripValuesButtonText}
         />
       </h2>
       <MomentDateRange
