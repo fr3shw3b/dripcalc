@@ -85,6 +85,10 @@ function Dashboard() {
             dashboard to help give that extra bit of help in understanding the
             data.
           </p>
+          <p>
+            All your changes will be saved to your browser's storage for future
+            sessions in the same browser.
+          </p>
           <Button
             className="block"
             intent="primary"
