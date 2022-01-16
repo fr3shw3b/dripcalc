@@ -1,5 +1,5 @@
-import { Button } from "@blueprintjs/core";
 import { useContext } from "react";
+import { Button, Tab, Tabs } from "@blueprintjs/core";
 
 import { MonthInput } from "../../store/reducers/wallets";
 import ContentContext from "../../contexts/content";
@@ -8,9 +8,11 @@ import MomentDateRange from "../moment-date-range";
 import "./wallet-view.css";
 import { useSelector } from "react-redux";
 import { AppState } from "../../store/types";
-import { EarningsAndInfo } from "../../store/middleware/shared-calculator-types";
-import moment from "moment";
-import { getDaysInMonth } from "../../utils/date";
+
+import MonthlyWalletPanel from "../monthly-wallet-panel";
+import YearlyWalletPanel from "../yearly-wallet-panel";
+import { Popover2 } from "@blueprintjs/popover2";
+import { findLastYearForWallet } from "../../utils/wallets";
 
 type Props = {
   walletId: string;
@@ -34,7 +36,7 @@ function WalletView({
   onCustomDripValuesClick,
 }: Props) {
   const { wallets: walletsContent } = useContext(ContentContext);
-  const { calculatedEarnings } = useSelector(
+  const { isCalculating, calculatedEarnings } = useSelector(
     (state: AppState) => state.general
   );
 
@@ -59,7 +61,7 @@ function WalletView({
   };
 
   return (
-    <>
+    <div className="wallet-view-container">
       <h2 className="wallet-heading">
         {label}{" "}
         <Button
@@ -90,51 +92,53 @@ function WalletView({
           text={walletsContent.customDripValuesButtonText}
         />
       </h2>
-      <MomentDateRange
-        className="date-range"
-        range={[
-          new Date(startDate),
-          new Date(
-            findLastYearForWallet(walletId, calculatedEarnings) ?? startDate
-          ),
-        ]}
-      />
-    </>
-  );
-}
-
-function findLastYearForWallet(
-  walletId: string,
-  calculatedEarnings?: EarningsAndInfo
-): number | undefined {
-  if (!calculatedEarnings) {
-    return undefined;
-  }
-
-  const { yearEarnings: yearEarningsMap } =
-    calculatedEarnings.walletEarnings[walletId];
-
-  const lastYearEarnings = Object.values(yearEarningsMap).find(
-    (yearEarnings) => yearEarnings.lastYear
-  );
-
-  if (!lastYearEarnings) {
-    return undefined;
-  }
-
-  const monthKeys = Object.keys(lastYearEarnings.monthEarnings);
-  monthKeys.sort();
-
-  const month = monthKeys[monthKeys.length - 1];
-  const daysInMonth = getDaysInMonth(
-    moment(`1/${month}/${lastYearEarnings.year}`, "D/M/YYYY").toDate()
-  );
-  return Number.parseInt(
-    moment(
-      `${daysInMonth}/${month}/${lastYearEarnings.year}`,
-      "D/M/YYYY"
-    ).format("x"),
-    10
+      <div className="wallet-help">
+        <Popover2
+          content={
+            <div className="wallet-help-popover-content">
+              {walletsContent.walletViewHelpText}
+            </div>
+          }
+          placement="left"
+          usePortal={false}
+          modifiers={{
+            arrow: { enabled: true },
+            flip: { enabled: true },
+            preventOverflow: { enabled: true },
+          }}
+        >
+          <Button icon="help" />
+        </Popover2>
+      </div>
+      <div>
+        <MomentDateRange
+          className={`date-range${isCalculating ? " bp3-skeleton" : ""}`}
+          range={[
+            new Date(startDate),
+            new Date(
+              findLastYearForWallet(walletId, calculatedEarnings) ?? startDate
+            ),
+          ]}
+        />
+        <div className="block">
+          <Tabs
+            id={`wallet-${walletId}-tabs`}
+            className={isCalculating ? "bp3-skeleton" : ""}
+          >
+            <Tab
+              id={`monthly-${walletId}`}
+              title="Monthly"
+              panel={<MonthlyWalletPanel walletId={walletId} />}
+            />
+            <Tab
+              id={`yearly-${walletId}`}
+              title="Yearly"
+              panel={<YearlyWalletPanel walletId={walletId} />}
+            />
+          </Tabs>
+        </div>
+      </div>
+    </div>
   );
 }
 

@@ -5,17 +5,17 @@ import { Button } from "@blueprintjs/core";
 import "./help.css";
 
 type Props = {
-  helpContent: React.ReactNode;
+  helpContent: string | JSX.Element;
   children: React.ReactNode;
 };
 
-function Help({ children }: Props) {
+function Help({ children, helpContent }: Props) {
   return (
     <div className="help-container">
       <div className="help-content">{children}</div>
       <div className="help-button-wrapper">
         <Popover2
-          content={<>Content</>}
+          content={helpContent}
           placement="bottom"
           usePortal={false}
           modifiers={{

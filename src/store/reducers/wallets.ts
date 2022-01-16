@@ -1,3 +1,6 @@
+import moment from "moment";
+import { nanoid } from "nanoid";
+import { config } from "../../contexts/config";
 import {
   ADD_WALLET,
   AddWalletAction,
@@ -41,13 +44,37 @@ export type Deposit = {
 };
 
 export function initialState(): WalletsState {
+  const seed: Record<string, MonthInput> = {};
+  const conf = config();
+  const currentDate = new Date();
+  const depositsId = nanoid();
+
   return {
     wallets: [
       {
         id: "default-wallet",
         label: "Default Wallet",
-        startDate: new Date().getTime(),
-        monthInputs: {},
+        startDate: currentDate.getTime(),
+        // Default deposits of (£|$|€)100 for 12 months.
+        monthInputs: [...Array(12)].reduce((defaultMonthInputs, _val, i) => {
+          const monthMomentDate = moment(currentDate).add(i, "month");
+          return {
+            ...defaultMonthInputs,
+            [monthMomentDate.format("01/MM/YYYY")]: {
+              dripValue: conf.defaultDripValue,
+              reinvest: conf.defaultReinvest,
+              deposits: [
+                {
+                  dayOfMonth: Number.parseInt(monthMomentDate.format("D")),
+                  amountInCurrency: 100,
+                  // Use same ID so the UI picks it up as a monthly deposit.
+                  depositId: depositsId,
+                  timestamp: Number.parseInt(monthMomentDate.format("x")),
+                },
+              ],
+            },
+          };
+        }, seed),
       },
     ],
     current: "default-wallet",

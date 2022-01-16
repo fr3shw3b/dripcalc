@@ -10,3 +10,7 @@
   top: 25px;
   right: 20px;
 }
+
+.intro {
+  max-width: 500px;
+}

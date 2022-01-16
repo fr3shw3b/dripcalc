@@ -17,6 +17,7 @@ export type OverviewInfo = {
   depositsOutOfPocket: number;
   // Timestamp in milliseconds.
   depositsOutOfPocketCoveredBy: number;
+  totalConsumedRewards: number;
 };
 
 export type WalletEarnings = {
@@ -33,7 +34,10 @@ export type YearEarnings = {
   lastYear: boolean;
 };
 
-export type NextActions = "keepCompounding" | "considerNewWallet";
+export type NextActions =
+  | "keepCompounding"
+  | "considerNewWallet"
+  | "newWalletRequired";
 
 export type MonthEarningsAndInfo = {
   // Timestamp in milliseconds.

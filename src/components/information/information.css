@@ -1,0 +1,18 @@
+.information-content {
+  margin: 30px;
+  max-width: 1024px;
+}
+
+.info-content-block {
+  margin-top: 40px;
+}
+
+.information-content-list {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+}
+
+.information-content-list > li {
+  margin-top: 10px;
+}

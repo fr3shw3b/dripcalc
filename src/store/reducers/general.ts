@@ -10,12 +10,15 @@ import {
 import {
   REMOVE_NOTIFICATION,
   RemoveNotificationAction,
+  SET_NOT_FIRST_TIME,
+  SetNotFirstTimeAction,
 } from "../actions/general";
 import { EarningsAndInfo } from "../middleware/shared-calculator-types";
 
 export type GeneralState = {
   notifications: Notification[];
   isCalculating: boolean;
+  isFirstTime: boolean;
   calculatedEarnings?: EarningsAndInfo;
 };
 
@@ -32,6 +35,7 @@ export function initialState(): GeneralState {
   return {
     notifications: [],
     isCalculating: false,
+    isFirstTime: true,
   };
 }
 
@@ -39,6 +43,7 @@ export type GeneralAction =
   | FailedCalulatingEarningsAction
   | CalculatingEarningsAction
   | EarningsCalculatedAction
+  | SetNotFirstTimeAction
   | RemoveNotificationAction;
 
 function reducer(state = initialState(), action: GeneralAction): GeneralState {
@@ -93,6 +98,15 @@ const reducers = {
       notifications: state.notifications.filter(
         ({ id }) => id !== (action as RemoveNotificationAction).payload.id
       ),
+    };
+  },
+  [SET_NOT_FIRST_TIME]: (
+    state: GeneralState,
+    _action: GeneralAction
+  ): GeneralState => {
+    return {
+      ...state,
+      isFirstTime: false,
     };
   },
 };

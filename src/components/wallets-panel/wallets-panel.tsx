@@ -469,7 +469,6 @@ function WalletsPanel() {
             }
           />
         ))}
-        <Tabs.Expander />
         <Button
           className="wallet-tabs-add-new"
           icon="plus"

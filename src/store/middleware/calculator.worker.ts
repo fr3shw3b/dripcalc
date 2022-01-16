@@ -4,6 +4,7 @@ import {
   DayEarnings,
   EarningsAndInfo,
   MonthEarningsAndInfo,
+  NextActions,
   OverviewInfo,
   WalletEarnings,
   YearEarnings,
@@ -13,6 +14,7 @@ import type { SettingsState } from "../reducers/settings";
 import type { WalletState } from "../reducers/wallets";
 import type { AppState } from "../types";
 import type { Config } from "../../contexts/config";
+import moment from "moment";
 
 export default {} as typeof Worker & { new (): Worker };
 
@@ -77,6 +79,7 @@ function computeOverviewInfo(
     percentageMaxPayoutConsumed:
       accumYearlyOverviewInfo.totalClaimed /
       accumYearlyOverviewInfo.totalEarnings,
+    totalConsumedRewards: accumYearlyOverviewInfo.totalEarnings,
     // deposits out of pocket covers gas fees up to the point
     // daily claimed rewards can cover gas fees (dcr >= 2 . gf).
     // All deposits into the faucet are counted as deposits out
@@ -172,6 +175,7 @@ type YearlyAccumulatedOverviewInfo = Omit<
   | "percentageMaxPayoutConsumed"
   | "depositsOutOfPocket"
   | "depositsOutOfPocketCoveredBy"
+  | "totalConsumedRewards"
 > & { totalEarnings: number };
 
 function accumOverviewInfoFromYear(
@@ -267,7 +271,7 @@ function calculateWalletEarnings(
     let totalYearEarnings = firstYearEarnings.totalYearEarnings;
     let prevDate = startDate;
     while (totalYearEarnings > 0) {
-      const newDate = new Date(prevDate.getFullYear() + 1, 1, 1);
+      const newDate = new Date(prevDate.getFullYear() + 1, 0, 1);
 
       const yearEarnings = calculateYearEarnings(
         config,
@@ -378,7 +382,7 @@ function calculateMonthEarnings(
   return (accum: Record<number, MonthEarningsAndInfo>, date: Date) => {
     const month = date.getMonth();
     // Format of custom month input keys is dd/mm/yyyy.
-    const monthInputsKey = `01/${date.getMonth()}/${date.getFullYear()}`;
+    const monthInputsKey = moment(date).format("01/MM/YYYY");
     const totalDaysInMonth = getDaysInMonth(date);
     const earningDaysInMonth = totalDaysInMonth - date.getDate() + 1;
     const offsetDay = date.getDate();
@@ -407,8 +411,15 @@ function calculateMonthEarnings(
         trendTargetDripValue,
         state.settings.dripValueTrend
       );
+
+    const lastMonthEarnings = accum[month - 1] ?? lastMonthOfPrevYearEarnings;
     const lastDayOfPrevMonthEarnings =
-      lastMonthOfPrevYearEarnings?.dayEarnings[totalDaysInMonth];
+      accum[month - 1]?.dayEarnings[
+        getDaysInMonth(new Date(accum[month - 1].month))
+      ] ??
+      lastMonthOfPrevYearEarnings?.dayEarnings?.[
+        getDaysInMonth(new Date(lastMonthOfPrevYearEarnings.month))
+      ];
     const dayEarningsSeed: Record<number, DayEarnings> = {};
     const dayEarnings = dayEarningDates.reduce(
       calculateDayEarnings(
@@ -440,6 +451,7 @@ function calculateMonthEarnings(
       dripDepositBalanceEndOfMonth * config.depositMultiplier,
       config.maxPayoutCap
     );
+
     return {
       ...accum,
       [month]: {
@@ -453,25 +465,47 @@ function calculateMonthEarnings(
         dayEarnings,
         dripDepositBalanceEndOfMonth,
         accumClaimed:
-          (lastMonthOfPrevYearEarnings?.accumClaimed ?? 0) +
-          monthClaimedAfterTax,
+          (lastMonthEarnings?.accumClaimed ?? 0) + monthClaimedAfterTax,
         accumClaimedInCurrency:
-          (lastMonthOfPrevYearEarnings?.accumClaimedInCurrency ?? 0) +
+          (lastMonthEarnings?.accumClaimedInCurrency ?? 0) +
           monthClaimedInCurrency,
         accumConsumedRewards,
         monthEstimatedGasFees,
         monthEstimatedGasFeesOutOfPocket,
         // Half of deposit balance or consumed rewards reaches current max payout/max payout cap
         // indicates time for a new wallet.
-        nextActions:
-          dripDepositBalanceEndOfMonth >= config.maxDepositBalance / 2 ||
-          accumConsumedRewards >= maxPayout
-            ? "considerNewWallet"
-            : "keepCompounding",
+        nextActions: determineNextActions(
+          dripDepositBalanceEndOfMonth,
+          config,
+          accumConsumedRewards,
+          maxPayout
+        ),
         dripValueForMonth,
       },
     };
   };
+}
+
+function determineNextActions(
+  dripDepositBalanceEndOfMonth: number,
+  config: Config,
+  accumConsumedRewards: number,
+  maxPayout: number
+): NextActions {
+  if (accumConsumedRewards === 0 || maxPayout === 0) {
+    return "keepCompounding";
+  }
+
+  // When we are within 10% of the max payout, let's make it more pressing
+  // to indicate a new wallet is required.
+  if (accumConsumedRewards >= maxPayout - maxPayout * 0.1) {
+    return "newWalletRequired";
+  }
+
+  return dripDepositBalanceEndOfMonth >= config.maxDepositBalance / 2 ||
+    accumConsumedRewards >= maxPayout
+    ? "considerNewWallet"
+    : "keepCompounding";
 }
 
 function determineTrendTargetDripValue(settings: SettingsState): number {
@@ -589,7 +623,7 @@ function calculateDayEarnings(
     const prevDayEarningsData =
       accum[dayInMonth - 1] ?? lastDayOfPrevMonthEarnings ?? emptyDayEarnings;
     // Format of custom month input keys is dd/mm/yyyy.
-    const monthInputsKey = `01/${date.getMonth()}/${date.getFullYear()}`;
+    const monthInputsKey = moment(date).format("01/MM/YYYY");
 
     const isClaimDay = shouldClaimOnDay(
       date,
@@ -646,11 +680,11 @@ function calculateDayEarnings(
       ...accum,
       [dayInMonth]: {
         earnings: dayEarnings,
-        earningsInCurrency: dayEarnings / dripValueForDay,
+        earningsInCurrency: dayEarnings * dripValueForDay,
         reinvestAfterTax,
-        reinvestInCurrency: reinvestAfterTax / dripValueForDay,
+        reinvestInCurrency: reinvestAfterTax * dripValueForDay,
         claimAfterTax,
-        claimInCurrency: claimAfterTax / dripValueForDay,
+        claimInCurrency: claimAfterTax * dripValueForDay,
         dripDepositBalance: finalDepositBalanceEndOfDay,
         // Multiply gas fee by 2 for deposit and compound/claim.
         estimatedGasFees,

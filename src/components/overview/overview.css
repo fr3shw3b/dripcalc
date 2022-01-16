@@ -13,3 +13,8 @@
 .overview-button {
   margin-left: 10px;
 }
+
+.overview-info {
+  padding: 20px;
+  max-width: 300px;
+}

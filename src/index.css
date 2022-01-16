@@ -37,3 +37,20 @@ code {
 .block-bottom-lg {
   margin-bottom: 40px;
 }
+
+.wallet-tab-panel-container {
+  height: calc(100vh - 250px);
+  overflow: auto;
+}
+
+.wallet-tab-panel-inner-container {
+  overflow: auto;
+}
+
+tr.warning {
+  background: #a66321;
+}
+
+tr.danger {
+  background: #a82a2a;
+}

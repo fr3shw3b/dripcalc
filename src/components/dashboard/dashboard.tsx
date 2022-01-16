@@ -1,6 +1,7 @@
 import { Button, Tab, Tabs, Drawer } from "@blueprintjs/core";
 import React from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { setNotFirstTime } from "../../store/actions/general";
 import {
   hideSettingsPanel,
   showOverview,
@@ -22,8 +23,11 @@ const tabs = {
 
 function Dashboard() {
   const dispatch = useDispatch();
-  const { showTabView, isSettingsOpen } = useSelector(
-    (state: AppState) => state.views
+  const { isFirstTime, showTabView, isSettingsOpen } = useSelector(
+    (state: AppState) => ({
+      ...state.views,
+      isFirstTime: state.general.isFirstTime,
+    })
   );
 
   const handleTabChange = (newTabId: string) => {
@@ -33,6 +37,13 @@ function Dashboard() {
   const handleSettingsButtonClick: React.MouseEventHandler = (evt) => {
     evt.preventDefault();
     dispatch(showSettingsPanel());
+  };
+
+  const handleGetStartedClick: React.MouseEventHandler = (evt) => {
+    evt.preventDefault();
+    // Default to the wallets view for first time users!
+    dispatch(showWallets());
+    dispatch(setNotFirstTime());
   };
 
   const handleClose = (evt: React.SyntheticEvent) => {
@@ -53,19 +64,54 @@ function Dashboard() {
         <Settings />
       </Drawer>
 
-      <Tabs
-        id="DashboardTabs"
-        onChange={handleTabChange}
-        selectedTabId={tabs[showTabView]}
-      >
-        <Tab id="overview" title="Overview" panel={<Overview />} />
-        <Tab id="wallets" title="Wallets" panel={<Wallets />} />
-      </Tabs>
-      <Button
-        className="settings-button"
-        icon="settings"
-        onClick={handleSettingsButtonClick}
-      />
+      {isFirstTime && (
+        <div className="intro">
+          <h1>Welcome to dripcalc!</h1>
+          <p>
+            This tool is a calculator for your long term DRIP earnings that
+            provides a long-term look across multiple wallets for your DRIP
+            faucet compounding strategy.
+          </p>
+          <p>
+            The tool dashboard provides two tabs. One is the overview tab that
+            provides some high level stats that give an overview of your
+            earnings across all wallets along with some other useful
+            DRIP-specific insights. The other is the wallets tab where all the
+            action happens, here you can configure strategies and see earning
+            results across multiple wallets.
+          </p>
+          <p>
+            You will find tooltips and help buttons across components in the
+            dashboard to help give that extra bit of help in understanding the
+            data.
+          </p>
+          <Button
+            className="block"
+            intent="primary"
+            icon="chevron-right"
+            text="Get started"
+            onClick={handleGetStartedClick}
+          />
+        </div>
+      )}
+      {!isFirstTime && (
+        <>
+          {" "}
+          <Tabs
+            id="DashboardTabs"
+            onChange={handleTabChange}
+            selectedTabId={tabs[showTabView]}
+          >
+            <Tab id="overview" title="Overview" panel={<Overview />} />
+            <Tab id="wallets" title="Wallets" panel={<Wallets />} />
+          </Tabs>
+          <Button
+            className="settings-button"
+            icon="settings"
+            onClick={handleSettingsButtonClick}
+          />
+        </>
+      )}
     </div>
   );
 }

@@ -54,9 +54,8 @@ function calculator<State extends AppState = AppState>(
               })
             )
             .then((earningsSerialised) => {
-              store.dispatch(
-                earningsCalculated(JSON.parse(earningsSerialised))
-              );
+              const earnings = JSON.parse(earningsSerialised);
+              store.dispatch(earningsCalculated(earnings));
             })
             .catch((error) => {
               console.error(error);

@@ -5,3 +5,18 @@
 .wallet-heading-cta {
   margin-left: 10px;
 }
+
+.wallet-help {
+  position: absolute;
+  right: 0;
+  top: 0;
+}
+
+.wallet-view-container {
+  position: relative;
+}
+
+.wallet-help-popover-content {
+  padding: 20px;
+  min-width: 300px;
+}

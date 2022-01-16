@@ -18,3 +18,26 @@ export function removeNotification(id: string): RemoveNotificationAction {
     meta: {},
   };
 }
+
+export const SET_NOT_FIRST_TIME = "SET_NOT_FIRST_TIME";
+export type SetNotFirstTimeAction = FSA<
+  typeof SET_NOT_FIRST_TIME,
+  {
+    calculator: {
+      recalculate: boolean;
+    };
+  },
+  {}
+>;
+
+export function setNotFirstTime(): SetNotFirstTimeAction {
+  return {
+    type: SET_NOT_FIRST_TIME,
+    payload: {},
+    meta: {
+      calculator: {
+        recalculate: true,
+      },
+    },
+  };
+}
