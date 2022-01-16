@@ -526,9 +526,11 @@ function getLastCustomDripValue(
 ): number {
   const monthDates = Object.keys(wallet.monthInputs);
   monthDates.sort((monthAStr, monthBStr) => {
+    // eslint-disable-next-line
     const [_dayA, monthA, yearA] = monthAStr
       .split("/")
       .map((val) => Number.parseInt(val));
+    // eslint-disable-next-line
     const [_dayB, monthB, yearB] = monthBStr
       .split("/")
       .map((val) => Number.parseInt(val));

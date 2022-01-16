@@ -1,11 +1,9 @@
-import { Button, Collapse, HTMLTable, Position } from "@blueprintjs/core";
-import { Cell, Column, Table2 } from "@blueprintjs/table";
-import { useContext, useLayoutEffect, useRef, useState } from "react";
+import { HTMLTable, Position } from "@blueprintjs/core";
+import { useContext } from "react";
 import { useSelector } from "react-redux";
 import { AppState } from "../../store/types";
 
 import ContentContext from "../../contexts/content";
-import moment from "moment";
 import { Tooltip2 } from "@blueprintjs/popover2";
 import formatCurrency from "../../utils/currency";
 
@@ -180,18 +178,6 @@ function YearlyWalletPanel({ walletId }: Props) {
       </div>
     </div>
   );
-}
-
-function determineRowClass(nextActions?: string): string {
-  if (nextActions === "considerNewWallet") {
-    return "warning";
-  }
-
-  if (nextActions === "newWalletRequired") {
-    return "danger";
-  }
-
-  return "";
 }
 
 export default YearlyWalletPanel;
