@@ -640,10 +640,20 @@ function calculateDayEarnings(
       wallet.monthInputs[monthInputsKey]?.reinvest ?? config.defaultReinvest
     );
 
-    const dayEarnings =
-      prevDayEarningsData.accumConsumedRewards >= config.maxPayoutCap
+    const maxPayout = Math.min(
+      prevDayEarningsData.dripDepositBalance * config.depositMultiplier,
+      config.maxPayoutCap
+    );
+
+    const initialDayEarnings =
+      prevDayEarningsData.accumConsumedRewards >= maxPayout
         ? 0
         : prevDayEarningsData.dripDepositBalance * config.dailyCompound;
+
+    const dayEarnings =
+      prevDayEarningsData.accumConsumedRewards + initialDayEarnings <= maxPayout
+        ? initialDayEarnings
+        : maxPayout - prevDayEarningsData.accumConsumedRewards;
 
     const reinvestAfterTax = !isClaimDay
       ? dayEarnings - dayEarnings * config.hydrateTax
