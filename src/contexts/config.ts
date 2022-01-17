@@ -52,7 +52,7 @@ export function config(): Config {
     // £50, $50 or €50 depending on the user's configured currency.
     defaultDripValue: 50,
     // 100% reinvest is the default value users can adjust.
-    defaultReinvest: 1,
+    defaultReinvest: 0.5,
   };
 }
 
