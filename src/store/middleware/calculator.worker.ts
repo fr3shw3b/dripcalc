@@ -479,7 +479,7 @@ function calculateMonthEarnings(
           config,
           accumConsumedRewards,
           maxPayout,
-          lastMonthEarnings.nextActions
+          lastMonthEarnings?.nextActions
         ),
         dripValueForMonth,
       },
