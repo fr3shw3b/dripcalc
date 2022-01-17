@@ -110,15 +110,16 @@ const reducers = {
     state: WalletsState,
     action: WalletsAction
   ): WalletsState => {
+    const toUpdateIndex = state.wallets.findIndex(
+      ({ id }) => id === (action as UpdateWalletAction).id
+    );
+
     const updatedWallet = {
       id: (action as UpdateWalletAction).id,
       label: (action as UpdateWalletAction).label,
       startDate: (action as UpdateWalletAction).startDate,
-      monthInputs: {},
+      monthInputs: state.wallets[toUpdateIndex].monthInputs,
     };
-    const toUpdateIndex = state.wallets.findIndex(
-      ({ id }) => id === (action as UpdateWalletAction).id
-    );
 
     return {
       ...state,
