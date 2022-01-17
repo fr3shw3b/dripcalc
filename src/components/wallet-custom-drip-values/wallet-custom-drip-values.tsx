@@ -93,7 +93,7 @@ function WalletCustomDripValues({
                     return (
                       <EditableCell2
                         value={`${dripValue}`}
-                        onChange={handleChangeMonthDripValue(rowIndex)}
+                        onConfirm={handleChangeMonthDripValue(rowIndex)}
                       />
                     );
                   }}

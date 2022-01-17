@@ -91,7 +91,7 @@ function WalletReinvestmentPlan({
                     return (
                       <EditableCell2
                         value={`${reinvest * 100}`}
-                        onChange={handleChangeMonthReinvestPercent(rowIndex)}
+                        onConfirm={handleChangeMonthReinvestPercent(rowIndex)}
                       />
                     );
                   }}
