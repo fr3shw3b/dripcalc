@@ -478,7 +478,8 @@ function calculateMonthEarnings(
           dripDepositBalanceEndOfMonth,
           config,
           accumConsumedRewards,
-          maxPayout
+          maxPayout,
+          lastMonthEarnings.nextActions
         ),
         dripValueForMonth,
       },
@@ -490,7 +491,8 @@ function determineNextActions(
   dripDepositBalanceEndOfMonth: number,
   config: Config,
   accumConsumedRewards: number,
-  maxPayout: number
+  maxPayout: number,
+  lastMonthNextActions?: NextActions
 ): NextActions {
   if (accumConsumedRewards === 0 || maxPayout === 0) {
     return "keepCompounding";
@@ -498,11 +500,15 @@ function determineNextActions(
 
   // When we are within 10% of the max payout, let's make it more pressing
   // to indicate a new wallet is required.
-  if (accumConsumedRewards >= maxPayout - maxPayout * 0.1) {
+  if (
+    lastMonthNextActions === "newWalletRequired" ||
+    accumConsumedRewards >= maxPayout - maxPayout * 0.1
+  ) {
     return "newWalletRequired";
   }
 
-  return dripDepositBalanceEndOfMonth >= config.maxDepositBalance / 2 ||
+  return lastMonthNextActions === "considerNewWallet" ||
+    dripDepositBalanceEndOfMonth >= config.maxDepositBalance / 2 ||
     accumConsumedRewards >= maxPayout
     ? "considerNewWallet"
     : "keepCompounding";
