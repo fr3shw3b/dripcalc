@@ -692,17 +692,20 @@ function reinvestmentsFromMonthInputs(
   if (!wallet) {
     return [];
   }
-  const reinvestments = Object.entries(wallet.monthInputs).map(
-    ([monthKey, { reinvest }]) => {
+  const reinvestments = Object.entries(wallet.monthInputs)
+    .map(([monthKey, { reinvest }]) => {
       return {
-        reinvest: reinvest ?? config.defaultReinvest,
+        reinvest: reinvest,
         timestamp: Number.parseInt(
           moment(monthKey, "DD/MM/YYYY").format("x"),
           10
         ),
       };
-    }
-  );
+    })
+    .filter(
+      ({ reinvest }) => typeof reinvest !== "undefined"
+    ) as ReinvestmentInEditor[];
+
   return reinvestments.length > 0
     ? reinvestments
     : // Default with a year's worth of reinvestment.
@@ -800,17 +803,21 @@ function dripValuesFromMonthInputs(
   if (!wallet) {
     return [];
   }
-  const dripValues = Object.entries(wallet.monthInputs).map(
-    ([monthKey, { dripValue }]) => {
+  const dripValues = Object.entries(wallet.monthInputs)
+    .map(([monthKey, { dripValue }]) => {
       return {
-        dripValue: dripValue ?? config.defaultDripValue,
+        dripValue,
         timestamp: Number.parseInt(
           moment(monthKey, "DD/MM/YYYY").format("x"),
           10
         ),
       };
-    }
-  );
+    })
+    // filter out months with undefined drip values.
+    .filter(
+      ({ dripValue }) => typeof dripValue !== "undefined"
+    ) as DripValueInEditor[];
+
   return dripValues.length > 0
     ? dripValues
     : // Default with a year's worth of reinvestment.

@@ -27,9 +27,9 @@ export type WalletState = {
 };
 
 export type MonthInput = {
-  dripValue: number;
+  dripValue?: number;
   // Fraction from 0 to 1.
-  reinvest: number;
+  reinvest?: number;
   deposits: Deposit[];
 };
 

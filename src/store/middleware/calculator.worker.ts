@@ -540,7 +540,8 @@ function getLastCustomDripValue(
     return 1;
   });
   return monthDates.length > 0
-    ? wallet.monthInputs[monthDates[monthDates.length - 1]].dripValue
+    ? wallet.monthInputs[monthDates[monthDates.length - 1]].dripValue ??
+        fallbackDripValue
     : fallbackDripValue;
 }
 

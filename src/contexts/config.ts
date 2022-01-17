@@ -44,7 +44,7 @@ export function config(): Config {
     },
     totalDripSupply: 1000000,
     maxDepositBalance: MAX_PAYOUT_CAP / DEPOSIT_MULTIPLIER,
-    minWalletStartDate: "01/01/2022",
+    minWalletStartDate: "01/12/2021",
     maxWalletStartDate: "12/31/2032",
     depositBufferFees: 3,
     // Binance fee.
