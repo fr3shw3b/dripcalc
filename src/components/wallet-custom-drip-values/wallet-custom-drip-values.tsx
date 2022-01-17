@@ -58,6 +58,7 @@ function WalletCustomDripValues({
         isOpen={isOpen}
         className="bp3-dark deposits-container"
         onClose={onClose}
+        canOutsideClickClose={false}
         style={{ minWidth: 768 }}
       >
         <div className={Classes.DIALOG_BODY}>

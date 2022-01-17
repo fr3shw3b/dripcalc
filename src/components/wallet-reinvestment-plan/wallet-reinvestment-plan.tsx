@@ -57,6 +57,7 @@ function WalletReinvestmentPlan({
         className="bp3-dark deposits-container"
         onClose={onClose}
         style={{ minWidth: 768 }}
+        canOutsideClickClose={false}
       >
         <div className={Classes.DIALOG_BODY}>
           <form onSubmit={(evt) => evt.preventDefault()}>

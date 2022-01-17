@@ -150,6 +150,7 @@ function WalletDeposits({
         isOpen={isOpen}
         className="bp3-dark deposits-container"
         onClose={onClose}
+        canOutsideClickClose={false}
       >
         <div className={Classes.DIALOG_BODY}>
           <form onSubmit={(evt) => evt.preventDefault()}>
