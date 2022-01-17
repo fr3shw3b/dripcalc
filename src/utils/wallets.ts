@@ -10,8 +10,13 @@ export function findLastYearForWallet(
     return undefined;
   }
 
-  const { yearEarnings: yearEarningsMap } =
-    calculatedEarnings.walletEarnings[walletId];
+  const walletEarnings = calculatedEarnings.walletEarnings[walletId];
+
+  if (!walletEarnings) {
+    return undefined;
+  }
+
+  const { yearEarnings: yearEarningsMap } = walletEarnings;
 
   const lastYearEarnings = Object.values(yearEarningsMap).find(
     (yearEarnings) => yearEarnings.lastYear
