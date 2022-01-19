@@ -1,4 +1,5 @@
-import { FSA } from "../types";
+import type { TrendPeriod } from "../../services/drip-value-provider";
+import type { FSA } from "../types";
 
 type CalculatorMeta = {
   calculator: {
@@ -164,6 +165,31 @@ export function updateClaimDays(claimDays: string): UpdateClaimDaysAction {
     type: UPDATE_CLAIM_DAYS,
     payload: {
       claimDays,
+    },
+    meta: {
+      calculator: {
+        recalculate: true,
+      },
+    },
+  };
+}
+
+export const UPDATE_TREND_PERIOD = "UPDATE_TREND_PERIOD";
+export type UpdateTrendPeriodAction = FSA<
+  typeof UPDATE_TREND_PERIOD,
+  CalculatorMeta,
+  {
+    trendPeriod: TrendPeriod;
+  }
+>;
+
+export function updateTrendPeriod(
+  trendPeriod: TrendPeriod
+): UpdateTrendPeriodAction {
+  return {
+    type: UPDATE_TREND_PERIOD,
+    payload: {
+      trendPeriod,
     },
     meta: {
       calculator: {

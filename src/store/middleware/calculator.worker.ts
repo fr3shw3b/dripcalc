@@ -409,7 +409,8 @@ function calculateMonthEarnings(
         date,
         getLastCustomDripValue(wallet, config.defaultDripValue),
         trendTargetDripValue,
-        state.settings.dripValueTrend
+        state.settings.dripValueTrend,
+        state.settings.trendPeriod
       );
 
     const lastMonthEarnings = accum[month - 1] ?? lastMonthOfPrevYearEarnings;

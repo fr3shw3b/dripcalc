@@ -2,6 +2,7 @@ import { FormGroup, HTMLSelect, InputGroup } from "@blueprintjs/core";
 import React, { useContext } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import ContentContext from "../../contexts/content";
+import type { TrendPeriod } from "../../services/drip-value-provider";
 import {
   updateDripValueTrend,
   updateCurrency,
@@ -10,6 +11,7 @@ import {
   updateStabilisesAt,
   updateAverageGasFee,
   updateClaimDays,
+  updateTrendPeriod,
 } from "../../store/actions/settings";
 import { AppState } from "../../store/types";
 
@@ -26,6 +28,7 @@ function Settings() {
     stabilisesAt,
     averageGasFee,
     claimDays,
+    trendPeriod,
   } = useSelector((state: AppState) => state.settings);
 
   const handleSelectTrend: React.ReactEventHandler<HTMLSelectElement> = (
@@ -72,6 +75,12 @@ function Settings() {
     evt
   ) => {
     dispatch(updateClaimDays(evt.currentTarget.value));
+  };
+
+  const handleSelectTrendPeriod: React.ReactEventHandler<HTMLSelectElement> = (
+    evt
+  ) => {
+    dispatch(updateTrendPeriod(evt.currentTarget.value as TrendPeriod));
   };
 
   return (
@@ -170,6 +179,23 @@ function Settings() {
             />
           </FormGroup>
         )}
+        <FormGroup
+          helperText={settings.trendPeriodHelpText}
+          label={settings.trendPeriodLabel}
+          labelFor="trend-period-select"
+        >
+          <HTMLSelect
+            id="trend-period-select"
+            value={trendPeriod}
+            onChange={handleSelectTrendPeriod}
+          >
+            {Object.entries(settings.trendPeriods).map(([value, label]) => (
+              <option key={value} value={value}>
+                {label}
+              </option>
+            ))}
+          </HTMLSelect>
+        </FormGroup>
         <FormGroup
           helperText={settings.averageGasFeeHelpText(currency)}
           label={settings.averageGasFeeLabel}

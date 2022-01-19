@@ -1,3 +1,4 @@
+import type { TrendPeriod } from "../../services/drip-value-provider";
 import {
   UpdateCurrencyAction,
   UpdateDripValueTrendAction,
@@ -13,6 +14,8 @@ import {
   UpdateAverageGasFeeAction,
   UpdateClaimDaysAction,
   UPDATE_CLAIM_DAYS,
+  UPDATE_TREND_PERIOD,
+  UpdateTrendPeriodAction,
 } from "../actions/settings";
 
 export type SettingsState = {
@@ -23,6 +26,7 @@ export type SettingsState = {
   currency: "$" | "£" | "€";
   averageGasFee: number;
   claimDays: string;
+  trendPeriod: TrendPeriod;
 };
 
 export function initialState(): SettingsState {
@@ -34,6 +38,7 @@ export function initialState(): SettingsState {
     currency: "£",
     claimDays: "startOfMonth",
     averageGasFee: 1,
+    trendPeriod: "tenYears",
   };
 }
 
@@ -44,6 +49,7 @@ export type SettingsAction =
   | UpdateDowntrendMinValueChangeAction
   | UpdateStabilisesAtAction
   | UpdateAverageGasFeeAction
+  | UpdateTrendPeriodAction
   | UpdateClaimDaysAction;
 
 function reducer(
@@ -117,6 +123,15 @@ const reducers = {
     return {
       ...state,
       claimDays: (action as UpdateClaimDaysAction).payload.claimDays,
+    };
+  },
+  [UPDATE_TREND_PERIOD]: (
+    state: SettingsState,
+    action: SettingsAction
+  ): SettingsState => {
+    return {
+      ...state,
+      trendPeriod: (action as UpdateTrendPeriodAction).payload.trendPeriod,
     };
   },
 };

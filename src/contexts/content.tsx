@@ -1,4 +1,5 @@
 import { createContext } from "react";
+import type { TrendPeriod } from "../services/drip-value-provider";
 
 export type Content = {
   settings: SettingsContent;
@@ -25,6 +26,9 @@ export type SettingsContent = {
   claimDaysLabel: string;
   claimDaysHelpText: string;
   claimDays: Record<string, string>;
+  trendPeriodLabel: string;
+  trendPeriodHelpText: string;
+  trendPeriods: Record<TrendPeriod, string>;
 };
 
 export type WalletsContent = {
@@ -149,6 +153,16 @@ export function content(): Content {
       claimDays: {
         startOfMonth: "Start of Month",
         endOfMonth: "End of Month",
+      },
+      trendPeriodLabel: "Trend Period",
+      trendPeriodHelpText:
+        "The amount of years the DRIP value trend period is spread across. After this time period the value will remain the same as the target value unless you provide custom DRIP values in each wallet." +
+        " The target value is the maximum value for up trend, minimum value for down trend and stabilises at for stable trend.",
+      trendPeriods: {
+        oneYear: "One Year",
+        twoYears: "Two Years",
+        fiveYears: "Five Years",
+        tenYears: "Ten Years",
       },
     },
     wallets: {
