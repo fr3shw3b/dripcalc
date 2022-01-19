@@ -240,7 +240,7 @@ export function content(): Content {
       earningsMonthInCurrencyLabel: (currency: string) =>
         `Earnings ${currency} (Est.)`,
       earningsMonthInCurrencyHelpText: (currency: string) =>
-        `The total estimated earnings in ${currency} for the month from your 1% daily rewards. This is based on the value of DRIP in ${currency} each day.`,
+        `The total estimated earnings in ${currency} for the month from your 1% daily rewards. This is based on the value of DRIP in ${currency} each day. This is before deciding whether to hydrate or claim each day.`,
       reinvestMonthLabel: "Reinvest (DRIP)",
       reinvestMonthHelpText:
         "The total re-invested in DRIP after the 5% compound (hydrate) tax",
@@ -286,7 +286,7 @@ export function content(): Content {
       yearEarningsInCurrencyLabel: (currency: string) =>
         `Earnings ${currency} (Est.)`,
       yearEarningsInCurrencyHelpText: (currency: string) =>
-        `The total estimated earnings in ${currency} for the year from your 1% daily rewards. This is based on the value of DRIP in ${currency} each day.`,
+        `The total estimated earnings in ${currency} for the year from your 1% daily rewards. This is based on the value of DRIP in ${currency} each day. This is before deciding whether to hydrate or claim each day.`,
       yearClaimedLabel: "Claimed (DRIP)",
       yearClaimedHelpText:
         "The total claimed to your own wallet in DRIP after the 10% claim tax",
