@@ -35,7 +35,7 @@ function YearlyWalletPanel({ walletId }: Props) {
         <div className="block block-bottom-lg">
           <HTMLTable className="results-table" striped>
             <thead>
-              <th>{resultsContent.monthTableColumnLabel}</th>
+              <th>{resultsContent.yearTableColumnLabel}</th>
               <th>
                 <Tooltip2
                   content={resultsContent.dripDepositBalanceEndOfYearHelpText}

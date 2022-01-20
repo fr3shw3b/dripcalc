@@ -68,6 +68,7 @@ export type ResultsContent = {
   reinvestMonthInCurrencyLabel: (currency: string) => string;
   reinvestMonthInCurrencyHelpText: (currency: string) => string;
   monthTableColumnLabel: string;
+  yearTableColumnLabel: string;
   claimMonthLabel: string;
   claimMonthHelpText: string;
   claimMonthInCurrencyLabel: (currency: string) => string;
@@ -249,6 +250,7 @@ export function content(): Content {
       reinvestMonthInCurrencyHelpText: (currency: string) =>
         `The total estimated in ${currency} for the month that is reinvested into your faucet deposit balance. This is based on the value of DRIP in ${currency} each day.`,
       monthTableColumnLabel: "Month",
+      yearTableColumnLabel: "Year",
       claimMonthLabel: "Claimed (DRIP)",
       claimMonthHelpText:
         "The total claimed to your own wallet in DRIP after the 10% claim tax for the month",
