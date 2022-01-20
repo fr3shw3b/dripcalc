@@ -662,13 +662,27 @@ function monthInputsFromDeposits(
     seedGrouped
   );
 
-  const seedMonthInputs: Record<string, MonthInput> = {};
+  const seedMonthInputs: Record<string, MonthInput> = Object.entries(
+    wallet?.monthInputs ?? {}
+  ).reduce((accum, [monthKey, inputs]) => {
+    return {
+      ...accum,
+      [monthKey]: {
+        ...accum[monthKey],
+        // clear out existing deposits for existing entries before
+        // adding the new set of deposits.
+        // We don't want to lose reinvestment plan and custom DRIP value inputs
+        // when updating deposits.
+        deposits: [],
+      },
+    };
+  }, {} as Record<string, MonthInput>);
   return Object.entries(depositsGroupedByMonth).reduce(
-    (monthInputs, [monthKey, deposits]) => {
+    (accumMonthInputs, [monthKey, deposits]) => {
       return {
-        ...monthInputs,
+        ...accumMonthInputs,
         [monthKey]: {
-          ...(wallet.monthInputs[monthKey] ?? {}),
+          ...(accumMonthInputs[monthKey] ?? {}),
           deposits: deposits.map((deposit) => ({
             dayOfMonth: Number.parseInt(
               moment(new Date(deposit.timestamp)).format("D"),
