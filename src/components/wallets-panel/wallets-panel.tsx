@@ -668,7 +668,7 @@ function monthInputsFromDeposits(
     return {
       ...accum,
       [monthKey]: {
-        ...accum[monthKey],
+        ...inputs,
         // clear out existing deposits for existing entries before
         // adding the new set of deposits.
         // We don't want to lose reinvestment plan and custom DRIP value inputs
