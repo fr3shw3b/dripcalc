@@ -854,7 +854,7 @@ function dripValuesFromMonthInputs(
       return {
         dripValue,
         timestamp: Number.parseInt(
-          moment(monthKey, "DD/MM/YYYY").startOf("month").format("x"),
+          moment(monthKey, "DD/MM/YYYY").format("x"),
           10
         ),
       };
@@ -867,7 +867,10 @@ function dripValuesFromMonthInputs(
   // Default with a year's worth of reinvestment.
   return [...Array(Math.max(dripValues.length, 12))].map((_, i) => {
     const timestamp = Number.parseInt(
-      moment(new Date(wallet.startDate)).add(i, "month").format("x"),
+      moment(new Date(wallet.startDate))
+        .add(i, "month")
+        .startOf("month")
+        .format("x"),
       10
     );
     const existingDripValueForTimestamp = dripValues.find(
