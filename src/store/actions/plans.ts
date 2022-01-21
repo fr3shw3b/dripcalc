@@ -48,6 +48,12 @@ export type UpdateWalletAction = Action<typeof UPDATE_WALLET> & {
   planId: string;
   label: string;
   startDate: number;
+  // Start date changes should cause recalculation!
+  meta: {
+    calculator: {
+      recalculate: boolean;
+    };
+  };
 };
 
 export function updateWallet(
@@ -62,6 +68,11 @@ export function updateWallet(
     planId,
     label,
     startDate,
+    meta: {
+      calculator: {
+        recalculate: true,
+      },
+    },
   };
 }
 
