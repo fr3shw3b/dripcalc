@@ -58,3 +58,16 @@ tr.danger {
 .navbar-edit {
   margin-left: 10px;
 }
+
+.inline-field {
+  float: left;
+  margin-left: 10px;
+}
+
+.bp3-input-group.edit-plan-label {
+  display: none;
+}
+
+.bp3-input-group.edit-plan-label.show {
+  display: block;
+}

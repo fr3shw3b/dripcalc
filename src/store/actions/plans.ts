@@ -128,3 +128,27 @@ export function selectPlan(id: string, label: string): SelectPlanAction {
     },
   };
 }
+
+export const UPDATE_PLAN_LABEL = "UPDATE_PLAN_LABEL";
+export type UpdatePlanLabelAction = FSA<
+  typeof UPDATE_PLAN_LABEL,
+  {},
+  {
+    id: string;
+    label: string;
+  }
+>;
+
+export function updatePlanLabel(
+  id: string,
+  label: string
+): UpdatePlanLabelAction {
+  return {
+    type: UPDATE_PLAN_LABEL,
+    payload: {
+      id,
+      label,
+    },
+    meta: {},
+  };
+}

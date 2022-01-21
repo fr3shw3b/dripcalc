@@ -12,6 +12,8 @@ import {
   UPDATE_WALLET_MONTH_INPUTS,
   SelectPlanAction,
   SELECT_PLAN,
+  UpdatePlanLabelAction,
+  UPDATE_PLAN_LABEL,
 } from "../actions/plans";
 
 export type PlansState = {
@@ -104,6 +106,7 @@ function createDefaultWalletInfo() {
 }
 
 export type PlansAction =
+  | UpdatePlanLabelAction
   | SelectPlanAction
   | AddWalletAction
   | UpdateCurrentWalletAction
@@ -139,6 +142,28 @@ const reducers = {
         },
       ],
     };
+  },
+  [UPDATE_PLAN_LABEL]: (state: PlansState, action: PlansAction): PlansState => {
+    const updatePlanLabelAction = action as UpdatePlanLabelAction;
+    const planIndex = state.plans.findIndex(
+      (plan) => plan.id === updatePlanLabelAction.payload.id
+    );
+
+    if (planIndex > -1) {
+      return {
+        ...state,
+        plans: [
+          ...state.plans.slice(0, planIndex),
+          {
+            ...state.plans[planIndex],
+            label: updatePlanLabelAction.payload.label,
+          },
+          ...state.plans.slice(planIndex + 1),
+        ],
+      };
+    }
+
+    return state;
   },
   [ADD_WALLET]: (state: PlansState, action: PlansAction): PlansState => {
     const addWalletAction = action as AddWalletAction;

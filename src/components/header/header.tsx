@@ -4,14 +4,21 @@ import {
   Button,
   MenuItem,
   Position,
+  InputGroup,
 } from "@blueprintjs/core";
 import { Select } from "@blueprintjs/select";
 import { nanoid } from "nanoid";
-import type { MouseEventHandler } from "react";
+import React, {
+  MouseEventHandler,
+  ChangeEventHandler,
+  useState,
+  useRef,
+  useEffect,
+} from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { useLocation, useNavigate } from "react-router-dom";
 import { PlanState } from "../../store/reducers/plans";
-import { selectPlan } from "../../store/actions/plans";
+import { selectPlan, updatePlanLabel } from "../../store/actions/plans";
 import { AppState } from "../../store/types";
 import { Tooltip2 } from "@blueprintjs/popover2";
 
@@ -22,8 +29,8 @@ function Header() {
   const navigate = useNavigate();
   const location = useLocation();
   const dispatch = useDispatch();
-  const { plans, currentPlanLabel, currentPlanIndex } = useSelector(
-    (state: AppState) => {
+  const { plans, currentPlanLabel, currentPlanIndex, currentPlanId } =
+    useSelector((state: AppState) => {
       const planIndex = state.plans.plans.findIndex(
         (plan) => plan.id === state.plans.current
       );
@@ -31,9 +38,13 @@ function Header() {
         plans: state.plans.plans.map(({ id, label }) => ({ id, label })),
         currentPlanLabel: state.plans.plans[planIndex]?.label,
         currentPlanIndex: planIndex,
+        currentPlanId: state.plans.plans[planIndex]?.id,
       };
-    }
-  );
+    });
+
+  const [showEditPlanLabel, setShowEditPlanLabel] = useState(false);
+
+  const editPlanLabelInputRef = useRef<HTMLInputElement>(null);
 
   const handleNavButtonClick: (path: string) => MouseEventHandler =
     (path) => (evt) => {
@@ -43,6 +54,32 @@ function Header() {
 
   const handlePlanSelect = (plan: PlanLite) => {
     dispatch(selectPlan(plan.id, plan.label));
+  };
+
+  const handleCurrentPlanLabelChange: ChangeEventHandler<HTMLInputElement> = (
+    evt
+  ) => {
+    dispatch(updatePlanLabel(currentPlanId, evt.target.value));
+  };
+
+  const handleEditPlanLabelClick = (
+    evt: React.MouseEvent<HTMLElement, MouseEvent>
+  ) => {
+    evt.preventDefault();
+    setShowEditPlanLabel(true);
+  };
+
+  useEffect(() => {
+    if (showEditPlanLabel && editPlanLabelInputRef.current) {
+      editPlanLabelInputRef.current.focus();
+    }
+  }, [showEditPlanLabel]);
+
+  const handleCloseEditPlanLabelClick = (
+    evt: React.MouseEvent<HTMLElement, MouseEvent>
+  ) => {
+    evt.preventDefault();
+    setShowEditPlanLabel(false);
   };
 
   return (
@@ -120,11 +157,36 @@ function Header() {
         >
           <Button text={currentPlanLabel} rightIcon="double-caret-vertical" />
         </PlanSelect>
-        <Tooltip2
-          content={`Edit "${currentPlanLabel}" label`}
-          position={Position.BOTTOM}
-          openOnTargetFocus={false}
-        ></Tooltip2>
+        <form onSubmit={(evt) => evt.preventDefault()}>
+          <InputGroup
+            id="current-plan-label"
+            className={`inline-field edit-plan-label${
+              showEditPlanLabel ? " show" : ""
+            }`}
+            type="text"
+            asyncControl={true}
+            rightElement={
+              <Button icon="cross" onClick={handleCloseEditPlanLabelClick} />
+            }
+            placeholder="Enter minimum value"
+            value={currentPlanLabel}
+            onChange={handleCurrentPlanLabelChange}
+            inputRef={editPlanLabelInputRef}
+          />
+          {!showEditPlanLabel && (
+            <Tooltip2
+              content={`Edit "${currentPlanLabel}" label`}
+              position={Position.BOTTOM}
+              openOnTargetFocus={false}
+            >
+              <Button
+                icon="edit"
+                className="navbar-edit"
+                onClick={handleEditPlanLabelClick}
+              />
+            </Tooltip2>
+          )}
+        </form>
       </Navbar.Group>
     </Navbar>
   );
