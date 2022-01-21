@@ -1,37 +1,49 @@
 import { Action } from "redux";
 
 export const SHOW_OVERVIEW = "SHOW_OVERVIEW";
-export type ShowOverviewAction = Action<typeof SHOW_OVERVIEW>;
+export type ShowOverviewAction = Action<typeof SHOW_OVERVIEW> & {
+  planId: string;
+};
 
 export const SHOW_WALLETS = "SHOW_WALLETS";
-export type ShowWalletsAction = Action<typeof SHOW_WALLETS>;
+export type ShowWalletsAction = Action<typeof SHOW_WALLETS> & {
+  planId: string;
+};
 
 export const SHOW_SETTINGS_PANEL = "SHOW_SETTINGS_PANEL";
-export type ShowSettingsPanelAction = Action<typeof SHOW_SETTINGS_PANEL>;
+export type ShowSettingsPanelAction = Action<typeof SHOW_SETTINGS_PANEL> & {
+  planId: string;
+};
 
 export const HIDE_SETTINGS_PANEL = "HIDE_SETTINGS_PANEL";
-export type HideSettingsPanelAction = Action<typeof HIDE_SETTINGS_PANEL>;
+export type HideSettingsPanelAction = Action<typeof HIDE_SETTINGS_PANEL> & {
+  planId: string;
+};
 
-export function showOverview(): ShowOverviewAction {
+export function showOverview(planId: string): ShowOverviewAction {
   return {
     type: SHOW_OVERVIEW,
+    planId,
   };
 }
 
-export function showWallets(): ShowWalletsAction {
+export function showWallets(planId: string): ShowWalletsAction {
   return {
     type: SHOW_WALLETS,
+    planId,
   };
 }
 
-export function showSettingsPanel(): ShowSettingsPanelAction {
+export function showSettingsPanel(planId: string): ShowSettingsPanelAction {
   return {
     type: SHOW_SETTINGS_PANEL,
+    planId,
   };
 }
 
-export function hideSettingsPanel(): HideSettingsPanelAction {
+export function hideSettingsPanel(planId: string): HideSettingsPanelAction {
   return {
     type: HIDE_SETTINGS_PANEL,
+    planId,
   };
 }

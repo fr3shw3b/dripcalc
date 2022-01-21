@@ -23,32 +23,39 @@ const tabs = {
 
 function Dashboard() {
   const dispatch = useDispatch();
-  const { isFirstTime, showTabView, isSettingsOpen } = useSelector(
-    (state: AppState) => ({
-      ...state.views,
-      isFirstTime: state.general.isFirstTime,
-    })
-  );
+  const { isFirstTime, showTabView, isSettingsOpen, currentPlanId } =
+    useSelector((state: AppState) => {
+      const currentPlanId = state.plans.current;
+      return {
+        ...state.views[currentPlanId],
+        isFirstTime: state.general.isFirstTime,
+        currentPlanId,
+      };
+    });
 
   const handleTabChange = (newTabId: string) => {
-    dispatch(newTabId === "wallets" ? showWallets() : showOverview());
+    dispatch(
+      newTabId === "wallets"
+        ? showWallets(currentPlanId)
+        : showOverview(currentPlanId)
+    );
   };
 
   const handleSettingsButtonClick: React.MouseEventHandler = (evt) => {
     evt.preventDefault();
-    dispatch(showSettingsPanel());
+    dispatch(showSettingsPanel(currentPlanId));
   };
 
   const handleGetStartedClick: React.MouseEventHandler = (evt) => {
     evt.preventDefault();
     // Default to the wallets view for first time users!
-    dispatch(showWallets());
+    dispatch(showWallets(currentPlanId));
     dispatch(setNotFirstTime());
   };
 
   const handleClose = (evt: React.SyntheticEvent) => {
     evt.preventDefault();
-    dispatch(hideSettingsPanel());
+    dispatch(hideSettingsPanel(currentPlanId));
   };
 
   return (

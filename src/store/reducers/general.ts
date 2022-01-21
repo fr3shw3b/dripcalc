@@ -19,7 +19,7 @@ export type GeneralState = {
   notifications: Notification[];
   isCalculating: boolean;
   isFirstTime: boolean;
-  calculatedEarnings?: EarningsAndInfo;
+  calculatedEarnings: Record<string, EarningsAndInfo | undefined>;
 };
 
 export type Notification = {
@@ -36,6 +36,7 @@ export function initialState(): GeneralState {
     notifications: [],
     isCalculating: false,
     isFirstTime: true,
+    calculatedEarnings: {},
   };
 }
 
@@ -82,11 +83,14 @@ const reducers = {
     state: GeneralState,
     action: GeneralAction
   ): GeneralState => {
+    const finalAction = action as EarningsCalculatedAction;
     return {
       ...state,
       isCalculating: false,
-      calculatedEarnings: (action as EarningsCalculatedAction).payload
-        .earningsAndInfo,
+      calculatedEarnings: {
+        ...state.calculatedEarnings,
+        [finalAction.payload.planId]: finalAction.payload.earningsAndInfo,
+      },
     };
   },
   [REMOVE_NOTIFICATION]: (

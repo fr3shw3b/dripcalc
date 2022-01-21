@@ -22,16 +22,19 @@ export type EarningsCalculatedAction = FSA<
   Record<string, unknown>,
   {
     earningsAndInfo: EarningsAndInfo;
+    planId: string;
   }
 >;
 
 export function earningsCalculated(
-  earningsAndInfo: EarningsAndInfo
+  earningsAndInfo: EarningsAndInfo,
+  planId: string
 ): EarningsCalculatedAction {
   return {
     type: EARNINGS_CALCULATED,
     payload: {
       earningsAndInfo,
+      planId,
     },
     meta: {},
   };

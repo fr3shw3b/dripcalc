@@ -1,22 +1,25 @@
 import { Action } from "redux";
-import { MonthInput } from "../reducers/wallets";
+import { MonthInput } from "../reducers/plans";
 import { FSA } from "../types";
 
 export const ADD_WALLET = "ADD_WALLET";
 export type AddWalletAction = Action<typeof ADD_WALLET> & {
   id: string;
+  planId: string;
   label: string;
   startDate: number;
 };
 
 export function addWallet(
   id: string,
+  planId: string,
   label: string,
   startDate: number
 ): AddWalletAction {
   return {
     type: ADD_WALLET,
     id,
+    planId,
     label,
     startDate,
   };
@@ -25,11 +28,16 @@ export function addWallet(
 export const UPDATE_CURRENT_WALLET = "UPDATE_CURRENT_WALLET";
 export type UpdateCurrentWalletAction = Action<typeof UPDATE_CURRENT_WALLET> & {
   id: string;
+  planId: string;
 };
 
-export function updateCurrentWallet(id: string): UpdateCurrentWalletAction {
+export function updateCurrentWallet(
+  id: string,
+  planId: string
+): UpdateCurrentWalletAction {
   return {
     type: UPDATE_CURRENT_WALLET,
+    planId,
     id,
   };
 }
@@ -37,18 +45,21 @@ export function updateCurrentWallet(id: string): UpdateCurrentWalletAction {
 export const UPDATE_WALLET = "UPDATE_WALLET";
 export type UpdateWalletAction = Action<typeof UPDATE_WALLET> & {
   id: string;
+  planId: string;
   label: string;
   startDate: number;
 };
 
 export function updateWallet(
   id: string,
+  planId: string,
   label: string,
   startDate: number
 ): UpdateWalletAction {
   return {
     type: UPDATE_WALLET,
     id,
+    planId,
     label,
     startDate,
   };
@@ -64,19 +75,51 @@ export type UpdateWalletMonthInputsAction = FSA<
   },
   {
     id: string;
+    planId: string;
     monthInputs: Record<string, MonthInput>;
   }
 >;
 
 export function updateWalletMonthInputs(
   id: string,
+  planId: string,
   monthInputs: Record<string, MonthInput>
 ): UpdateWalletMonthInputsAction {
   return {
     type: UPDATE_WALLET_MONTH_INPUTS,
     payload: {
       id,
+      planId,
       monthInputs,
+    },
+    meta: {
+      calculator: {
+        recalculate: true,
+      },
+    },
+  };
+}
+
+export const SELECT_PLAN = "SELECT_PLAN";
+export type SelectPlanAction = FSA<
+  typeof SELECT_PLAN,
+  {
+    calculator: {
+      recalculate: boolean;
+    };
+  },
+  {
+    id: string;
+    label: string;
+  }
+>;
+
+export function selectPlan(id: string, label: string): SelectPlanAction {
+  return {
+    type: SELECT_PLAN,
+    payload: {
+      id,
+      label,
     },
     meta: {
       calculator: {

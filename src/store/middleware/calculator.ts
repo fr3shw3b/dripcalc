@@ -3,9 +3,10 @@ import { wrap } from "comlink";
 
 import type { AppState, FSA, MiddlewareFunction } from "../types";
 import type { Config } from "../../contexts/config";
+import type { AppState as AppStateForCalculator } from "./calculator.worker";
 import reducer from "../reducers";
 import { SettingsAction } from "../reducers/settings";
-import { WalletsAction } from "../reducers/wallets";
+import { PlansAction } from "../reducers/plans";
 
 import {
   calculatingEarnings,
@@ -40,22 +41,26 @@ function calculator<State extends AppState = AppState>(
         if (recalculate) {
           store.dispatch(calculatingEarnings());
 
+          // Apply the action using the application reducer,
+          // this is duplicating the reducer call but is needed
+          // so the middleware can run the calculations on the new state.
+          const appliedState = reducer()(
+            store.getState(),
+            action as SettingsAction | PlansAction
+          );
           calculatorWorkerApi
             .calculateEarnings(
               JSON.stringify({
                 config,
-                // Apply the action using the application reducer,
-                // this is duplicating the reducer call but is needed
-                // so the middleware can run the calculations on the new state.
-                state: reducer()(
-                  store.getState(),
-                  action as SettingsAction | WalletsAction
-                ),
+
+                state: adaptState(appliedState),
               })
             )
             .then((earningsSerialised) => {
               const earnings = JSON.parse(earningsSerialised);
-              store.dispatch(earningsCalculated(earnings));
+              store.dispatch(
+                earningsCalculated(earnings, appliedState.plans.current)
+              );
             })
             .catch((error) => {
               console.error(error);
@@ -65,6 +70,21 @@ function calculator<State extends AppState = AppState>(
       }
       next(action);
     };
+}
+
+function adaptState<SourceState extends AppState>(
+  state: SourceState
+): AppStateForCalculator {
+  const currentPlanId = state.plans.current;
+  const planIndex = state.plans.plans.findIndex(
+    (plan) => plan.id === currentPlanId
+  );
+  return {
+    settings: state.settings[currentPlanId],
+    wallets: {
+      wallets: state.plans.plans[planIndex].wallets,
+    },
+  };
 }
 
 function supportsCalculator<ActionType>(

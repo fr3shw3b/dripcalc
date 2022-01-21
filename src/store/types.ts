@@ -3,7 +3,7 @@ import { GeneralState } from "./reducers/general";
 
 import { SettingsState } from "./reducers/settings";
 import { ViewsState } from "./reducers/views";
-import { WalletsState } from "./reducers/wallets";
+import { PlansState } from "./reducers/plans";
 
 export type FSA<ActionType, Meta, Payload> = Action<ActionType> & {
   meta: Meta;
@@ -17,7 +17,7 @@ export type FSA<ActionType, Meta, Payload> = Action<ActionType> & {
 export type AppState = {
   views: ViewsState;
   settings: SettingsState;
-  wallets: WalletsState;
+  plans: PlansState;
   general: GeneralState;
 };
 

@@ -13,10 +13,14 @@ type Props = {
 };
 
 function MonthlyWalletPanel({ walletId }: Props) {
-  const { calculatedEarnings, currency } = useSelector((state: AppState) => ({
-    ...state.general,
-    currency: state.settings.currency,
-  }));
+  const { calculatedEarnings, currency } = useSelector((state: AppState) => {
+    const currentPlanId = state.plans.current;
+    return {
+      ...state.general,
+      calculatedEarnings: state.general.calculatedEarnings[currentPlanId],
+      currency: state.settings[currentPlanId].currency,
+    };
+  });
   const { results: resultsContent } = useContext(ContentContext);
 
   const earningsTuple = Object.entries(

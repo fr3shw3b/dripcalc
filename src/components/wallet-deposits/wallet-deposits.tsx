@@ -71,7 +71,10 @@ function WalletDeposits({
   >({});
   const { wallets: walletsContent } = useContext(ContentContext);
   const { minWalletStartDate, maxWalletStartDate } = useContext(ConfigContext);
-  const { currency } = useSelector((state: AppState) => state.settings);
+  const { currency } = useSelector((state: AppState) => {
+    const currentPlanId = state.plans.current;
+    return state.settings[currentPlanId];
+  });
 
   const handleAddNewDepositClick: React.MouseEventHandler = (evt) => {
     evt.preventDefault();

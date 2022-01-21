@@ -54,3 +54,7 @@ tr.warning {
 tr.danger {
   background: #a82a2a;
 }
+
+.navbar-edit {
+  margin-left: 10px;
+}

@@ -14,12 +14,19 @@ import "./overview.css";
 function Overview() {
   const { overview: overviewContent } = useContext(ContentContext);
 
-  const { currency, wallets, calculatedEarnings } = useSelector(
-    (state: AppState) => ({
-      currency: state.settings.currency,
-      wallets: state.wallets.wallets,
-      calculatedEarnings: state.general.calculatedEarnings,
-    })
+  const { calculatedEarnings, wallets, currency } = useSelector(
+    (state: AppState) => {
+      const currentPlanId = state.plans.current;
+      const currentPlan = state.plans.plans.find(
+        (plan) => plan.id === currentPlanId
+      );
+      return {
+        ...state.general,
+        calculatedEarnings: state.general.calculatedEarnings[currentPlanId],
+        currency: state.settings[currentPlanId].currency,
+        wallets: currentPlan?.wallets ?? [],
+      };
+    }
   );
   const lastWalletYears = wallets.map(
     (wallet) => findLastYearForWallet(wallet.id, calculatedEarnings) ?? 0

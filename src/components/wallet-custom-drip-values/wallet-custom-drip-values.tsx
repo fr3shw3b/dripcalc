@@ -35,7 +35,10 @@ function WalletCustomDripValues({
   onAddAnotherMonth,
 }: Props) {
   const { wallets: walletsContent } = useContext(ContentContext);
-  const { currency } = useSelector((state: AppState) => state.settings);
+  const { currency } = useSelector((state: AppState) => {
+    const currentPlanId = state.plans.current;
+    return state.settings[currentPlanId];
+  });
 
   const handleSaveClick: React.MouseEventHandler = (evt) => {
     evt.preventDefault();

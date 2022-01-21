@@ -1,3 +1,4 @@
+import { SelectPlanAction, SELECT_PLAN } from "../actions/plans";
 import {
   HideSettingsPanelAction,
   HIDE_SETTINGS_PANEL,
@@ -15,18 +16,23 @@ export enum ShowTabView {
 }
 
 export type ViewsState = {
-  showTabView: ShowTabView;
-  isSettingsOpen: boolean;
+  [planId: string]: {
+    showTabView: ShowTabView;
+    isSettingsOpen: boolean;
+  };
 };
 
 export function initialState(): ViewsState {
   return {
-    showTabView: ShowTabView.Overview,
-    isSettingsOpen: false,
+    "default-plan": {
+      showTabView: ShowTabView.Overview,
+      isSettingsOpen: false,
+    },
   };
 }
 
-type ViewsAction =
+export type ViewsAction =
+  | SelectPlanAction
   | ShowOverviewAction
   | ShowWalletsAction
   | ShowSettingsPanelAction
@@ -37,34 +43,64 @@ function reducer(state = initialState(), action: ViewsAction): ViewsState {
 }
 
 const reducers = {
-  [SHOW_OVERVIEW]: (state: ViewsState, _action: ViewsAction): ViewsState => {
+  [SELECT_PLAN]: (state: ViewsState, action: ViewsAction): ViewsState => {
+    const finalAction = action as SelectPlanAction;
+    if (state[finalAction.payload.id]) {
+      return state;
+    }
+
     return {
       ...state,
-      showTabView: ShowTabView.Overview,
+      [finalAction.payload.id]: {
+        showTabView: ShowTabView.Overview,
+        isSettingsOpen: false,
+      },
     };
   },
-  [SHOW_WALLETS]: (state: ViewsState, _action: ViewsAction): ViewsState => {
+  [SHOW_OVERVIEW]: (state: ViewsState, action: ViewsAction): ViewsState => {
+    const finalAction = action as ShowOverviewAction;
     return {
       ...state,
-      showTabView: ShowTabView.Wallets,
+      [finalAction.planId]: {
+        ...state[finalAction.planId],
+        showTabView: ShowTabView.Overview,
+      },
+    };
+  },
+  [SHOW_WALLETS]: (state: ViewsState, action: ViewsAction): ViewsState => {
+    const finalAction = action as ShowWalletsAction;
+    return {
+      ...state,
+      [finalAction.planId]: {
+        ...state[finalAction.planId],
+        showTabView: ShowTabView.Wallets,
+      },
     };
   },
   [SHOW_SETTINGS_PANEL]: (
     state: ViewsState,
-    _action: ViewsAction
+    action: ViewsAction
   ): ViewsState => {
+    const finalAction = action as ShowSettingsPanelAction;
     return {
       ...state,
-      isSettingsOpen: true,
+      [finalAction.planId]: {
+        ...state[finalAction.planId],
+        isSettingsOpen: true,
+      },
     };
   },
   [HIDE_SETTINGS_PANEL]: (
     state: ViewsState,
-    _action: ViewsAction
+    action: ViewsAction
   ): ViewsState => {
+    const finalAction = action as HideSettingsPanelAction;
     return {
       ...state,
-      isSettingsOpen: false,
+      [finalAction.planId]: {
+        ...state[finalAction.planId],
+        isSettingsOpen: false,
+      },
     };
   },
 };

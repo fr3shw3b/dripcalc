@@ -12,7 +12,7 @@ import {
   updateCurrentWallet,
   updateWallet,
   updateWalletMonthInputs,
-} from "../../store/actions/wallets";
+} from "../../store/actions/plans";
 import { AppState } from "../../store/types";
 
 import WalletView from "../wallet-view";
@@ -22,7 +22,7 @@ import WalletReinvestmentPlan from "../wallet-reinvestment-plan";
 import WalletCustomDripValues from "../wallet-custom-drip-values";
 
 import "./wallets-panel.css";
-import { Deposit, MonthInput, WalletState } from "../../store/reducers/wallets";
+import { Deposit, MonthInput, WalletState } from "../../store/reducers/plans";
 import { DepositInEditor } from "../wallet-deposits/wallet-deposits";
 import { ReinvestmentInEditor } from "../wallet-reinvestment-plan/wallet-reinvestment-plan";
 import { DripValueInEditor } from "../wallet-custom-drip-values/wallet-custom-drip-values";
@@ -61,12 +61,21 @@ function WalletsPanel() {
   const [editorWalletName, setEditorWalletName] = useState("");
   const [editorWalletDate, setEditorWalletDate] = useState(new Date());
   const dispatch = useDispatch();
-  const { wallets, current } = useSelector((state: AppState) => state.wallets);
+  const { wallets, current, currentPlanId } = useSelector((state: AppState) => {
+    const currentPlanIndex = state.plans.plans.findIndex(
+      (plan) => plan.id === state.plans.current
+    );
+    return {
+      wallets: state.plans.plans[currentPlanIndex].wallets,
+      current: state.plans.plans[currentPlanIndex].current,
+      currentPlanId: state.plans.current,
+    };
+  });
   const { wallets: walletsContent } = useContext(ContentContext);
   const config = useContext(ConfigContext);
 
   const handleWalletChange = (newTabId: string) => {
-    dispatch(updateCurrentWallet(newTabId));
+    dispatch(updateCurrentWallet(newTabId, currentPlanId));
   };
 
   const handleEditorClose = () => {
@@ -99,10 +108,22 @@ function WalletsPanel() {
   const handleEditorSaveClick = (id?: string | null) => {
     if (!id || editorState.action === "create") {
       dispatch(
-        addWallet(nanoid(), editorWalletName, editorWalletDate.getTime())
+        addWallet(
+          nanoid(),
+          currentPlanId,
+          editorWalletName,
+          editorWalletDate.getTime()
+        )
       );
     } else {
-      dispatch(updateWallet(id, editorWalletName, editorWalletDate.getTime()));
+      dispatch(
+        updateWallet(
+          id,
+          currentPlanId,
+          editorWalletName,
+          editorWalletDate.getTime()
+        )
+      );
     }
 
     setEditorState({
@@ -248,6 +269,7 @@ function WalletsPanel() {
       dispatch(
         updateWalletMonthInputs(
           walletId,
+          currentPlanId,
           monthInputsFromDeposits(
             monthInputsState.deposits,
             wallets.find(({ id }) => id === walletId)
@@ -261,7 +283,7 @@ function WalletsPanel() {
         deposits: [],
       }));
     },
-    [wallets, monthInputsState.deposits, dispatch]
+    [wallets, currentPlanId, monthInputsState.deposits, dispatch]
   );
 
   const handleDepositsClose = () => {
@@ -318,6 +340,7 @@ function WalletsPanel() {
       dispatch(
         updateWalletMonthInputs(
           walletId,
+          currentPlanId,
           monthInputsFromReinvestments(
             monthInputsState.reinvestments,
             wallets.find(({ id }) => id === walletId)
@@ -331,7 +354,7 @@ function WalletsPanel() {
         reinvestments: [],
       }));
     },
-    [wallets, monthInputsState.reinvestments, dispatch]
+    [wallets, currentPlanId, monthInputsState.reinvestments, dispatch]
   );
 
   const handleAddAnotherReinvestMonth = () => {
@@ -401,6 +424,7 @@ function WalletsPanel() {
       dispatch(
         updateWalletMonthInputs(
           walletId,
+          currentPlanId,
           monthInputsFromDripValues(
             monthInputsState.dripValues,
             wallets.find(({ id }) => id === walletId)
@@ -414,7 +438,7 @@ function WalletsPanel() {
         dripValues: [],
       }));
     },
-    [wallets, monthInputsState.dripValues, dispatch]
+    [wallets, currentPlanId, monthInputsState.dripValues, dispatch]
   );
 
   const handleAddAnotherDripValueMonth = () => {

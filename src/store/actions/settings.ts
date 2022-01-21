@@ -13,16 +13,19 @@ export type UpdateDripValueTrendAction = FSA<
   CalculatorMeta,
   {
     trend: string;
+    planId: string;
   }
 >;
 
 export function updateDripValueTrend(
-  trend: string
+  trend: string,
+  planId: string
 ): UpdateDripValueTrendAction {
   return {
     type: UPDATE_DRIP_VALUE_TREND,
     payload: {
       trend,
+      planId,
     },
     meta: {
       calculator: {
@@ -38,16 +41,19 @@ export type UpdateCurrencyAction = FSA<
   {},
   {
     currency: "$" | "£" | "€";
+    planId: string;
   }
 >;
 
 export function updateCurrency(
-  currency: "$" | "£" | "€"
+  currency: "$" | "£" | "€",
+  planId: string
 ): UpdateCurrencyAction {
   return {
     type: UPDATE_CURRENCY,
     payload: {
       currency,
+      planId,
     },
     meta: {},
   };
@@ -60,16 +66,19 @@ export type UpdateUptrendMaxValueChangeAction = FSA<
   CalculatorMeta,
   {
     value: number;
+    planId: string;
   }
 >;
 
 export function updateUptrendMaxValueChange(
-  value: number
+  value: number,
+  planId: string
 ): UpdateUptrendMaxValueChangeAction {
   return {
     type: UPDATE_UPTREND_MAX_VALUE_CHANGE,
     payload: {
       value,
+      planId,
     },
     meta: {
       calculator: {
@@ -86,16 +95,19 @@ export type UpdateDowntrendMinValueChangeAction = FSA<
   CalculatorMeta,
   {
     value: number;
+    planId: string;
   }
 >;
 
 export function updateDowntrendMinValueChange(
-  value: number
+  value: number,
+  planId: string
 ): UpdateDowntrendMinValueChangeAction {
   return {
     type: UPDATE_DOWNTREND_MIN_VALUE_CHANGE,
     payload: {
       value,
+      planId,
     },
     meta: {
       calculator: {
@@ -111,14 +123,19 @@ export type UpdateStabilisesAtAction = FSA<
   CalculatorMeta,
   {
     value: number;
+    planId: string;
   }
 >;
 
-export function updateStabilisesAt(value: number): UpdateStabilisesAtAction {
+export function updateStabilisesAt(
+  value: number,
+  planId: string
+): UpdateStabilisesAtAction {
   return {
     type: UPDATE_STABILISES_AT,
     payload: {
       value,
+      planId,
     },
     meta: {
       calculator: {
@@ -134,14 +151,19 @@ export type UpdateAverageGasFeeAction = FSA<
   CalculatorMeta,
   {
     value: number;
+    planId: string;
   }
 >;
 
-export function updateAverageGasFee(value: number): UpdateAverageGasFeeAction {
+export function updateAverageGasFee(
+  value: number,
+  planId: string
+): UpdateAverageGasFeeAction {
   return {
     type: UPDATE_AVERAGE_GAS_FEE,
     payload: {
       value,
+      planId,
     },
     meta: {
       calculator: {
@@ -157,14 +179,19 @@ export type UpdateClaimDaysAction = FSA<
   CalculatorMeta,
   {
     claimDays: string;
+    planId: string;
   }
 >;
 
-export function updateClaimDays(claimDays: string): UpdateClaimDaysAction {
+export function updateClaimDays(
+  claimDays: string,
+  planId: string
+): UpdateClaimDaysAction {
   return {
     type: UPDATE_CLAIM_DAYS,
     payload: {
       claimDays,
+      planId,
     },
     meta: {
       calculator: {
@@ -180,16 +207,19 @@ export type UpdateTrendPeriodAction = FSA<
   CalculatorMeta,
   {
     trendPeriod: TrendPeriod;
+    planId: string;
   }
 >;
 
 export function updateTrendPeriod(
-  trendPeriod: TrendPeriod
+  trendPeriod: TrendPeriod,
+  planId: string
 ): UpdateTrendPeriodAction {
   return {
     type: UPDATE_TREND_PERIOD,
     payload: {
       trendPeriod,
+      planId,
     },
     meta: {
       calculator: {

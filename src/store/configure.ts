@@ -6,12 +6,18 @@ import calculator from "./middleware/calculator";
 import { EARNINGS_CALCULATED } from "./middleware/calculator-actions";
 
 import createRootReducer, { initialState } from "./reducers";
+import { GeneralAction } from "./reducers/general";
+import { PlansAction } from "./reducers/plans";
+import { SettingsAction } from "./reducers/settings";
+import { ViewsAction } from "./reducers/views";
 import type { AppState } from "./types";
 
 /**
  * Configures the redux store to be used for the application.
  */
-export default async function configure(): Promise<Store<AppState>> {
+export default async function configure(): Promise<
+  Store<AppState, SettingsAction | GeneralAction | PlansAction | ViewsAction>
+> {
   // We can't access the react context API from the redux middleware
   // so we have to load a separate instance of config.
   const appConfig = config();
@@ -19,7 +25,7 @@ export default async function configure(): Promise<Store<AppState>> {
   const persistedStorage = storage();
 
   const preloadedState: AppState | null = await persistedStorage.readData(
-    "state"
+    "statev2"
   );
 
   const composeDevToolsEnhancer = composeWithDevTools({
@@ -40,7 +46,7 @@ export default async function configure(): Promise<Store<AppState>> {
     enhancers
   );
   store.subscribe(async () => {
-    await persistedStorage.writeData("state", store.getState());
+    await persistedStorage.writeData("statev2", store.getState());
   });
   return store;
 }

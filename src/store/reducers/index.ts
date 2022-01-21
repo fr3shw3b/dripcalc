@@ -2,7 +2,7 @@ import { combineReducers } from "redux";
 
 import views, { initialState as viewsInitialState } from "./views";
 import settings, { initialState as settingsInitialState } from "./settings";
-import wallets, { initialState as walletsInitialState } from "./wallets";
+import plans, { initialState as plansInitialState } from "./plans";
 import general, { initialState as generalInitialState } from "./general";
 import { AppState } from "../types";
 
@@ -10,7 +10,7 @@ function createRootReducer() {
   return combineReducers({
     views,
     settings,
-    wallets,
+    plans,
     general,
   });
 }
@@ -19,7 +19,7 @@ export function initialState(): Partial<AppState> {
   return {
     views: viewsInitialState(),
     settings: settingsInitialState(),
-    wallets: walletsInitialState(),
+    plans: plansInitialState(),
     general: generalInitialState(),
   };
 }

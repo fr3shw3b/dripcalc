@@ -1,7 +1,7 @@
 import { useContext } from "react";
 import { Button, Tab, Tabs } from "@blueprintjs/core";
 
-import { MonthInput } from "../../store/reducers/wallets";
+import { MonthInput } from "../../store/reducers/plans";
 import ContentContext from "../../contexts/content";
 import MomentDateRange from "../moment-date-range";
 
@@ -36,8 +36,11 @@ function WalletView({
   onCustomDripValuesClick,
 }: Props) {
   const { wallets: walletsContent } = useContext(ContentContext);
-  const { isCalculating, calculatedEarnings } = useSelector(
-    (state: AppState) => state.general
+  const { isCalculating, calculatedEarnings, currentPlanId } = useSelector(
+    (state: AppState) => ({
+      ...state.general,
+      currentPlanId: state.plans.current,
+    })
   );
 
   const handleEditClick: React.MouseEventHandler = (evt) => {
@@ -116,7 +119,10 @@ function WalletView({
           range={[
             new Date(startDate),
             new Date(
-              findLastYearForWallet(walletId, calculatedEarnings) ?? startDate
+              findLastYearForWallet(
+                walletId,
+                calculatedEarnings[currentPlanId]
+              ) ?? startDate
             ),
           ]}
         />

@@ -10,9 +10,8 @@ import {
   YearEarnings,
 } from "./shared-calculator-types";
 import createDripValueProvider from "../../services/drip-value-provider";
-import type { SettingsState } from "../reducers/settings";
-import type { WalletState } from "../reducers/wallets";
-import type { AppState } from "../types";
+import type { PlanSettings } from "../reducers/settings";
+import type { WalletState } from "../reducers/plans";
 import type { Config } from "../../contexts/config";
 import moment from "moment";
 
@@ -32,6 +31,17 @@ expose(api);
 export interface CalculatorWorkerApi {
   calculateEarnings(data: string): Promise<string>;
 }
+
+// An augmented version of AppState that is adapted to be compatible
+// with existing calculator functionality implemented before the introduction
+// of plans when you could only have one "plan" with wallets and settings
+// as top-level state.
+export type AppState = {
+  wallets: {
+    wallets: WalletState[];
+  };
+  settings: PlanSettings;
+};
 
 function calculateEarningsAndInfo(
   config: Config,
@@ -202,7 +212,7 @@ function accumOverviewInfoFromYear(
 }
 
 function determineLastNetPositiveMonth(
-  prevNetPositiveUpToDate: number,
+  prevSeedNetPositiveUpToDate: number,
   monthEarningsMap: Record<number, MonthEarningsAndInfo>
 ): number {
   const months = Object.keys(monthEarningsMap).map((str) =>
@@ -210,7 +220,7 @@ function determineLastNetPositiveMonth(
   );
   // Sort months so we iterate through them
   // in order of time.
-  months.sort();
+  months.sort((a, b) => a - b);
 
   return months.reduce((prevNetPositiveUpToDate, monthKey) => {
     const monthEarnings = monthEarningsMap[monthKey];
@@ -222,7 +232,7 @@ function determineLastNetPositiveMonth(
       depositBalance + rolled - monthEarnings.accumClaimed >= 0;
 
     return isNetPositive ? monthEarnings.month : prevNetPositiveUpToDate;
-  }, prevNetPositiveUpToDate);
+  }, prevSeedNetPositiveUpToDate);
 }
 
 function getLastPayoutMonthTimestamp(yearEarnings: YearEarnings): number {
@@ -394,9 +404,9 @@ function calculateMonthEarnings(
     });
 
     const earliestWalletStartTimestamp = state.wallets.wallets.reduce(
-      (prevEarliestStartDate, wallet) => {
-        return wallet.startDate < prevEarliestStartDate
-          ? wallet.startDate
+      (prevEarliestStartDate, currentWallet) => {
+        return currentWallet.startDate < prevEarliestStartDate
+          ? currentWallet.startDate
           : prevEarliestStartDate;
       },
       /* 15/01/2100 as seed date in milliseconds */ 4103698536000
@@ -515,7 +525,7 @@ function determineNextActions(
     : "keepCompounding";
 }
 
-function determineTrendTargetDripValue(settings: SettingsState): number {
+function determineTrendTargetDripValue(settings: PlanSettings): number {
   if (settings.dripValueTrend === "uptrend") {
     return settings.uptrendMaxValue;
   }

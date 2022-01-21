@@ -1115,6 +1115,15 @@
     resize-observer-polyfill "^1.5.1"
     tslib "~1.13.0"
 
+"@blueprintjs/select@^3.18.11":
+  version "3.18.11"
+  resolved "https://registry.yarnpkg.com/@blueprintjs/select/-/select-3.18.11.tgz#9d79adecd18225c220515e3774d964277f78e99d"
+  integrity sha512-pEwx/ioJ7JxQV3abTlLx2+4RghCeYKTzT2QLf7Wr5a5CrLilz/utQ3jMSG0hlS6HM4/5q4zSclkVsI3zv+Tp3w==
+  dependencies:
+    "@blueprintjs/core" "^3.52.0"
+    classnames "^2.2"
+    tslib "~1.13.0"
+
 "@blueprintjs/table@^3.9.13":
   version "3.9.13"
   resolved "https://registry.yarnpkg.com/@blueprintjs/table/-/table-3.9.13.tgz#86bb138e99eb98192a05fa26986796f51bf45234"

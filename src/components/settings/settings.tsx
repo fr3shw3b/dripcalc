@@ -29,25 +29,34 @@ function Settings() {
     averageGasFee,
     claimDays,
     trendPeriod,
-  } = useSelector((state: AppState) => state.settings);
+    currentPlanId,
+  } = useSelector((state: AppState) => {
+    const currentPlanId = state.plans.current;
+    return { ...state.settings[currentPlanId], currentPlanId };
+  });
 
   const handleSelectTrend: React.ReactEventHandler<HTMLSelectElement> = (
     evt
   ) => {
-    dispatch(updateDripValueTrend(evt.currentTarget.value));
+    dispatch(updateDripValueTrend(evt.currentTarget.value, currentPlanId));
   };
 
   const handleSelectCurrency: React.ReactEventHandler<HTMLSelectElement> = (
     evt
   ) => {
-    dispatch(updateCurrency(evt.currentTarget.value as "$" | "£" | "€"));
+    dispatch(
+      updateCurrency(evt.currentTarget.value as "$" | "£" | "€", currentPlanId)
+    );
   };
 
   const handleUptrendMaxValueChange: React.ChangeEventHandler<
     HTMLInputElement
   > = (evt) => {
     dispatch(
-      updateUptrendMaxValueChange(Number.parseFloat(evt.currentTarget.value))
+      updateUptrendMaxValueChange(
+        Number.parseFloat(evt.currentTarget.value),
+        currentPlanId
+      )
     );
   };
 
@@ -55,32 +64,47 @@ function Settings() {
     HTMLInputElement
   > = (evt) => {
     dispatch(
-      updateDowntrendMinValueChange(Number.parseFloat(evt.currentTarget.value))
+      updateDowntrendMinValueChange(
+        Number.parseFloat(evt.currentTarget.value),
+        currentPlanId
+      )
     );
   };
 
   const handleStabilisesAtChange: React.ChangeEventHandler<HTMLInputElement> = (
     evt
   ) => {
-    dispatch(updateStabilisesAt(Number.parseFloat(evt.currentTarget.value)));
+    dispatch(
+      updateStabilisesAt(
+        Number.parseFloat(evt.currentTarget.value),
+        currentPlanId
+      )
+    );
   };
 
   const handleAverageGasFeeChange: React.ChangeEventHandler<
     HTMLInputElement
   > = (evt) => {
-    dispatch(updateAverageGasFee(Number.parseFloat(evt.currentTarget.value)));
+    dispatch(
+      updateAverageGasFee(
+        Number.parseFloat(evt.currentTarget.value),
+        currentPlanId
+      )
+    );
   };
 
   const handleSelectClaimDays: React.ReactEventHandler<HTMLSelectElement> = (
     evt
   ) => {
-    dispatch(updateClaimDays(evt.currentTarget.value));
+    dispatch(updateClaimDays(evt.currentTarget.value, currentPlanId));
   };
 
   const handleSelectTrendPeriod: React.ReactEventHandler<HTMLSelectElement> = (
     evt
   ) => {
-    dispatch(updateTrendPeriod(evt.currentTarget.value as TrendPeriod));
+    dispatch(
+      updateTrendPeriod(evt.currentTarget.value as TrendPeriod, currentPlanId)
+    );
   };
 
   return (
