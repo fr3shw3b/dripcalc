@@ -744,16 +744,21 @@ function reinvestmentsFromMonthInputs(
       ({ reinvest }) => typeof reinvest !== "undefined"
     ) as ReinvestmentInEditor[];
 
-  return reinvestments.length > 0
-    ? reinvestments
-    : // Default with a year's worth of reinvestment.
-      [...Array(12)].map((_, i) => ({
-        reinvest: config.defaultReinvest,
-        timestamp: Number.parseInt(
-          moment(new Date(wallet.startDate)).add(i, "month").format("x"),
-          10
-        ),
-      }));
+  // Default with a year's worth of reinvestment.
+  return [...Array(Math.max(reinvestments.length, 12))].map((_, i) => {
+    const timestamp = Number.parseInt(
+      moment(new Date(wallet.startDate)).add(i, "month").format("x"),
+      10
+    );
+    const existingReinvestmentForTimestamp = reinvestments.find(
+      (reinvestment) => reinvestment.timestamp === timestamp
+    );
+    return {
+      reinvest:
+        existingReinvestmentForTimestamp?.reinvest ?? config.defaultReinvest,
+      timestamp,
+    };
+  });
 }
 
 function monthInputsFromReinvestments(
@@ -856,16 +861,21 @@ function dripValuesFromMonthInputs(
       ({ dripValue }) => typeof dripValue !== "undefined"
     ) as DripValueInEditor[];
 
-  return dripValues.length > 0
-    ? dripValues
-    : // Default with a year's worth of reinvestment.
-      [...Array(12)].map((_, i) => ({
-        dripValue: config.defaultDripValue,
-        timestamp: Number.parseInt(
-          moment(new Date(wallet.startDate)).add(i, "month").format("x"),
-          10
-        ),
-      }));
+  // Default with a year's worth of reinvestment.
+  return [...Array(Math.max(dripValues.length, 12))].map((_, i) => {
+    const timestamp = Number.parseInt(
+      moment(new Date(wallet.startDate)).add(i, "month").format("x"),
+      10
+    );
+    const existingDripValueForTimestamp = dripValues.find(
+      (dripValue) => dripValue.timestamp === timestamp
+    );
+    return {
+      dripValue:
+        existingDripValueForTimestamp?.dripValue ?? config.defaultDripValue,
+      timestamp,
+    };
+  });
 }
 
 export default WalletsPanel;
