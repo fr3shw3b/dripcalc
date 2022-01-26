@@ -68,6 +68,9 @@ function Information() {
         instead a measure of the cash flow through daily 1% drip (3.65 x deposit
         balance)
       </p>
+      <p className="info-content-block">
+        This calculator assumes that you will hydrate or claim rewards daily!
+      </p>
     </div>
   );
 }

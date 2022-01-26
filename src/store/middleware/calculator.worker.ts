@@ -661,9 +661,18 @@ function calculateDayEarnings(
         ? 0
         : prevDayEarningsData.dripDepositBalance * config.dailyCompound;
 
+    const dayEarningsAfterWhaleTax =
+      initialDayEarnings -
+      initialDayEarnings *
+        whaleTax(
+          config,
+          prevDayEarningsData.accumConsumedRewards + initialDayEarnings
+        );
+
     const dayEarnings =
-      prevDayEarningsData.accumConsumedRewards + initialDayEarnings <= maxPayout
-        ? initialDayEarnings
+      prevDayEarningsData.accumConsumedRewards + dayEarningsAfterWhaleTax <=
+      maxPayout
+        ? dayEarningsAfterWhaleTax
         : maxPayout - prevDayEarningsData.accumConsumedRewards;
 
     const reinvestAfterTax = !isClaimDay
@@ -673,13 +682,9 @@ function calculateDayEarnings(
     const newDepositBalance =
       prevDayEarningsData.dripDepositBalance + reinvestAfterTax;
 
-    const claimBeforeWhaleTax = isClaimDay
+    const claimAfterTax = isClaimDay
       ? dayEarnings - dayEarnings * config.claimTax
       : 0;
-
-    const claimAfterTax =
-      claimBeforeWhaleTax -
-      claimBeforeWhaleTax * whaleTax(config, newDepositBalance);
 
     // Add deposited amount on this day after calculating claims as it will impact
     // the next day's 1% rewards.
