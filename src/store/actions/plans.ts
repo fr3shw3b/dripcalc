@@ -140,6 +140,36 @@ export function selectPlan(id: string, label: string): SelectPlanAction {
   };
 }
 
+export const REFRESH_CURRENT_PLAN_CALCULATIONS =
+  "REFRESH_CURRENT_PLAN_CALCULATIONS";
+export type RefreshCurrentPlanCalculationsAction = FSA<
+  typeof REFRESH_CURRENT_PLAN_CALCULATIONS,
+  {
+    calculator: {
+      recalculate: boolean;
+    };
+  },
+  {
+    id: string;
+  }
+>;
+
+export function refreshCalculations(
+  id: string
+): RefreshCurrentPlanCalculationsAction {
+  return {
+    type: REFRESH_CURRENT_PLAN_CALCULATIONS,
+    payload: {
+      id,
+    },
+    meta: {
+      calculator: {
+        recalculate: true,
+      },
+    },
+  };
+}
+
 export const UPDATE_PLAN_LABEL = "UPDATE_PLAN_LABEL";
 export type UpdatePlanLabelAction = FSA<
   typeof UPDATE_PLAN_LABEL,

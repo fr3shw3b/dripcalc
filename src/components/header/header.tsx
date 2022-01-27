@@ -18,7 +18,11 @@ import React, {
 import { useSelector, useDispatch } from "react-redux";
 import { useLocation, useNavigate } from "react-router-dom";
 import { PlanState } from "../../store/reducers/plans";
-import { selectPlan, updatePlanLabel } from "../../store/actions/plans";
+import {
+  selectPlan,
+  updatePlanLabel,
+  refreshCalculations,
+} from "../../store/actions/plans";
 import { AppState } from "../../store/types";
 import { Tooltip2 } from "@blueprintjs/popover2";
 
@@ -80,6 +84,13 @@ function Header() {
   ) => {
     evt.preventDefault();
     setShowEditPlanLabel(false);
+  };
+
+  const handleRefreshClick = (
+    evt: React.MouseEvent<HTMLElement, MouseEvent>
+  ) => {
+    evt.preventDefault();
+    dispatch(refreshCalculations(currentPlanId));
   };
 
   return (
@@ -186,6 +197,17 @@ function Header() {
               />
             </Tooltip2>
           )}
+          <Tooltip2
+            content={`Refresh "${currentPlanLabel}" calculations`}
+            position={Position.BOTTOM}
+            openOnTargetFocus={false}
+          >
+            <Button
+              icon="refresh"
+              className="navbar-edit"
+              onClick={handleRefreshClick}
+            />
+          </Tooltip2>
         </form>
       </Navbar.Group>
     </Navbar>
