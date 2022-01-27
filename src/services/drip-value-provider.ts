@@ -46,10 +46,10 @@ function dripValueProvider(): DripValueProvider {
       const baseValueFraction =
         yearArrIndex <= trendBoundaryIndex
           ? dripTrendBaseValues[yearArrIndex][monthIndex]
-          : 1;
+          : DEFAULT_DRIP_VALUE_TREND[dripValueTrend];
 
       if (dripValueTrend === "downtrend") {
-        const diff = startDripValue - targetDripValue;
+        const downtrendDiff = startDripValue - targetDripValue;
         // Example:
         // startDripValue <- 65
         // targetDripValue <- 30
@@ -57,11 +57,11 @@ function dripValueProvider(): DripValueProvider {
         //
         // 65 - 30 = 35
         // 30 + (35 * 0.2) = 37
-        return targetDripValue + baseValueFraction * diff;
+        return targetDripValue + baseValueFraction * downtrendDiff;
       }
 
       if (dripValueTrend === "uptrend") {
-        const diff = targetDripValue - startDripValue;
+        const uptrendDiff = targetDripValue - startDripValue;
         // Example:
         // startDripValue <- 65
         // targetDripValue <- 800
@@ -69,13 +69,13 @@ function dripValueProvider(): DripValueProvider {
         //
         // 800 - 65 = 735
         // 65 + (735 * 0.2) = 212
-        return startDripValue + baseValueFraction * diff;
+        return startDripValue + baseValueFraction * uptrendDiff;
       }
 
       if (targetDripValue < startDripValue) {
         // Stable trend going down from start value.
         const lowerBound = targetDripValue / 2;
-        const diff = startDripValue - lowerBound;
+        const stableDiff = startDripValue - lowerBound;
         // Example:
         // startDripValue <- 65
         // targetDripValue <- 40 (stabilises at)
@@ -84,7 +84,7 @@ function dripValueProvider(): DripValueProvider {
         //
         // 65 - 20 = 45
         // 20 + (45 * 0.3) = 33.5
-        return lowerBound + diff * baseValueFraction;
+        return lowerBound + stableDiff * baseValueFraction;
       }
 
       // Stable trend going up from start value.
@@ -141,6 +141,12 @@ const DRIP_TREND_BOUNDARY_INDEX: Record<TrendPeriod, number> = {
   twoYears: 1,
   fiveYears: 4,
   tenYears: 9,
+};
+
+const DEFAULT_DRIP_VALUE_TREND: Record<string, number> = {
+  downtrend: 0,
+  stable: 0.375,
+  uptrend: 1,
 };
 
 // Provides 0 to 1 real numbers for each trend

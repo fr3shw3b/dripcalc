@@ -160,7 +160,7 @@ function Settings() {
               asyncControl={true}
               leftElement={<div className="currency-inline">{currency}</div>}
               placeholder="Enter maximum value"
-              value={uptrendMaxValue?.toFixed(2) ?? 0}
+              value={`${uptrendMaxValue}` ?? 0}
               onChange={handleUptrendMaxValueChange}
             />
           </FormGroup>
@@ -179,7 +179,7 @@ function Settings() {
               asyncControl={true}
               leftElement={<div className="currency-inline">{currency}</div>}
               placeholder="Enter minimum value"
-              value={downtrendMinValue?.toFixed(2) ?? 0}
+              value={`${downtrendMinValue}` ?? 0}
               onChange={handleDowntrendMinValueChange}
             />
           </FormGroup>
@@ -198,7 +198,7 @@ function Settings() {
               asyncControl={true}
               leftElement={<div className="currency-inline">{currency}</div>}
               placeholder="Enter value DRIP stabilises at"
-              value={stabilisesAt?.toFixed(2) ?? 0}
+              value={`${stabilisesAt}` ?? 0}
               onChange={handleStabilisesAtChange}
             />
           </FormGroup>
@@ -231,7 +231,7 @@ function Settings() {
             asyncControl={true}
             leftElement={<div className="currency-inline">{currency}</div>}
             placeholder="Enter average gas fee"
-            value={averageGasFee?.toFixed(2) ?? 0}
+            value={`${averageGasFee}` ?? 0}
             onChange={handleAverageGasFeeChange}
           />
         </FormGroup>
