@@ -1,5 +1,5 @@
 import { HTMLSelect, HTMLTable, Position } from "@blueprintjs/core";
-import { useContext, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { AppState } from "../../store/types";
 
@@ -7,6 +7,7 @@ import ContentContext from "../../contexts/content";
 import { Tooltip2 } from "@blueprintjs/popover2";
 import moment from "moment";
 import { DayEarnings } from "../../store/middleware/shared-calculator-types";
+import usePrevious from "../../hooks/use-previous";
 
 type Props = {
   walletId: string;
@@ -65,6 +66,14 @@ function HydrateClaimStrategyPanel({ walletId }: Props) {
     evt.preventDefault();
     setCurrentMonth(Number.parseInt(evt.currentTarget.value));
   };
+
+  const prevCurrentYear = usePrevious(currentYear);
+
+  useEffect(() => {
+    if (currentYear !== prevCurrentYear) {
+      setCurrentMonth(monthOptions[0][0]);
+    }
+  }, [currentYear, prevCurrentYear, setCurrentMonth, monthOptions]);
 
   return (
     <div>
