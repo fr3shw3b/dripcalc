@@ -703,7 +703,8 @@ function calculateDayEarnings(
         prevDayEarningsData.accumConsumedRewards + initialAccumDayEarnings,
         state.settings.claimDays,
         state.settings,
-        dripValueForDay
+        dripValueForDay,
+        isClaimDay
       );
 
     const leaveRewardsAvailableToAccumulate =
@@ -908,8 +909,18 @@ function shouldHydrateOnDay(
   totalConsumedIncludingAccumulatedAvailableRewards: number,
   claimDays: string,
   settings: PlanSettings,
-  dripPriceforDay: number
+  dripPriceforDay: number,
+  isClaimDay: boolean
 ): { isHydrateDay: boolean; accumulateAvailableRewardsToHydrate: boolean } {
+  // If the day has already been marked for claiming, that will
+  // take priority!
+  if (isClaimDay) {
+    return {
+      isHydrateDay: false,
+      accumulateAvailableRewardsToHydrate: false,
+    };
+  }
+
   const lastHydrateTimestamp = Number.parseInt(
     moment(lastHydrateDate).format("x")
   );
