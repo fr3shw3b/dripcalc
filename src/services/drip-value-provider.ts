@@ -7,7 +7,8 @@ export interface DripValueProvider {
     startDripValue: number,
     targetDripValue: number,
     dripValueTrend: string,
-    trendPeriod?: TrendPeriod
+    trendPeriod?: TrendPeriod,
+    lastCustomDripValueDate?: Date
   ): number;
   applyVariance(inputDripValue: number): number;
 }
@@ -22,9 +23,12 @@ function dripValueProvider(): DripValueProvider {
       startDripValue: number,
       targetDripValue: number,
       dripValueTrend: string,
-      trendPeriod: TrendPeriod = "tenYears"
+      trendPeriod: TrendPeriod = "tenYears",
+      lastCustomDripValueDate?: Date
     ): number => {
-      const yearArrIndex = monthDate.getFullYear() - startDate.getFullYear();
+      const trendStartDate = lastCustomDripValueDate ?? startDate;
+      const yearArrIndex =
+        monthDate.getFullYear() - trendStartDate.getFullYear();
       const trendBoundaryIndex = DRIP_TREND_BOUNDARY_INDEX[trendPeriod];
       if (yearArrIndex > 9) {
         console.warn(

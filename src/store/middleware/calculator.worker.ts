@@ -411,6 +411,17 @@ function calculateMonthEarnings(
       },
       /* 15/01/2100 as seed date in milliseconds */ 4103698536000
     );
+    const lastDripValueInCurrentWalletTimestamp = Object.entries(
+      wallet.monthInputs
+    ).reduce((prevTimestamp, [monthInputKey, { dripValue }]) => {
+      if (dripValue && dripValue > 0) {
+        const timestamp = Number.parseInt(
+          moment(monthInputKey, "DD/MM/YYYY").format("x")
+        );
+        return timestamp > prevTimestamp ? timestamp : prevTimestamp;
+      }
+      return prevTimestamp;
+    }, /* earliest wallet start date is the seed date to fall back on */ earliestWalletStartTimestamp);
     const trendTargetDripValue = determineTrendTargetDripValue(state.settings);
     const dripValueForMonth =
       wallet.monthInputs[monthInputsKey]?.dripValue ??
@@ -420,7 +431,8 @@ function calculateMonthEarnings(
         getLastCustomDripValue(wallet, config.defaultDripValue),
         trendTargetDripValue,
         state.settings.dripValueTrend,
-        state.settings.trendPeriod
+        state.settings.trendPeriod,
+        new Date(lastDripValueInCurrentWalletTimestamp)
       );
 
     const lastMonthEarnings = accum[month - 1] ?? lastMonthOfPrevYearEarnings;
