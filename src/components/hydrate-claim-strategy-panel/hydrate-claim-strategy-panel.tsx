@@ -1,11 +1,10 @@
-import { FormGroup, HTMLSelect, HTMLTable, Position } from "@blueprintjs/core";
+import { HTMLSelect, HTMLTable, Position } from "@blueprintjs/core";
 import { useContext, useState } from "react";
 import { useSelector } from "react-redux";
 import { AppState } from "../../store/types";
 
 import ContentContext from "../../contexts/content";
 import { Tooltip2 } from "@blueprintjs/popover2";
-import formatCurrency from "../../utils/currency";
 import moment from "moment";
 import { DayEarnings } from "../../store/middleware/shared-calculator-types";
 
@@ -14,7 +13,7 @@ type Props = {
 };
 
 function HydrateClaimStrategyPanel({ walletId }: Props) {
-  const { calculatedEarnings, currency } = useSelector((state: AppState) => {
+  const { calculatedEarnings } = useSelector((state: AppState) => {
     const currentPlanId = state.plans.current;
     return {
       ...state.general,

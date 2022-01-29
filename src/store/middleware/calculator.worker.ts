@@ -10,11 +10,7 @@ import {
   YearEarnings,
 } from "./shared-calculator-types";
 import createDripValueProvider from "../../services/drip-value-provider";
-import type {
-  HydrateFrequency,
-  PlanSettings,
-  SettingsState,
-} from "../reducers/settings";
+import type { HydrateFrequency, PlanSettings } from "../reducers/settings";
 import type { WalletState } from "../reducers/plans";
 import type { Config } from "../../contexts/config";
 import moment from "moment";
