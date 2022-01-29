@@ -937,7 +937,11 @@ function shouldHydrateOnDay(
     maxPayout - maxPayout * 0.1;
 
   // Exclude the claim days at the start of the month.
-  if (claimDays === "startOfMonth" && date.getDate() <= numberOfClaimDays) {
+  if (
+    numberOfClaimDays > 0 &&
+    claimDays === "startOfMonth" &&
+    date.getDate() <= numberOfClaimDays
+  ) {
     return {
       isHydrateDay: false,
       accumulateAvailableRewardsToHydrate: false,
@@ -946,6 +950,7 @@ function shouldHydrateOnDay(
 
   // Exclude the claim days at the end of the month.
   if (
+    numberOfClaimDays > 0 &&
     claimDays === "endOfMonth" &&
     date.getDate() >= daysInMonth - numberOfClaimDays
   ) {
