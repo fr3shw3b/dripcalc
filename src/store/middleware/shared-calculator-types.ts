@@ -70,6 +70,14 @@ export type DayEarnings = {
   dripDepositBalance: number;
   estimatedGasFees: number;
   accumConsumedRewards: number;
+  // The accumulated daily rewards from previous days
+  // that have not yet been hydrated or claimed!
+  accumDailyRewards: number;
   // daily claimed rewards >= 2 . gas fees for day?
   estimatedGasFeesCoveredByClaimedRewards: boolean;
+  isClaimDay: boolean;
+  leaveRewardsToAccumulateForClaim: boolean;
+  isHydrateDay: boolean;
+  leaveRewardsToAccumulateForHydrate: boolean;
+  lastHydrateTimestamp: number;
 };

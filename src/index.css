@@ -38,12 +38,16 @@ code {
   margin-bottom: 40px;
 }
 
-.wallet-tab-panel-container {
+.wallet-tab-panel-container,
+.hydrate-claim-strategy-tab-panel-container {
   height: calc(100vh - 250px);
+  /* todo: change for mobile responsiveness! */
+  min-width: 720px;
   overflow: auto;
 }
 
-.wallet-tab-panel-inner-container {
+.wallet-tab-panel-inner-container,
+.hydrate-claim-strategy-tab-panel-inner-container {
   overflow: auto;
 }
 
@@ -55,7 +59,8 @@ tr.danger {
   background: #a82a2a;
 }
 
-.navbar-edit {
+.navbar-edit,
+.navbar-clean-data {
   margin-left: 10px;
 }
 
@@ -70,4 +75,12 @@ tr.danger {
 
 .bp3-input-group.edit-plan-label.show {
   display: block;
+}
+
+.left-small-margin {
+  margin-left: 15px;
+}
+
+.hydrate-strategy-year-month-select-block {
+  padding-bottom: 20px;
 }

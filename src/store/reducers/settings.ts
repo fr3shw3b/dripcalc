@@ -17,6 +17,8 @@ import {
   UPDATE_CLAIM_DAYS,
   UPDATE_TREND_PERIOD,
   UpdateTrendPeriodAction,
+  UpdateHydrateFrequencyAction,
+  UPDATE_HYDRATE_FREQUENCY,
 } from "../actions/settings";
 
 export type SettingsState = Record<string, PlanSettings>;
@@ -30,7 +32,14 @@ export type PlanSettings = {
   averageGasFee: number;
   claimDays: string;
   trendPeriod: TrendPeriod;
+  defaultHydrateFrequency: HydrateFrequency;
 };
+
+export type HydrateFrequency =
+  | "everyDay"
+  | "everyOtherDay"
+  | "everyWeek"
+  | "automatic";
 
 export function initialState(): SettingsState {
   return {
@@ -48,6 +57,7 @@ function createDefaultSettings(): PlanSettings {
     claimDays: "startOfMonth",
     averageGasFee: 1,
     trendPeriod: "tenYears",
+    defaultHydrateFrequency: "automatic",
   };
 }
 
@@ -60,6 +70,7 @@ export type SettingsAction =
   | UpdateStabilisesAtAction
   | UpdateAverageGasFeeAction
   | UpdateTrendPeriodAction
+  | UpdateHydrateFrequencyAction
   | UpdateClaimDaysAction;
 
 function reducer(
@@ -94,6 +105,19 @@ const reducers = {
       [finalAction.payload.planId]: {
         ...state[finalAction.payload.planId],
         dripValueTrend: finalAction.payload.trend,
+      },
+    };
+  },
+  [UPDATE_HYDRATE_FREQUENCY]: (
+    state: SettingsState,
+    action: SettingsAction
+  ): SettingsState => {
+    const finalAction = action as UpdateHydrateFrequencyAction;
+    return {
+      ...state,
+      [finalAction.payload.planId]: {
+        ...state[finalAction.payload.planId],
+        defaultHydrateFrequency: finalAction.payload.hydrateFrequency,
       },
     };
   },

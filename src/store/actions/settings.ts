@@ -1,4 +1,5 @@
 import type { TrendPeriod } from "../../services/drip-value-provider";
+import { HydrateFrequency } from "../reducers/settings";
 import type { FSA } from "../types";
 
 type CalculatorMeta = {
@@ -219,6 +220,34 @@ export function updateTrendPeriod(
     type: UPDATE_TREND_PERIOD,
     payload: {
       trendPeriod,
+      planId,
+    },
+    meta: {
+      calculator: {
+        recalculate: true,
+      },
+    },
+  };
+}
+
+export const UPDATE_HYDRATE_FREQUENCY = "UPDATE_HYDRATE_FREQUENCY";
+export type UpdateHydrateFrequencyAction = FSA<
+  typeof UPDATE_HYDRATE_FREQUENCY,
+  CalculatorMeta,
+  {
+    hydrateFrequency: HydrateFrequency;
+    planId: string;
+  }
+>;
+
+export function updateHydrateFrequency(
+  hydrateFrequency: HydrateFrequency,
+  planId: string
+): UpdateHydrateFrequencyAction {
+  return {
+    type: UPDATE_HYDRATE_FREQUENCY,
+    payload: {
+      hydrateFrequency,
       planId,
     },
     meta: {

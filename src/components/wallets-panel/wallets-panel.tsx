@@ -26,6 +26,7 @@ import { Deposit, MonthInput, WalletState } from "../../store/reducers/plans";
 import { DepositInEditor } from "../wallet-deposits/wallet-deposits";
 import { ReinvestmentInEditor } from "../wallet-reinvestment-plan/wallet-reinvestment-plan";
 import { DripValueInEditor } from "../wallet-custom-drip-values/wallet-custom-drip-values";
+import { HydrateFrequency } from "../../store/reducers/settings";
 
 type EditorState = {
   isOpen: boolean;
@@ -335,6 +336,26 @@ function WalletsPanel() {
     });
   };
 
+  const handleChangeMonthHydrateStrategy = (
+    strategy: "default" | HydrateFrequency,
+    index: number
+  ) => {
+    setMonthInputsState((prevState) => {
+      const reinvestment = prevState.reinvestments[index];
+      return {
+        ...prevState,
+        reinvestments: [
+          ...prevState.reinvestments.slice(0, index),
+          {
+            ...reinvestment,
+            hydrateStrategy: strategy,
+          },
+          ...prevState.reinvestments.slice(index + 1),
+        ],
+      };
+    });
+  };
+
   const handleReinvestSaveClick = useCallback(
     (walletId: string) => {
       dispatch(
@@ -364,6 +385,7 @@ function WalletsPanel() {
         ...prevState.reinvestments,
         {
           reinvest: config.defaultReinvest,
+          hydrateStrategy: "default",
           timestamp: Number.parseInt(
             moment(
               new Date(
@@ -378,6 +400,24 @@ function WalletsPanel() {
         },
       ],
     }));
+  };
+
+  const handleRemoveLastReinvestMonth = () => {
+    setMonthInputsState((prevState) => {
+      if (prevState.reinvestments.length <= 1) {
+        return {
+          ...prevState,
+          reinvestments: [],
+        };
+      }
+      return {
+        ...prevState,
+        reinvestments: prevState.reinvestments.slice(
+          0,
+          prevState.reinvestments.length - 1
+        ),
+      };
+    });
   };
 
   const handleCustomDripValuesClose = () => {
@@ -462,6 +502,24 @@ function WalletsPanel() {
     }));
   };
 
+  const handleRemoveLastDripValueMonth = () => {
+    setMonthInputsState((prevState) => {
+      if (prevState.dripValues.length <= 1) {
+        return {
+          ...prevState,
+          dripValues: [],
+        };
+      }
+      return {
+        ...prevState,
+        dripValues: prevState.dripValues.slice(
+          0,
+          prevState.dripValues.length - 1
+        ),
+      };
+    });
+  };
+
   const monthInputsCurrentWallet = wallets.find(
     ({ id }) => id === monthInputsState.walletId
   );
@@ -538,8 +596,10 @@ function WalletsPanel() {
           onClose={handleReinvestmentPlanClose}
           reinvestments={monthInputsState.reinvestments}
           onChangeMonthReinvestPercent={handleChangeMonthReinvestPercent}
+          onChangeMonthHydrateStrategy={handleChangeMonthHydrateStrategy}
           onSaveClick={handleReinvestSaveClick}
           onAddAnotherMonth={handleAddAnotherReinvestMonth}
+          onRemoveLastMonth={handleRemoveLastReinvestMonth}
         />
         <WalletCustomDripValues
           walletId={monthInputsState.walletId}
@@ -551,6 +611,7 @@ function WalletsPanel() {
           onChangeMonthDripValue={handleChangeMonthDripValue}
           onSaveClick={handleCustomDripValuesSaveClick}
           onAddAnotherMonth={handleAddAnotherDripValueMonth}
+          onRemoveLastMonth={handleRemoveLastDripValueMonth}
         />
       </Tabs>
     </>
@@ -731,13 +792,14 @@ function reinvestmentsFromMonthInputs(
     return [];
   }
   const reinvestments = Object.entries(wallet.monthInputs)
-    .map(([monthKey, { reinvest }]) => {
+    .map(([monthKey, { reinvest, hydrateStrategy }]) => {
       return {
         reinvest: reinvest,
         timestamp: Number.parseInt(
           moment(monthKey, "DD/MM/YYYY").format("x"),
           10
         ),
+        hydrateStrategy,
       };
     })
     .filter(
@@ -760,6 +822,8 @@ function reinvestmentsFromMonthInputs(
       reinvest:
         existingReinvestmentForTimestamp?.reinvest ?? config.defaultReinvest,
       timestamp,
+      hydrateStrategy:
+        existingReinvestmentForTimestamp?.hydrateStrategy ?? "default",
     };
   });
 }
@@ -772,7 +836,7 @@ function monthInputsFromReinvestments(
     return {};
   }
 
-  const seedGrouped: Record<string, number> = {};
+  const seedGrouped: Record<string, ReinvestmentInEditor> = {};
   const reinvestGroupedByMonth = reinvestments.reduce(
     (accumGrouped, reinvestment) => {
       // Super important the key format is DD/MM/YYYYY as expected in the calculator middleware.
@@ -782,7 +846,7 @@ function monthInputsFromReinvestments(
 
       return {
         ...accumGrouped,
-        [monthKeyFormatted]: reinvestment.reinvest,
+        [monthKeyFormatted]: reinvestment,
       };
     },
     seedGrouped
@@ -790,12 +854,13 @@ function monthInputsFromReinvestments(
 
   const seedMonthInputs: Record<string, MonthInput> = {};
   return Object.entries(reinvestGroupedByMonth).reduce(
-    (monthInputs, [monthKey, reinvest]) => {
+    (monthInputs, [monthKey, reinvestment]) => {
       return {
         ...monthInputs,
         [monthKey]: {
           ...(wallet.monthInputs[monthKey] ?? {}),
-          reinvest,
+          reinvest: reinvestment.reinvest,
+          hydrateStrategy: reinvestment.hydrateStrategy,
         },
       };
     },

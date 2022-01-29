@@ -15,6 +15,7 @@ import {
   UpdatePlanLabelAction,
   UPDATE_PLAN_LABEL,
 } from "../actions/plans";
+import { HydrateFrequency } from "./settings";
 
 export type PlansState = {
   plans: PlanState[];
@@ -42,6 +43,7 @@ export type MonthInput = {
   // Fraction from 0 to 1.
   reinvest?: number;
   deposits: Deposit[];
+  hydrateStrategy?: "default" | HydrateFrequency;
 };
 
 export type Deposit = {
@@ -87,6 +89,7 @@ function createDefaultWalletInfo() {
             [monthMomentDate.format("01/MM/YYYY")]: {
               dripValue: conf.defaultDripValue,
               reinvest: conf.defaultReinvest,
+              hydrateFrequency: "default",
               deposits: [
                 {
                   dayOfMonth: Number.parseInt(monthMomentDate.format("D")),

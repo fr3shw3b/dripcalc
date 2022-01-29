@@ -41,3 +41,26 @@ export function setNotFirstTime(): SetNotFirstTimeAction {
     },
   };
 }
+
+export const CLEAN_ALL_DATA = "CLEAN_ALL_DATA";
+export type CleanAllDataAction = FSA<
+  typeof CLEAN_ALL_DATA,
+  {
+    persistence: {
+      cleanAll: boolean;
+    };
+  },
+  {}
+>;
+
+export function cleanAllData(): CleanAllDataAction {
+  return {
+    type: CLEAN_ALL_DATA,
+    payload: {},
+    meta: {
+      persistence: {
+        cleanAll: true,
+      },
+    },
+  };
+}

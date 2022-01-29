@@ -23,6 +23,7 @@ import {
   updatePlanLabel,
   refreshCalculations,
 } from "../../store/actions/plans";
+import { cleanAllData } from "../../store/actions/general";
 import { AppState } from "../../store/types";
 import { Tooltip2 } from "@blueprintjs/popover2";
 
@@ -91,6 +92,13 @@ function Header() {
   ) => {
     evt.preventDefault();
     dispatch(refreshCalculations(currentPlanId));
+  };
+
+  const handleCleanDataClick = (
+    evt: React.MouseEvent<HTMLElement, MouseEvent>
+  ) => {
+    evt.preventDefault();
+    dispatch(cleanAllData());
   };
 
   return (
@@ -206,6 +214,17 @@ function Header() {
               icon="refresh"
               className="navbar-edit"
               onClick={handleRefreshClick}
+            />
+          </Tooltip2>
+          <Tooltip2
+            content={`Clean all data! (This will clean out the browser storage that stores all your dripcalc data)`}
+            position={Position.BOTTOM}
+            openOnTargetFocus={false}
+          >
+            <Button
+              icon="clean"
+              className="navbar-clean-data"
+              onClick={handleCleanDataClick}
             />
           </Tooltip2>
         </form>

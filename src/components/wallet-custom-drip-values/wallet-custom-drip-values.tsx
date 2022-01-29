@@ -22,6 +22,7 @@ type Props = {
   onChangeMonthDripValue: (value: number, rowIndex: number) => void;
   onSaveClick: (walletId: string) => void;
   onAddAnotherMonth: () => void;
+  onRemoveLastMonth: () => void;
 };
 
 function WalletCustomDripValues({
@@ -33,6 +34,7 @@ function WalletCustomDripValues({
   onChangeMonthDripValue,
   onSaveClick,
   onAddAnotherMonth,
+  onRemoveLastMonth,
 }: Props) {
   const { wallets: walletsContent } = useContext(ContentContext);
   const { currency } = useSelector((state: AppState) => {
@@ -48,6 +50,11 @@ function WalletCustomDripValues({
   const handleAddAnotherMonthClick: React.MouseEventHandler = (evt) => {
     evt.preventDefault();
     onAddAnotherMonth();
+  };
+
+  const handleRemoveLastMonthClick: React.MouseEventHandler = (evt) => {
+    evt.preventDefault();
+    onRemoveLastMonth();
   };
 
   const handleChangeMonthDripValue = (rowIndex: number) => (value: string) => {
@@ -108,6 +115,14 @@ function WalletCustomDripValues({
               icon="plus"
               text={walletsContent.monthsAddAnotherText}
               onClick={handleAddAnotherMonthClick}
+            />
+            <Button
+              icon="minus"
+              className="left-small-margin"
+              text={walletsContent.monthsRemoveLastMonthText}
+              onClick={handleRemoveLastMonthClick}
+              // The first 12 months will always be populated!
+              disabled={dripValues.length <= 12}
             />
           </form>
         </div>

@@ -64,12 +64,32 @@ function Information() {
       </p>
       <p className="info-content-block">
         Depositing in the faucet is NOT staking! You get your tokens back in the
-        form of the 1% daily drip. Deposit balance is not asset value but
-        instead a measure of the cash flow through daily 1% drip (3.65 x deposit
-        balance)
+        form of the 1% daily drip rewards. Deposit balance is not asset value
+        but instead a measure of the cash flow for which the daily 1% drip is
+        calculated (3.65 x deposit balance)
+      </p>
+
+      <p className="info-content-block">
+        <h3>About claiming</h3>
+        <p>
+          This calculator assumes you will claim the % that is not reinvested
+          once a month. For example, if you are re-investing 70% in January and
+          your claim days are at the end of the month you will stop hydrating on
+          the 23rd and claim the rewards for the rest of the month.
+        </p>
+        <p>
+          The strategy produced by the calculator will make sure as soon as you
+          reach a day where the accumulated available rewards are within 10% of
+          the max payout, you will claim on that day. This prevents you from
+          reaching max payout, therefore making sure you do not stop receiving
+          rewards earlier than you should.
+        </p>
       </p>
       <p className="info-content-block">
-        This calculator assumes that you will hydrate or claim rewards daily!
+        <h3>About government tax</h3>
+        All the fiat currency values in the earnings calculated are before
+        government tax, it's down to you to figure that out given your
+        circumstances!
       </p>
     </div>
   );

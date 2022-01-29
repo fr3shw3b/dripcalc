@@ -11,6 +11,7 @@ import { AppState } from "../../store/types";
 
 import MonthlyWalletPanel from "../monthly-wallet-panel";
 import YearlyWalletPanel from "../yearly-wallet-panel";
+import HydrateClaimStrategyPanel from "../hydrate-claim-strategy-panel";
 import { Popover2 } from "@blueprintjs/popover2";
 import { findLastYearForWallet } from "../../utils/wallets";
 
@@ -140,6 +141,11 @@ function WalletView({
               id={`yearly-${walletId}`}
               title="Yearly"
               panel={<YearlyWalletPanel walletId={walletId} />}
+            />
+            <Tab
+              id={`hydrate-strategy-${walletId}`}
+              title="Hydrate & Claim Strategy"
+              panel={<HydrateClaimStrategyPanel walletId={walletId} />}
             />
           </Tabs>
         </div>

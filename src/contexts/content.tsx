@@ -1,5 +1,6 @@
 import { createContext } from "react";
 import type { TrendPeriod } from "../services/drip-value-provider";
+import { HydrateFrequency } from "../store/reducers/settings";
 
 export type Content = {
   settings: SettingsContent;
@@ -29,6 +30,9 @@ export type SettingsContent = {
   trendPeriodLabel: string;
   trendPeriodHelpText: string;
   trendPeriods: Record<TrendPeriod, string>;
+  defaultHydrateFrequencyHelpText: string;
+  defaultHydrateFrequencyLabel: string;
+  defaultHydrateFrequencies: Record<HydrateFrequency, string>;
 };
 
 export type WalletsContent = {
@@ -50,12 +54,18 @@ export type WalletsContent = {
   depositsChangeDateCollapseText: string;
   customDripValuesButtonText: string;
   monthsAddAnotherText: string;
+  monthsRemoveLastMonthText: string;
   monthTableColumnLabel: string;
   yearTableColumnLabel: string;
   reinvestColumnLabel: string;
   reinvestmentPlanTableHelpText: string;
   customDripValuesColumnLabel: (currency: string) => string;
   customDripValuesTableHelpText: (currency: string) => string;
+  hydrateStrategyColumnLabel: string;
+  reinvestmentPlanHydrateStrategies: Record<
+    "default" | HydrateFrequency,
+    string
+  >;
 };
 
 export type ResultsContent = {
@@ -96,6 +106,11 @@ export type ResultsContent = {
   yearClaimedHelpText: string;
   yearClaimedInCurrencyLabel: (currency: string) => string;
   yearClaimedInCurrencyHelpText: (currency: string) => string;
+  dayTableColumnLabel: string;
+  hydrateClaimActionColumnLabel: string;
+  hydrateClaimActionColumnHelpText: string;
+  hydrateClaimAccumDripRewardsLabel: string;
+  hydrateClaimAccumDripRewardsHelpText: string;
 };
 
 export type OverviewContent = {
@@ -165,6 +180,16 @@ export function content(): Content {
         fiveYears: "Five Years",
         tenYears: "Ten Years",
       },
+      defaultHydrateFrequencyHelpText:
+        "The default frequency at which to hydrate (re-invest or compound), this is overridden if you provide fine-grained monthly hydrate/claim data in your reinvestment plan. " +
+        '"Automatic" means the calculator will determine an optimised strategy making sure the gas fee is less than 25% of the amount of DRIP being compounded, even in automatic mode the minimum hydrate frequency is 1 day.',
+      defaultHydrateFrequencyLabel: "Default Hydrate Frequency",
+      defaultHydrateFrequencies: {
+        everyDay: "Every Day",
+        everyOtherDay: "Every Other Day",
+        everyWeek: "Every Week",
+        automatic: "Automatic",
+      },
     },
     wallets: {
       createNewWalletTitle: "Create New Wallet",
@@ -224,9 +249,18 @@ export function content(): Content {
       },
       customDripValuesButtonText: "custom drip values",
       monthsAddAnotherText: "add another month",
+      monthsRemoveLastMonthText: "remove last month",
       monthTableColumnLabel: "Month",
       yearTableColumnLabel: "Year",
       reinvestColumnLabel: "Reinvest %",
+      hydrateStrategyColumnLabel: "Hydrate Frequency",
+      reinvestmentPlanHydrateStrategies: {
+        default: "Use Plan Settings",
+        everyDay: "Every Day",
+        everyOtherDay: "Every Other Day",
+        everyWeek: "Every Week",
+        automatic: "Automatic",
+      },
       reinvestmentPlanTableHelpText:
         'Edit the "Reinvest %" column for each month and then save your changes. You can add more months if you need to.',
       customDripValuesColumnLabel: (currency: string) =>
@@ -296,6 +330,13 @@ export function content(): Content {
         `Claimed ${currency} (Est.)`,
       yearClaimedInCurrencyHelpText: (currency: string) =>
         `The total estimated in ${currency} for the year claimed out into your own wallet. This is based on the value of DRIP in ${currency} each day.`,
+      dayTableColumnLabel: "Day",
+      hydrateClaimActionColumnLabel: "Action",
+      hydrateClaimActionColumnHelpText:
+        "The action to carry out on this day, either hydrate, claim or leave available rewards to accumulate.",
+      hydrateClaimAccumDripRewardsLabel: "Accum. DRIP Rewards",
+      hydrateClaimAccumDripRewardsHelpText:
+        'The DRIP rewards accumulating in the "Available" column in the faucet prior to claiming or hydrating.',
     },
     overview: {
       totalRewardsConsumedPrefixText: "Total Rewards Consumed by ",

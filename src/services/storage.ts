@@ -1,6 +1,6 @@
 import localforage from "localforage";
 
-interface Storage {
+export interface Storage {
   writeData<T = string | Record<string, unknown>>(
     key: string,
     data: T

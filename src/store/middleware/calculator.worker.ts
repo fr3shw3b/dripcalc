@@ -10,7 +10,11 @@ import {
   YearEarnings,
 } from "./shared-calculator-types";
 import createDripValueProvider from "../../services/drip-value-provider";
-import type { PlanSettings } from "../reducers/settings";
+import type {
+  HydrateFrequency,
+  PlanSettings,
+  SettingsState,
+} from "../reducers/settings";
 import type { WalletState } from "../reducers/plans";
 import type { Config } from "../../contexts/config";
 import moment from "moment";
@@ -521,14 +525,16 @@ function determineNextActions(
     return "keepCompounding";
   }
 
+  // Disabled new wallet required behaviour as creates confusion with new claiming strategy
+  // that allows rewards to accumulate to save on gas fees!
   // When we are within 10% of the max payout, let's make it more pressing
   // to indicate a new wallet is required.
-  if (
-    lastMonthNextActions === "newWalletRequired" ||
-    accumConsumedRewards >= maxPayout - maxPayout * 0.1
-  ) {
-    return "newWalletRequired";
-  }
+  // if (
+  //   lastMonthNextActions === "newWalletRequired" ||
+  //   accumConsumedRewards >= maxPayout - maxPayout * 0.1
+  // ) {
+  //   return "newWalletRequired";
+  // }
 
   return lastMonthNextActions === "considerNewWallet" ||
     dripDepositBalanceEndOfMonth >= config.maxDepositBalance / 2 ||
@@ -639,8 +645,14 @@ const emptyDayEarnings: DayEarnings = {
   dripDepositBalance: 0,
   estimatedGasFees: 0,
   accumConsumedRewards: 0,
+  accumDailyRewards: 0,
   dripValueOnDay: 0,
   estimatedGasFeesCoveredByClaimedRewards: false,
+  isHydrateDay: false,
+  isClaimDay: false,
+  leaveRewardsToAccumulateForClaim: false,
+  leaveRewardsToAccumulateForHydrate: false,
+  lastHydrateTimestamp: 0,
 };
 
 function calculateDayEarnings(
@@ -657,45 +669,82 @@ function calculateDayEarnings(
     // Format of custom month input keys is dd/mm/yyyy.
     const monthInputsKey = moment(date).format("01/MM/YYYY");
 
-    const isClaimDay = shouldClaimOnDay(
-      date,
-      state.settings.claimDays,
-      wallet.monthInputs[monthInputsKey]?.reinvest ?? config.defaultReinvest
-    );
-
     const maxPayout = Math.min(
       prevDayEarningsData.dripDepositBalance * config.depositMultiplier,
       config.maxPayoutCap
     );
 
-    const initialDayEarnings =
+    const candidateRewardsForDay =
+      prevDayEarningsData.dripDepositBalance * config.dailyCompound;
+
+    const initialAccumDayEarnings = determineAccumDayEarnings(
+      prevDayEarningsData.accumDailyRewards + candidateRewardsForDay,
+      maxPayout,
+      prevDayEarningsData.accumConsumedRewards
+    );
+
+    const { isClaimDay, accumulateAvailableRewardsToClaim } = shouldClaimOnDay(
+      date,
+      state.settings.claimDays,
+      wallet.monthInputs[monthInputsKey]?.reinvest ?? config.defaultReinvest,
+      maxPayout,
+      prevDayEarningsData.accumConsumedRewards + initialAccumDayEarnings
+    );
+
+    const dripValueForDay = dripValueProvider.applyVariance(dripValueForMonth);
+
+    const { isHydrateDay, accumulateAvailableRewardsToHydrate } =
+      shouldHydrateOnDay(
+        new Date(prevDayEarningsData.lastHydrateTimestamp),
+        determineHydrateFrequency(
+          wallet.monthInputs[monthInputsKey]?.hydrateStrategy,
+          state.settings.defaultHydrateFrequency
+        ),
+        date,
+        wallet.monthInputs[monthInputsKey]?.reinvest ?? config.defaultReinvest,
+        maxPayout,
+        initialAccumDayEarnings,
+        prevDayEarningsData.accumConsumedRewards + initialAccumDayEarnings,
+        state.settings.claimDays,
+        state.settings,
+        dripValueForDay
+      );
+
+    const leaveRewardsAvailableToAccumulate =
+      accumulateAvailableRewardsToClaim || accumulateAvailableRewardsToHydrate;
+
+    // For the purposes of showing how much has been earned in rewards for the day, summing
+    // for each day to show total for month or year and accumulating available
+    // rewards that have not yet been claimed or hydrated.
+    const dayEarnings =
       prevDayEarningsData.accumConsumedRewards >= maxPayout
         ? 0
-        : prevDayEarningsData.dripDepositBalance * config.dailyCompound;
+        : candidateRewardsForDay;
 
-    const dayEarningsAfterWhaleTax =
-      initialDayEarnings -
-      initialDayEarnings *
+    const accumDayEarningsAfterWhaleTax =
+      initialAccumDayEarnings -
+      initialAccumDayEarnings *
         whaleTax(
           config,
-          prevDayEarningsData.accumConsumedRewards + initialDayEarnings
+          prevDayEarningsData.accumConsumedRewards + initialAccumDayEarnings
         );
 
-    const dayEarnings =
-      prevDayEarningsData.accumConsumedRewards + dayEarningsAfterWhaleTax <=
+    const accumDayEarnings =
+      prevDayEarningsData.accumConsumedRewards + initialAccumDayEarnings <=
       maxPayout
-        ? dayEarningsAfterWhaleTax
+        ? accumDayEarningsAfterWhaleTax
         : maxPayout - prevDayEarningsData.accumConsumedRewards;
 
-    const reinvestAfterTax = !isClaimDay
-      ? dayEarnings - dayEarnings * config.hydrateTax
-      : 0;
+    const reinvestAfterTax =
+      !isClaimDay && !leaveRewardsAvailableToAccumulate
+        ? accumDayEarnings - accumDayEarnings * config.hydrateTax
+        : 0;
 
     const newDepositBalance =
       prevDayEarningsData.dripDepositBalance + reinvestAfterTax;
 
     const claimAfterTax = isClaimDay
-      ? dayEarnings - dayEarnings * config.claimTax
+      ? accumDayEarnings - accumDayEarnings * config.claimTax
       : 0;
 
     // Add deposited amount on this day after calculating claims as it will impact
@@ -710,7 +759,6 @@ function calculateDayEarnings(
         config.depositBufferFees
       : 0;
 
-    const dripValueForDay = dripValueProvider.applyVariance(dripValueForMonth);
     const depositInDripBeforeTax =
       depositAfterFees > 0 ? depositAfterFees / dripValueForDay : 0;
 
@@ -718,10 +766,15 @@ function calculateDayEarnings(
       depositInDripBeforeTax - depositInDripBeforeTax * config.depositTax;
     const finalDepositBalanceEndOfDay = newDepositBalance + depositInDrip;
 
+    const claimOrHydrateGasFee =
+      !leaveRewardsAvailableToAccumulate &&
+      (reinvestAfterTax > 0 || claimAfterTax > 0)
+        ? state.settings.averageGasFee
+        : 0;
     const estimatedGasFees =
       depositInDrip > 0
-        ? state.settings.averageGasFee * 2
-        : state.settings.averageGasFee;
+        ? claimOrHydrateGasFee + state.settings.averageGasFee
+        : claimOrHydrateGasFee;
 
     return {
       ...accum,
@@ -733,16 +786,56 @@ function calculateDayEarnings(
         claimAfterTax,
         claimInCurrency: claimAfterTax * dripValueForDay,
         dripDepositBalance: finalDepositBalanceEndOfDay,
-        // Multiply gas fee by 2 for deposit and compound/claim.
         estimatedGasFees,
         accumConsumedRewards:
-          prevDayEarningsData.accumConsumedRewards + dayEarnings,
+          // Consumed rewards are the accumulation of available rewards before deciding to hydrate
+          // or claim and before any taxes are applied.
+          prevDayEarningsData.accumConsumedRewards + initialAccumDayEarnings,
+        accumDailyRewards: leaveRewardsAvailableToAccumulate
+          ? // Capture day earnings to be accumulated in the "Available" column
+            // before any tax is applied!
+            prevDayEarningsData.accumDailyRewards + dayEarnings
+          : // Reset to 0 if rewards have been claimed to wallet or reinvested!
+            0,
         dripValueOnDay: dripValueForDay,
         estimatedGasFeesCoveredByClaimedRewards:
           claimAfterTax > 2 * estimatedGasFees,
+        isClaimDay,
+        leaveRewardsToAccumulateForClaim: accumulateAvailableRewardsToClaim,
+        leaveRewardsToAccumulateForHydrate: accumulateAvailableRewardsToHydrate,
+        isHydrateDay: isHydrateDay,
+        lastHydrateTimestamp: isHydrateDay
+          ? Number.parseInt(moment(date).format("x"))
+          : prevDayEarningsData.lastHydrateTimestamp,
       },
     };
   };
+}
+
+function determineHydrateFrequency(
+  hydrateStrategy: "default" | HydrateFrequency | undefined,
+  defaultHydrateFrequency: HydrateFrequency
+): HydrateFrequency {
+  if (!hydrateStrategy || hydrateStrategy === "default") {
+    return defaultHydrateFrequency;
+  }
+  return hydrateStrategy;
+}
+
+function determineAccumDayEarnings(
+  candidateAccumAvailableRewards: number,
+  maxPayout: number,
+  prevAccumRewards: number
+): number {
+  const totalAccum = prevAccumRewards + candidateAccumAvailableRewards;
+  if (totalAccum <= maxPayout) {
+    return candidateAccumAvailableRewards;
+  }
+
+  const amountOverMaxPayout = totalAccum - maxPayout;
+  return candidateAccumAvailableRewards > amountOverMaxPayout
+    ? candidateAccumAvailableRewards - amountOverMaxPayout
+    : 0;
 }
 
 function whaleTax(config: Config, depositBalance: number): number {
@@ -755,15 +848,192 @@ function whaleTax(config: Config, depositBalance: number): number {
 function shouldClaimOnDay(
   date: Date,
   claimDays: string,
-  reinvest: number
-): boolean {
+  reinvest: number,
+  maxPayout: number,
+  totalConsumedIncludingAccumulatedAvailableRewards: number
+): { isClaimDay: boolean; accumulateAvailableRewardsToClaim: boolean } {
   const daysInMonth = getDaysInMonth(date);
-  const numberOfClaimDays = Math.round(daysInMonth * (1 - reinvest));
-  if (claimDays === "startOfMonth") {
-    return date.getDate() <= numberOfClaimDays;
+  // When days in month are not even, we'll take the extra day for claims!
+  const numberOfClaimDays = Math.ceil(daysInMonth * (1 - reinvest));
+  if (numberOfClaimDays === 0) {
+    return { isClaimDay: false, accumulateAvailableRewardsToClaim: false };
   }
-  return date.getDate() > daysInMonth - numberOfClaimDays;
+
+  // Claim regardless if today is the last day of the claim period
+  // as we don't want any accumulated available rewards feeding into hydrates.
+  const isLastDayOfClaimsPeriodForMonth =
+    (claimDays === "startOfMonth" && date.getDate() === numberOfClaimDays) ||
+    (claimDays === "endOfMonth" && date.getDate() === daysInMonth);
+
+  if (isLastDayOfClaimsPeriodForMonth) {
+    return {
+      isClaimDay: true,
+      accumulateAvailableRewardsToClaim: false,
+    };
+  }
+
+  // Make sure it's a claim day if we will be within 10% of max payout
+  // by claiming today's (and accumulated available) rewards.
+  const closeToMaxPayout =
+    totalConsumedIncludingAccumulatedAvailableRewards >=
+    maxPayout - maxPayout * 0.1;
+
+  if (claimDays === "startOfMonth") {
+    // Only claim on ${numberOfClaimDays}.
+    // e.g. 30 days in a month, 70% reinvest leaves 30% for claiming
+    // which is 9 days, so claim on the 9th.
+    return {
+      isClaimDay:
+        (closeToMaxPayout && date.getDate() < numberOfClaimDays) ||
+        date.getDate() === numberOfClaimDays,
+      accumulateAvailableRewardsToClaim:
+        !closeToMaxPayout && date.getDate() < numberOfClaimDays,
+    };
+  }
+  // Only claim on last day of the month.
+  return {
+    isClaimDay:
+      date.getDate() === daysInMonth ||
+      (date.getDate() >= daysInMonth - numberOfClaimDays && closeToMaxPayout),
+    accumulateAvailableRewardsToClaim:
+      date.getDate() < daysInMonth &&
+      date.getDate() >= daysInMonth - numberOfClaimDays &&
+      !closeToMaxPayout,
+  };
 }
+
+function shouldHydrateOnDay(
+  lastHydrateDate: Date,
+  hydrateFrequency: HydrateFrequency,
+  date: Date,
+  reinvest: number,
+  maxPayout: number,
+  accumulatedAvailableRewards: number,
+  totalConsumedIncludingAccumulatedAvailableRewards: number,
+  claimDays: string,
+  settings: PlanSettings,
+  dripPriceforDay: number
+): { isHydrateDay: boolean; accumulateAvailableRewardsToHydrate: boolean } {
+  const lastHydrateTimestamp = Number.parseInt(
+    moment(lastHydrateDate).format("x")
+  );
+  // If some available rewards have accumulated and you haven't yet hydrated
+  // then let's begin!
+  if (lastHydrateTimestamp === 0 && accumulatedAvailableRewards > 0) {
+    return {
+      isHydrateDay: true,
+      accumulateAvailableRewardsToHydrate: false,
+    };
+  }
+
+  const daysInMonth = getDaysInMonth(date);
+
+  // When days in month are not even, we'll take the extra day for claims!
+  const numberofHydrateDays = Math.floor(daysInMonth * reinvest);
+  const numberOfClaimDays = daysInMonth - numberofHydrateDays;
+  if (numberofHydrateDays === 0) {
+    return { isHydrateDay: false, accumulateAvailableRewardsToHydrate: false };
+  }
+  // Make sure it's a hydrate day if we will be within 10% of max payout
+  // by claiming today's (and accumulated available) rewards.
+  const closeToMaxPayout =
+    totalConsumedIncludingAccumulatedAvailableRewards >=
+    maxPayout - maxPayout * 0.1;
+
+  // Exclude the claim days at the start of the month.
+  if (claimDays === "startOfMonth" && date.getDate() <= numberOfClaimDays) {
+    return {
+      isHydrateDay: false,
+      accumulateAvailableRewardsToHydrate: false,
+    };
+  }
+
+  // Exclude the claim days at the end of the month.
+  if (
+    claimDays === "endOfMonth" &&
+    date.getDate() >= daysInMonth - numberOfClaimDays
+  ) {
+    return {
+      isHydrateDay: false,
+      accumulateAvailableRewardsToHydrate: false,
+    };
+  }
+
+  // We are definitely in hydrate territory now so if we are nearing max payout
+  // then we have no choice but to hydrate!
+  if (closeToMaxPayout) {
+    return {
+      isHydrateDay: true,
+      accumulateAvailableRewardsToHydrate: false,
+    };
+  }
+
+  if (hydrateFrequency === "everyDay") {
+    return {
+      isHydrateDay: true,
+      accumulateAvailableRewardsToHydrate: false,
+    };
+  }
+
+  // Hydrate regardless if today is the last day of the hydrate period
+  // as we don't want any accumulated available rewards feeding into claims.
+  const isLastDayOfHydratePeriodForMonth =
+    (claimDays === "startOfMonth" && date.getDate() === daysInMonth) ||
+    (claimDays === "endOfMonth" && date.getDate() === numberofHydrateDays);
+
+  if (isLastDayOfHydratePeriodForMonth) {
+    return {
+      isHydrateDay: true,
+      accumulateAvailableRewardsToHydrate: false,
+    };
+  }
+
+  if (hydrateFrequency === "automatic") {
+    // Automatic mode tries to hydrate daily as long as gas fees are < 25% of
+    // accumulated available rewards.
+    const accumulatedAvailableRewardsInCurrency =
+      accumulatedAvailableRewards * dripPriceforDay;
+    // Estimated gas fee is in fiat currency so we need to compare with the current fiat amount
+    // of accumulated rewards!
+    const isGasFeeLessThan25Percent =
+      settings.averageGasFee < accumulatedAvailableRewardsInCurrency * 0.25;
+    return {
+      isHydrateDay: isGasFeeLessThan25Percent,
+      accumulateAvailableRewardsToHydrate: !isGasFeeLessThan25Percent,
+    };
+  }
+
+  // At this point if we haven't yet hydrated then we will accumulate available rewards
+  // as we know we haven't hydrated from the timestamp and that we haven't accumulated any rewards yet
+  // from the first check in this fucntion.
+  if (lastHydrateTimestamp === 0) {
+    return {
+      isHydrateDay: false,
+      accumulateAvailableRewardsToHydrate: true,
+    };
+  }
+
+  // Make sure we are ignoring the time in the comparison.
+  const lastHydrateDateMoment = moment(lastHydrateDate).startOf("day");
+  const currentDateMoment = moment(date).startOf("day");
+  const daysBetween = moment
+    .duration(lastHydrateDateMoment.diff(currentDateMoment))
+    .asDays();
+
+  const hydrateFrequencyInDays = HYDRATE_FREQUENCY_DAYS[hydrateFrequency];
+
+  const shouldWeHydrateToday = daysBetween % hydrateFrequencyInDays === 0;
+
+  return {
+    isHydrateDay: shouldWeHydrateToday,
+    accumulateAvailableRewardsToHydrate: !shouldWeHydrateToday,
+  };
+}
+
+const HYDRATE_FREQUENCY_DAYS: Record<"everyOtherDay" | "everyWeek", number> = {
+  everyOtherDay: 2,
+  everyWeek: 7,
+};
 
 function getDaysInMonth(date: Date): number {
   const month = date.getMonth();

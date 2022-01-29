@@ -1,13 +1,21 @@
-import { Dialog, Classes, Button } from "@blueprintjs/core";
-import { Cell, Column, EditableCell2, Table2 } from "@blueprintjs/table";
+import { Dialog, Classes, Button, HTMLSelect } from "@blueprintjs/core";
+import {
+  Cell,
+  Column,
+  EditableCell2,
+  Table2,
+  RenderMode,
+} from "@blueprintjs/table";
 import React, { useContext } from "react";
 
 import ContentContext from "../../contexts/content";
 import moment from "moment";
+import { HydrateFrequency } from "../../store/reducers/settings";
 
 export type ReinvestmentInEditor = {
   reinvest: number;
   timestamp: number;
+  hydrateStrategy?: "default" | HydrateFrequency;
 };
 
 type Props = {
@@ -18,8 +26,13 @@ type Props = {
   isOpen: boolean;
   onClose: (evt: React.SyntheticEvent<HTMLElement, Event>) => void | undefined;
   onChangeMonthReinvestPercent: (value: number, rowIndex: number) => void;
+  onChangeMonthHydrateStrategy: (
+    value: "default" | HydrateFrequency,
+    rowIndex: number
+  ) => void;
   onSaveClick: (walletId: string) => void;
   onAddAnotherMonth: () => void;
+  onRemoveLastMonth: () => void;
 };
 
 function WalletReinvestmentPlan({
@@ -29,8 +42,10 @@ function WalletReinvestmentPlan({
   reinvestments,
   onClose,
   onChangeMonthReinvestPercent,
+  onChangeMonthHydrateStrategy,
   onSaveClick,
   onAddAnotherMonth,
+  onRemoveLastMonth,
 }: Props) {
   const { wallets: walletsContent } = useContext(ContentContext);
 
@@ -44,9 +59,22 @@ function WalletReinvestmentPlan({
     onAddAnotherMonth();
   };
 
+  const handleRemoveLastMonthClick: React.MouseEventHandler = (evt) => {
+    evt.preventDefault();
+    onRemoveLastMonth();
+  };
+
   const handleChangeMonthReinvestPercent =
     (rowIndex: number) => (value: string) => {
       onChangeMonthReinvestPercent(Number.parseFloat(value) / 100, rowIndex);
+    };
+
+  const handleChangeHydrateStategy =
+    (rowIndex: number) => (evt: React.ChangeEvent<HTMLSelectElement>) => {
+      onChangeMonthHydrateStrategy(
+        evt.currentTarget.value as "default" | HydrateFrequency,
+        rowIndex
+      );
     };
 
   return (
@@ -65,7 +93,15 @@ function WalletReinvestmentPlan({
               <p className="block block-bottom-lg">
                 {walletsContent.reinvestmentPlanTableHelpText}
               </p>
-              <Table2 numRows={reinvestments.length}>
+              <Table2
+                numRows={reinvestments.length}
+                minRowHeight={35}
+                defaultRowHeight={35}
+                columnWidths={[100, 100, 100, 200]}
+                // Disables optimised rendering so changes in the hydrate strategy dropdowns
+                // reflect without having to change focus of cells in the table!
+                renderMode={RenderMode.NONE}
+              >
                 <Column
                   name={walletsContent.monthTableColumnLabel}
                   cellRenderer={(rowIndex: number) => {
@@ -97,12 +133,43 @@ function WalletReinvestmentPlan({
                     );
                   }}
                 />
+                <Column
+                  name={walletsContent.hydrateStrategyColumnLabel}
+                  cellRenderer={(rowIndex: number) => {
+                    const { hydrateStrategy } = reinvestments[rowIndex];
+
+                    return (
+                      <Cell>
+                        <HTMLSelect
+                          value={hydrateStrategy ?? "default"}
+                          onChange={handleChangeHydrateStategy(rowIndex)}
+                        >
+                          {Object.entries(
+                            walletsContent.reinvestmentPlanHydrateStrategies
+                          ).map(([value, label]) => (
+                            <option key={value} value={value}>
+                              {label}
+                            </option>
+                          ))}
+                        </HTMLSelect>
+                      </Cell>
+                    );
+                  }}
+                />
               </Table2>
             </div>
             <Button
               icon="plus"
               text={walletsContent.monthsAddAnotherText}
               onClick={handleAddAnotherMonthClick}
+            />
+            <Button
+              icon="minus"
+              className="left-small-margin"
+              text={walletsContent.monthsRemoveLastMonthText}
+              onClick={handleRemoveLastMonthClick}
+              // The first 12 months will always be populated!
+              disabled={reinvestments.length <= 12}
             />
           </form>
         </div>

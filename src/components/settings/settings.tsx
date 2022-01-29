@@ -12,7 +12,9 @@ import {
   updateAverageGasFee,
   updateClaimDays,
   updateTrendPeriod,
+  updateHydrateFrequency,
 } from "../../store/actions/settings";
+import { HydrateFrequency } from "../../store/reducers/settings";
 import { AppState } from "../../store/types";
 
 import "./settings.css";
@@ -30,6 +32,7 @@ function Settings() {
     claimDays,
     trendPeriod,
     currentPlanId,
+    defaultHydrateFrequency,
   } = useSelector((state: AppState) => {
     const currentPlanId = state.plans.current;
     return { ...state.settings[currentPlanId], currentPlanId };
@@ -104,6 +107,17 @@ function Settings() {
   ) => {
     dispatch(
       updateTrendPeriod(evt.currentTarget.value as TrendPeriod, currentPlanId)
+    );
+  };
+
+  const handleSelectDefaultHydrateFrequency: React.ReactEventHandler<
+    HTMLSelectElement
+  > = (evt) => {
+    dispatch(
+      updateHydrateFrequency(
+        evt.currentTarget.value as HydrateFrequency,
+        currentPlanId
+      )
     );
   };
 
@@ -250,6 +264,25 @@ function Settings() {
                 {label}
               </option>
             ))}
+          </HTMLSelect>
+        </FormGroup>
+        <FormGroup
+          helperText={settings.defaultHydrateFrequencyHelpText}
+          label={settings.defaultHydrateFrequencyLabel}
+          labelFor="default-hydrate-frequency-select"
+        >
+          <HTMLSelect
+            id="default-hydrate-frequency-select"
+            value={defaultHydrateFrequency}
+            onChange={handleSelectDefaultHydrateFrequency}
+          >
+            {Object.entries(settings.defaultHydrateFrequencies).map(
+              ([value, label]) => (
+                <option key={value} value={value}>
+                  {label}
+                </option>
+              )
+            )}
           </HTMLSelect>
         </FormGroup>
       </form>
