@@ -111,6 +111,12 @@ export type ResultsContent = {
   hydrateClaimActionColumnHelpText: string;
   hydrateClaimAccumDripRewardsLabel: string;
   hydrateClaimAccumDripRewardsHelpText: string;
+  hydrateClaimClaimedOrHydratedLabel: string;
+  hydrateClaimClaimedOrHydratedHelpText: string;
+  hydrateClaimMaxPayoutEndOfDayLabel: string;
+  hydrateClaimMaxPayoutEndOfDayHelpText: string;
+  hydrateClaimConsumedRewardsEndOfDayLabel: string;
+  hydrateClaimConsumedRewardsEndOfDayHelpText: string;
 };
 
 export type OverviewContent = {
@@ -336,7 +342,18 @@ export function content(): Content {
         "The action to carry out on this day, either hydrate, claim or leave available rewards to accumulate.",
       hydrateClaimAccumDripRewardsLabel: "Accum. DRIP Rewards",
       hydrateClaimAccumDripRewardsHelpText:
-        'The DRIP rewards accumulating in the "Available" column in the faucet prior to claiming or hydrating.',
+        'The estimated DRIP rewards accumulating in the "Available" column in the faucet prior to claiming or hydrating.',
+      hydrateClaimClaimedOrHydratedLabel: "Claimed or Hydrated (DRIP)",
+      hydrateClaimClaimedOrHydratedHelpText:
+        "The estimated amount of DRIP claimed or hydrated after tax on a given day",
+      hydrateClaimMaxPayoutEndOfDayLabel: "Max Payout EOD (DRIP)",
+      hydrateClaimMaxPayoutEndOfDayHelpText:
+        "The max payout at the end of the day in DRIP based on the DRIP deposit balance at the end of day." +
+        " This value is used in the automatic hydrate/claim strategy to ensure you do not reach max payout too early.",
+      hydrateClaimConsumedRewardsEndOfDayLabel: "Consumed Rewards EOD (DRIP)",
+      hydrateClaimConsumedRewardsEndOfDayHelpText:
+        "The total accumulated consumed rewards in DRIP at the end of the day. If consumed rewards + available " +
+        "rewards is within 10% of the current max payout then you will need to claim so your rewards do not stop.",
     },
     overview: {
       totalRewardsConsumedPrefixText: "Total Rewards Consumed by ",

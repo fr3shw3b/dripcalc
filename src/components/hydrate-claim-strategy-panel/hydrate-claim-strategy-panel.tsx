@@ -8,12 +8,14 @@ import { Tooltip2 } from "@blueprintjs/popover2";
 import moment from "moment";
 import { DayEarnings } from "../../store/middleware/shared-calculator-types";
 import usePrevious from "../../hooks/use-previous";
+import ConfigContext from "../../contexts/config";
 
 type Props = {
   walletId: string;
 };
 
 function HydrateClaimStrategyPanel({ walletId }: Props) {
+  const config = useContext(ConfigContext);
   const { calculatedEarnings } = useSelector((state: AppState) => {
     const currentPlanId = state.plans.current;
     return {
@@ -53,7 +55,7 @@ function HydrateClaimStrategyPanel({ walletId }: Props) {
     monthLabels[month],
   ]);
 
-  const [currentMonth, setCurrentMonth] = useState(monthOptions[0][0]);
+  const [currentMonth, setCurrentMonth] = useState(monthOptions?.[0]?.[0] ?? 0);
 
   const earningDays = Object.keys(
     walletEarnings?.yearEarnings[currentYear]?.monthEarnings[currentMonth]
@@ -120,12 +122,45 @@ function HydrateClaimStrategyPanel({ walletId }: Props) {
                 <th>
                   <Tooltip2
                     content={
+                      resultsContent.hydrateClaimClaimedOrHydratedHelpText
+                    }
+                    position={Position.BOTTOM}
+                    openOnTargetFocus={false}
+                  >
+                    {resultsContent.hydrateClaimClaimedOrHydratedLabel}
+                  </Tooltip2>
+                </th>
+                <th>
+                  <Tooltip2
+                    content={
                       resultsContent.hydrateClaimAccumDripRewardsHelpText
                     }
                     position={Position.BOTTOM}
                     openOnTargetFocus={false}
                   >
                     {resultsContent.hydrateClaimAccumDripRewardsLabel}
+                  </Tooltip2>
+                </th>
+                <th>
+                  <Tooltip2
+                    content={
+                      resultsContent.hydrateClaimConsumedRewardsEndOfDayHelpText
+                    }
+                    position={Position.BOTTOM}
+                    openOnTargetFocus={false}
+                  >
+                    {resultsContent.hydrateClaimConsumedRewardsEndOfDayLabel}
+                  </Tooltip2>
+                </th>
+                <th>
+                  <Tooltip2
+                    content={
+                      resultsContent.hydrateClaimMaxPayoutEndOfDayHelpText
+                    }
+                    position={Position.BOTTOM}
+                    openOnTargetFocus={false}
+                  >
+                    {resultsContent.hydrateClaimMaxPayoutEndOfDayLabel}
                   </Tooltip2>
                 </th>
               </thead>
@@ -150,15 +185,38 @@ function HydrateClaimStrategyPanel({ walletId }: Props) {
                   const renderColumns = () => {
                     const accumDailyRewards =
                       dayEarnings?.accumDailyRewards ?? 0;
+                    const maxPayout = (
+                      dayEarnings?.dripDepositBalance ??
+                      0 * config.depositMultiplier
+                    ).toFixed(4);
+                    const consumedRewards = (
+                      dayEarnings?.accumConsumedRewards ?? 0
+                    ).toFixed(4);
+                    const hydrateOnDay = dayEarnings?.reinvestAfterTax;
+                    const claimOnDay = dayEarnings?.claimAfterTax;
+                    const actionForDay = selectActionForDay(dayEarnings);
                     return (
                       <>
                         <td>{renderDay()}</td>
-                        <td>{selectActionForDay(dayEarnings)}</td>
+                        <td>{actionForDay}</td>
+                        {actionForDay === "Hydrate" && (
+                          <td>{hydrateOnDay?.toFixed(4)}</td>
+                        )}
+                        {actionForDay === "Claim" && (
+                          <td>{claimOnDay?.toFixed(4)}</td>
+                        )}
+                        {(actionForDay === "Unknown" ||
+                          actionForDay ===
+                            "Leave to Accumulate in Available Rewards") && (
+                          <td></td>
+                        )}
                         <td>
                           {accumDailyRewards > 0
                             ? accumDailyRewards.toFixed(4)
                             : ""}
                         </td>
+                        <td>{consumedRewards}</td>
+                        <td>{maxPayout}</td>
                       </>
                     );
                   };

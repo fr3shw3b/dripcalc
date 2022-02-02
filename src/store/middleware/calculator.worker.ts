@@ -649,6 +649,7 @@ const emptyDayEarnings: DayEarnings = {
   leaveRewardsToAccumulateForClaim: false,
   leaveRewardsToAccumulateForHydrate: false,
   lastHydrateTimestamp: 0,
+  lastClaimTimestamp: 0,
 };
 
 function calculateDayEarnings(
@@ -684,7 +685,8 @@ function calculateDayEarnings(
       state.settings.claimDays,
       wallet.monthInputs[monthInputsKey]?.reinvest ?? config.defaultReinvest,
       maxPayout,
-      prevDayEarningsData.accumConsumedRewards + initialAccumDayEarnings
+      prevDayEarningsData.accumConsumedRewards + initialAccumDayEarnings,
+      initialAccumDayEarnings
     );
 
     const dripValueForDay = dripValueProvider.applyVariance(dripValueForMonth);
@@ -704,7 +706,8 @@ function calculateDayEarnings(
         state.settings.claimDays,
         state.settings,
         dripValueForDay,
-        isClaimDay
+        isClaimDay,
+        new Date(prevDayEarningsData.lastClaimTimestamp)
       );
 
     const leaveRewardsAvailableToAccumulate =
@@ -785,9 +788,11 @@ function calculateDayEarnings(
         dripDepositBalance: finalDepositBalanceEndOfDay,
         estimatedGasFees,
         accumConsumedRewards:
-          // Consumed rewards are the accumulation of available rewards before deciding to hydrate
-          // or claim and before any taxes are applied.
-          prevDayEarningsData.accumConsumedRewards + initialAccumDayEarnings,
+          // Consumed rewards are the accumulation of available rewards after they have been hydrated
+          // or claimed!
+          isClaimDay || isHydrateDay
+            ? prevDayEarningsData.accumConsumedRewards + initialAccumDayEarnings
+            : prevDayEarningsData.accumConsumedRewards,
         accumDailyRewards: leaveRewardsAvailableToAccumulate
           ? // Capture day earnings to be accumulated in the "Available" column
             // before any tax is applied!
@@ -804,6 +809,9 @@ function calculateDayEarnings(
         lastHydrateTimestamp: isHydrateDay
           ? Number.parseInt(moment(date).format("x"))
           : prevDayEarningsData.lastHydrateTimestamp,
+        lastClaimTimestamp: isClaimDay
+          ? Number.parseInt(moment(date).format("x"))
+          : prevDayEarningsData.lastClaimTimestamp,
       },
     };
   };
@@ -847,13 +855,23 @@ function shouldClaimOnDay(
   claimDays: string,
   reinvest: number,
   maxPayout: number,
-  totalConsumedIncludingAccumulatedAvailableRewards: number
+  totalConsumedIncludingAccumulatedAvailableRewards: number,
+  accumulatedAvailableRewards: number
 ): { isClaimDay: boolean; accumulateAvailableRewardsToClaim: boolean } {
   const daysInMonth = getDaysInMonth(date);
   // When days in month are not even, we'll take the extra day for claims!
   const numberOfClaimDays = Math.ceil(daysInMonth * (1 - reinvest));
   if (numberOfClaimDays === 0) {
     return { isClaimDay: false, accumulateAvailableRewardsToClaim: false };
+  }
+
+  // If there are no accumulated available rewards, you can't claim 0.
+  if (accumulatedAvailableRewards === 0) {
+    return {
+      isClaimDay: false,
+      // No rewards to accumulate really but we need to do something so "accumulate" 0.
+      accumulateAvailableRewardsToClaim: true,
+    };
   }
 
   // Claim regardless if today is the last day of the claim period
@@ -910,7 +928,8 @@ function shouldHydrateOnDay(
   claimDays: string,
   settings: PlanSettings,
   dripPriceforDay: number,
-  isClaimDay: boolean
+  isClaimDay: boolean,
+  lastClaimDate: Date
 ): { isHydrateDay: boolean; accumulateAvailableRewardsToHydrate: boolean } {
   // If the day has already been marked for claiming, that will
   // take priority!
@@ -921,15 +940,12 @@ function shouldHydrateOnDay(
     };
   }
 
-  const lastHydrateTimestamp = Number.parseInt(
-    moment(lastHydrateDate).format("x")
-  );
-  // If some available rewards have accumulated and you haven't yet hydrated
-  // then let's begin!
-  if (lastHydrateTimestamp === 0 && accumulatedAvailableRewards > 0) {
+  // If there are no accumulated available rewards, you can't reinvest 0.
+  if (accumulatedAvailableRewards === 0) {
     return {
-      isHydrateDay: true,
-      accumulateAvailableRewardsToHydrate: false,
+      isHydrateDay: false,
+      // No rewards to accumulate really but we need to do something so "accumulate" 0.
+      accumulateAvailableRewardsToHydrate: true,
     };
   }
 
@@ -967,6 +983,25 @@ function shouldHydrateOnDay(
   ) {
     return {
       isHydrateDay: false,
+      accumulateAvailableRewardsToHydrate: false,
+    };
+  }
+
+  const lastHydrateTimestamp = Number.parseInt(
+    moment(lastHydrateDate).format("x")
+  );
+  const lastClaimTimestamp = Number.parseInt(moment(lastClaimDate).format("x"));
+  // If some available rewards have accumulated and you haven't yet hydrated
+  // or claimed then let's begin!
+  // This comes after claim day checks as we first need to make sure we are in hydrate
+  // territory before assuming the first thing we should do is hydrate.
+  if (
+    lastClaimTimestamp === 0 &&
+    lastHydrateTimestamp === 0 &&
+    accumulatedAvailableRewards > 0
+  ) {
+    return {
+      isHydrateDay: true,
       accumulateAvailableRewardsToHydrate: false,
     };
   }

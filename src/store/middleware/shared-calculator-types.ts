@@ -80,4 +80,5 @@ export type DayEarnings = {
   isHydrateDay: boolean;
   leaveRewardsToAccumulateForHydrate: boolean;
   lastHydrateTimestamp: number;
+  lastClaimTimestamp: number;
 };
