@@ -186,8 +186,8 @@ function HydrateClaimStrategyPanel({ walletId }: Props) {
                     const accumDailyRewards =
                       dayEarnings?.accumDailyRewards ?? 0;
                     const maxPayout = (
-                      dayEarnings?.dripDepositBalance ??
-                      0 * config.depositMultiplier
+                      (dayEarnings?.dripDepositBalance ?? 0) *
+                      config.depositMultiplier
                     ).toFixed(4);
                     const consumedRewards = (
                       dayEarnings?.accumConsumedRewards ?? 0
