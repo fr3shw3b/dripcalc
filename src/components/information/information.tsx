@@ -18,7 +18,7 @@ function Information() {
         </strong>
       </Callout>
       <p className="info-content-block">
-        <strong>Max Payout Cap (DRIP):</strong> 100,0000
+        <strong>Max Payout Cap (DRIP):</strong> 100,000
         <br />
         <strong>Hydrate Tax:</strong> 5%
         <br />
