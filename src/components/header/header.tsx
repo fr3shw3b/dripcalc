@@ -27,6 +27,8 @@ import { cleanAllData } from "../../store/actions/general";
 import { AppState } from "../../store/types";
 import { Tooltip2 } from "@blueprintjs/popover2";
 
+import logo from "../../logo.svg";
+
 type PlanLite = Pick<PlanState, "id" | "label">;
 const PlanSelect = Select.ofType<PlanLite>();
 
@@ -104,7 +106,10 @@ function Header() {
   return (
     <Navbar>
       <Navbar.Group align={Alignment.LEFT}>
-        <Navbar.Heading>dripcalc</Navbar.Heading>
+        <Navbar.Heading>
+          {" "}
+          <img src={logo} alt="dripcalc" width={100} />
+        </Navbar.Heading>
         <Navbar.Divider />
         <Button
           className="bp3-minimal"

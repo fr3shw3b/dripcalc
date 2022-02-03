@@ -84,3 +84,7 @@ tr.danger {
 .hydrate-strategy-year-month-select-block {
   padding-bottom: 20px;
 }
+
+.right-small-margin {
+  margin-right: 10px;
+}

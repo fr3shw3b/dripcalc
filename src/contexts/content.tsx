@@ -153,14 +153,14 @@ export function content(): Content {
         " to the moment all rewards have been consumed in your last wallet. " +
         "When you input custom DRIP values for a wallet, the trend will begin from the date of the last custom DRIP value you enter.",
       dripValueTrendOptions: {
-        downtrend: "Down Trend",
+        downtrend: "Bearish",
         stable: "Stable",
-        uptrend: "Up Trend",
+        uptrend: "Bullish",
       },
-      uptrendMaxValueLabel: "Up Trend Max Value",
+      uptrendMaxValueLabel: "Bullish Max Value",
       uptrendMaxValueHelpText: (currency: string) =>
         `The maximum value the DRIP token will reach in ${currency}`,
-      downtrendMinValueLabel: "Down Trend Min Value",
+      downtrendMinValueLabel: "Bearish Min Value",
       downTrendMinValueHelpText: (currency: string) =>
         `The minimum value the DRIP token will fall to in ${currency}`,
       stabilisesAtLabel: "Stabilises At Value",

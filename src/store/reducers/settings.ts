@@ -130,7 +130,7 @@ const reducers = {
       ...state,
       [finalAction.payload.planId]: {
         ...state[finalAction.payload.planId],
-        dripValueTrend: finalAction.payload.currency,
+        currency: finalAction.payload.currency,
       },
     };
   },
