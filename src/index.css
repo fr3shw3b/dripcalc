@@ -51,6 +51,16 @@ code {
   overflow: auto;
 }
 
+@media screen and (max-width: 1350px) {
+  .wallet-tab-panel-container .bp3-collapse,
+  .wallet-tab-panel-container .block,
+  .hydrate-claim-strategy-tab-panel-container .block {
+    overflow-x: auto;
+    white-space: nowrap;
+    width: calc(100vw - 200px);
+  }
+}
+
 tr.warning {
   background: #a66321;
 }
