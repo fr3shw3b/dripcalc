@@ -5,6 +5,7 @@ import {
   MenuItem,
   Position,
   InputGroup,
+  Icon,
 } from "@blueprintjs/core";
 import { Select } from "@blueprintjs/select";
 import { nanoid } from "nanoid";
@@ -26,6 +27,7 @@ import {
 import { cleanAllData } from "../../store/actions/general";
 import { AppState } from "../../store/types";
 import { Tooltip2 } from "@blueprintjs/popover2";
+import useMobileCheck from "../../hooks/use-mobile-check";
 
 import logo from "../../logo.svg";
 
@@ -33,6 +35,7 @@ type PlanLite = Pick<PlanState, "id" | "label">;
 const PlanSelect = Select.ofType<PlanLite>();
 
 function Header() {
+  const isMobile = useMobileCheck();
   const navigate = useNavigate();
   const location = useLocation();
   const dispatch = useDispatch();
@@ -105,134 +108,148 @@ function Header() {
 
   return (
     <Navbar>
-      <Navbar.Group align={Alignment.LEFT}>
+      <Navbar.Group align={isMobile ? Alignment.CENTER : Alignment.LEFT}>
         <Navbar.Heading>
           {" "}
           <img src={logo} alt="dripcalc" width={100} />
         </Navbar.Heading>
-        <Navbar.Divider />
-        <Button
-          className="bp3-minimal"
-          icon="home"
-          text="dashboard"
-          active={location.pathname === "/"}
-          onClick={handleNavButtonClick("/")}
-        />
-        <Button
-          className="bp3-minimal"
-          icon="info-sign"
-          text="information"
-          active={location.pathname === "/information"}
-          onClick={handleNavButtonClick("information")}
-        />
-        <Navbar.Divider />
-        <PlanSelect
-          items={plans}
-          itemRenderer={(item: PlanLite, { handleClick, modifiers, query }) => {
-            if (!modifiers.matchesPredicate) {
-              return null;
-            }
+        {isMobile && <Icon icon="menu" className="menu-icon" />}
+        {!isMobile && (
+          <>
+            <Navbar.Divider />
+            <Button
+              className="bp3-minimal"
+              icon="home"
+              text="dashboard"
+              active={location.pathname === "/"}
+              onClick={handleNavButtonClick("/")}
+            />
+            <Button
+              className="bp3-minimal"
+              icon="info-sign"
+              text="information"
+              active={location.pathname === "/information"}
+              onClick={handleNavButtonClick("information")}
+            />
+            <Navbar.Divider />
+            <PlanSelect
+              items={plans}
+              itemRenderer={(
+                item: PlanLite,
+                { handleClick, modifiers, query }
+              ) => {
+                if (!modifiers.matchesPredicate) {
+                  return null;
+                }
 
-            return (
-              <MenuItem
-                active={modifiers.active}
-                disabled={modifiers.disabled}
-                key={item.id}
-                onClick={handleClick}
-                text={highlightText(item.label, query)}
-              />
-            );
-          }}
-          activeItem={plans[currentPlanIndex]}
-          onItemSelect={handlePlanSelect}
-          noResults={<MenuItem disabled={true} text="No plans." />}
-          filterable
-          createNewItemFromQuery={(title: string): PlanLite => {
-            return {
-              label: title,
-              id: nanoid(),
-            };
-          }}
-          itemPredicate={(query, plan, _index, exactMatch) => {
-            const normalizedTitle = plan.label.toLowerCase();
-            const normalizedQuery = query.toLowerCase();
+                return (
+                  <MenuItem
+                    active={modifiers.active}
+                    disabled={modifiers.disabled}
+                    key={item.id}
+                    onClick={handleClick}
+                    text={highlightText(item.label, query)}
+                  />
+                );
+              }}
+              activeItem={plans[currentPlanIndex]}
+              onItemSelect={handlePlanSelect}
+              noResults={<MenuItem disabled={true} text="No plans." />}
+              filterable
+              createNewItemFromQuery={(title: string): PlanLite => {
+                return {
+                  label: title,
+                  id: nanoid(),
+                };
+              }}
+              itemPredicate={(query, plan, _index, exactMatch) => {
+                const normalizedTitle = plan.label.toLowerCase();
+                const normalizedQuery = query.toLowerCase();
 
-            if (exactMatch) {
-              return normalizedTitle === normalizedQuery;
-            } else {
-              return normalizedTitle.indexOf(normalizedQuery) >= 0;
-            }
-          }}
-          createNewItemRenderer={(
-            query: string,
-            active: boolean,
-            handleClick: React.MouseEventHandler<HTMLElement>
-          ) => {
-            return (
-              <MenuItem
-                icon="add"
-                text={`Create "${query}"`}
-                active={active}
-                onClick={handleClick}
-                shouldDismissPopover={false}
-              />
-            );
-          }}
-        >
-          <Button text={currentPlanLabel} rightIcon="double-caret-vertical" />
-        </PlanSelect>
-        <form onSubmit={(evt) => evt.preventDefault()}>
-          <InputGroup
-            id="current-plan-label"
-            className={`inline-field edit-plan-label${
-              showEditPlanLabel ? " show" : ""
-            }`}
-            type="text"
-            asyncControl={true}
-            rightElement={
-              <Button icon="cross" onClick={handleCloseEditPlanLabelClick} />
-            }
-            placeholder="Enter minimum value"
-            value={currentPlanLabel}
-            onChange={handleCurrentPlanLabelChange}
-            inputRef={editPlanLabelInputRef}
-          />
-          {!showEditPlanLabel && (
-            <Tooltip2
-              content={`Edit "${currentPlanLabel}" label`}
-              position={Position.BOTTOM}
-              openOnTargetFocus={false}
+                if (exactMatch) {
+                  return normalizedTitle === normalizedQuery;
+                } else {
+                  return normalizedTitle.indexOf(normalizedQuery) >= 0;
+                }
+              }}
+              createNewItemRenderer={(
+                query: string,
+                active: boolean,
+                handleClick: React.MouseEventHandler<HTMLElement>
+              ) => {
+                return (
+                  <MenuItem
+                    icon="add"
+                    text={`Create "${query}"`}
+                    active={active}
+                    onClick={handleClick}
+                    shouldDismissPopover={false}
+                  />
+                );
+              }}
             >
               <Button
-                icon="edit"
-                className="navbar-edit"
-                onClick={handleEditPlanLabelClick}
+                text={currentPlanLabel}
+                rightIcon="double-caret-vertical"
               />
-            </Tooltip2>
-          )}
-          <Tooltip2
-            content={`Refresh "${currentPlanLabel}" calculations`}
-            position={Position.BOTTOM}
-            openOnTargetFocus={false}
-          >
-            <Button
-              icon="refresh"
-              className="navbar-edit"
-              onClick={handleRefreshClick}
-            />
-          </Tooltip2>
-          <Tooltip2
-            content={`Clean all data! (This will clean out the browser storage that stores all your dripcalc data)`}
-            position={Position.BOTTOM}
-            openOnTargetFocus={false}
-          >
-            <Button
-              icon="clean"
-              className="navbar-clean-data"
-              onClick={handleCleanDataClick}
-            />
-          </Tooltip2>
-        </form>
+            </PlanSelect>
+            <form onSubmit={(evt) => evt.preventDefault()}>
+              <InputGroup
+                id="current-plan-label"
+                className={`inline-field edit-plan-label${
+                  showEditPlanLabel ? " show" : ""
+                }`}
+                type="text"
+                asyncControl={true}
+                rightElement={
+                  <Button
+                    icon="cross"
+                    onClick={handleCloseEditPlanLabelClick}
+                  />
+                }
+                placeholder="Enter minimum value"
+                value={currentPlanLabel}
+                onChange={handleCurrentPlanLabelChange}
+                inputRef={editPlanLabelInputRef}
+              />
+              {!showEditPlanLabel && (
+                <Tooltip2
+                  content={`Edit "${currentPlanLabel}" label`}
+                  position={Position.BOTTOM}
+                  openOnTargetFocus={false}
+                >
+                  <Button
+                    icon="edit"
+                    className="navbar-edit"
+                    onClick={handleEditPlanLabelClick}
+                  />
+                </Tooltip2>
+              )}
+              <Tooltip2
+                content={`Refresh "${currentPlanLabel}" calculations`}
+                position={Position.BOTTOM}
+                openOnTargetFocus={false}
+              >
+                <Button
+                  icon="refresh"
+                  className="navbar-edit"
+                  onClick={handleRefreshClick}
+                />
+              </Tooltip2>
+              <Tooltip2
+                content={`Clean all data! (This will clean out the browser storage that stores all your dripcalc data)`}
+                position={Position.BOTTOM}
+                openOnTargetFocus={false}
+              >
+                <Button
+                  icon="clean"
+                  className="navbar-clean-data"
+                  onClick={handleCleanDataClick}
+                />
+              </Tooltip2>
+            </form>
+          </>
+        )}
       </Navbar.Group>
     </Navbar>
   );

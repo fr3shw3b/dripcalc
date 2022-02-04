@@ -41,7 +41,6 @@ code {
 .wallet-tab-panel-container,
 .hydrate-claim-strategy-tab-panel-container {
   height: calc(100vh - 250px);
-  /* todo: change for mobile responsiveness! */
   min-width: 720px;
   overflow: auto;
 }
@@ -58,6 +57,19 @@ code {
     overflow-x: auto;
     white-space: nowrap;
     width: calc(100vw - 200px);
+  }
+}
+
+@media screen and (max-width: 768px) {
+  .wallet-tab-panel-container .bp3-collapse,
+  .wallet-tab-panel-container .block,
+  .hydrate-claim-strategy-tab-panel-container .block {
+    width: calc(100vw - 30px);
+  }
+
+  .wallet-tab-panel-container,
+  .hydrate-claim-strategy-tab-panel-container {
+    height: calc(100vh - 400px);
   }
 }
 
@@ -97,4 +109,10 @@ tr.danger {
 
 .right-small-margin {
   margin-right: 10px;
+}
+
+.menu-icon {
+  position: absolute;
+  right: 15px;
+  cursor: pointer;
 }

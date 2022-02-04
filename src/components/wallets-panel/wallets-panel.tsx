@@ -27,6 +27,7 @@ import { DepositInEditor } from "../wallet-deposits/wallet-deposits";
 import { ReinvestmentInEditor } from "../wallet-reinvestment-plan/wallet-reinvestment-plan";
 import { DripValueInEditor } from "../wallet-custom-drip-values/wallet-custom-drip-values";
 import { HydrateFrequency } from "../../store/reducers/settings";
+import useMobileCheck from "../../hooks/use-mobile-check";
 
 type EditorState = {
   isOpen: boolean;
@@ -45,6 +46,7 @@ type MonthInputsState = {
 };
 
 function WalletsPanel() {
+  const isMobile = useMobileCheck();
   const [editorState, setEditorState] = useState<EditorState>({
     isOpen: false,
     action: "create",
@@ -529,7 +531,7 @@ function WalletsPanel() {
       <Tabs
         id="walletTabs"
         onChange={handleWalletChange}
-        vertical
+        vertical={!isMobile}
         selectedTabId={current}
       >
         {wallets.map(({ id, label, startDate, monthInputs }) => (

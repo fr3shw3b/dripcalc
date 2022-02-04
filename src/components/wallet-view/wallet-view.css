@@ -1,15 +1,14 @@
 .wallet-heading {
   margin-top: 0;
+  margin-bottom: 10px;
+}
+
+.wallet-ctas {
+  margin-bottom: 20px;
 }
 
 .wallet-heading-cta {
   margin-left: 10px;
-}
-
-.wallet-help {
-  position: absolute;
-  right: 0;
-  top: 0;
 }
 
 .wallet-view-container {

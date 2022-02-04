@@ -80,7 +80,7 @@ function Dashboard() {
             faucet compounding strategy.
           </p>
           <p>
-            The tool dashboard provides two tabs. One is the overview tab that
+            The dashboard provides two sections. One is the overview tab that
             provides some high level stats that give an overview of your
             earnings across all wallets along with some other useful
             DRIP-specific insights. The other is the wallets tab where all the

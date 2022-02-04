@@ -14,6 +14,7 @@ import YearlyWalletPanel from "../yearly-wallet-panel";
 import HydrateClaimStrategyPanel from "../hydrate-claim-strategy-panel";
 import { Popover2 } from "@blueprintjs/popover2";
 import { findLastYearForWallet } from "../../utils/wallets";
+import useMobileCheck from "../../hooks/use-mobile-check";
 
 type Props = {
   walletId: string;
@@ -36,6 +37,7 @@ function WalletView({
   onReinvestmentPlanClick,
   onCustomDripValuesClick,
 }: Props) {
+  const isMobile = useMobileCheck();
   const { wallets: walletsContent } = useContext(ContentContext);
   const { isCalculating, calculatedEarnings, currentPlanId } = useSelector(
     (state: AppState) => ({
@@ -66,44 +68,37 @@ function WalletView({
 
   return (
     <div className="wallet-view-container">
-      <h2 className="wallet-heading">
-        {label}{" "}
-        <Button
-          className="wallet-heading-cta"
-          icon="edit"
-          small
-          onClick={handleEditClick}
-        />
+      <h2 className="wallet-heading">{label} </h2>
+      <div className="wallet-ctas">
+        <Button icon="edit" small onClick={handleEditClick} />
         <Button
           className="wallet-heading-cta"
           icon="bank-account"
           small
           onClick={handleDepositsClick}
-          text={walletsContent.depositsButtonText}
+          text={isMobile ? "" : walletsContent.depositsButtonText}
         />
         <Button
           className="wallet-heading-cta"
           icon="percentage"
           small
           onClick={handleReinvestmentPlanClick}
-          text={walletsContent.reinvestButtonText}
+          text={isMobile ? "" : walletsContent.reinvestButtonText}
         />
         <Button
           className="wallet-heading-cta"
           icon="tint"
           small
           onClick={handleCustomDripValuesClick}
-          text={walletsContent.customDripValuesButtonText}
+          text={isMobile ? "" : walletsContent.customDripValuesButtonText}
         />
-      </h2>
-      <div className="wallet-help">
         <Popover2
           content={
             <div className="wallet-help-popover-content">
               {walletsContent.walletViewHelpText}
             </div>
           }
-          placement="left"
+          placement="auto"
           usePortal={false}
           modifiers={{
             arrow: { enabled: true },
@@ -111,7 +106,7 @@ function WalletView({
             preventOverflow: { enabled: true },
           }}
         >
-          <Button icon="help" />
+          <Button className="wallet-heading-cta" icon="help" small />
         </Popover2>
       </div>
       <div>
