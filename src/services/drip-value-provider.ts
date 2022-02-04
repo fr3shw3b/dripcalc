@@ -1,4 +1,5 @@
 import chance from "chance";
+import moment from "moment";
 
 export interface DripValueProvider {
   getDripValueForMonth(
@@ -26,7 +27,11 @@ function dripValueProvider(): DripValueProvider {
       trendPeriod: TrendPeriod = "tenYears",
       lastCustomDripValueDate?: Date
     ): number => {
-      const trendStartDate = lastCustomDripValueDate ?? startDate;
+      const trendStartDate = lastCustomDripValueDate
+        ? // Add a month to last custom DRIP value date so the custom DRIP value
+          // applies for the entirety of that month and the trend kicks in the following month.
+          moment(lastCustomDripValueDate).add(1, "month").toDate()
+        : startDate;
       const yearArrIndex =
         monthDate.getFullYear() - trendStartDate.getFullYear();
       const trendBoundaryIndex = DRIP_TREND_BOUNDARY_INDEX[trendPeriod];
