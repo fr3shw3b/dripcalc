@@ -26,16 +26,20 @@ export function findLastYearForWallet(
     return undefined;
   }
 
-  const monthKeys = Object.keys(lastYearEarnings.monthEarnings);
-  monthKeys.sort();
+  const monthKeys = Object.keys(lastYearEarnings.monthEarnings).filter(
+    (monthKey) =>
+      lastYearEarnings.monthEarnings[Number.parseInt(monthKey)].monthEarnings >
+      0
+  );
+  monthKeys.sort((a, b) => Number.parseInt(a) - Number.parseInt(b));
 
-  const month = monthKeys[monthKeys.length - 1];
+  const month = Number.parseInt(monthKeys[monthKeys.length - 1]);
   const daysInMonth = getDaysInMonth(
-    moment(`1/${month}/${lastYearEarnings.year}`, "D/M/YYYY").toDate()
+    moment(`1/${month + 1}/${lastYearEarnings.year}`, "D/M/YYYY").toDate()
   );
   return Number.parseInt(
     moment(
-      `${daysInMonth}/${month}/${lastYearEarnings.year}`,
+      `${daysInMonth}/${month + 1}/${lastYearEarnings.year}`,
       "D/M/YYYY"
     ).format("x"),
     10
