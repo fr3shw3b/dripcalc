@@ -290,16 +290,15 @@ function calculateWalletEarnings(
         newDate,
         yearEarningsMap
       );
-      yearEarningsMap[newDate.getFullYear()] = yearEarnings;
-      prevDate = newDate;
       totalYearEarnings = yearEarnings.totalYearEarnings;
       if (totalYearEarnings === 0) {
         // Now that we know there are no earnings this year,
         // the previous year is the last year.
         yearEarningsMap[prevDate.getFullYear()].lastYear = true;
-        // No need to add a year that has no earnings to the results!
-        return accum;
+      } else {
+        yearEarningsMap[newDate.getFullYear()] = yearEarnings;
       }
+      prevDate = newDate;
     }
 
     return {
