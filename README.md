@@ -2,7 +2,7 @@
 
 ![dripcalc logo](/resources/logo-readme.svg)
 
-dripcalc is calculator for long-term earnings with DRIP network projects.
+dripcalc is a calculator for long-term earnings with DRIP network projects.
 
 dripcalc currently provides calculators for the DRIP faucet and DRIP/BUSD LP garden
 that give long-term views of potential earnings over a period of years across multiple wallets.
