@@ -294,8 +294,9 @@ function getDayEarnings(
   return Object.entries(calculatedEarnings?.walletEarnings ?? {}).reduce(
     (accum, [walletId, walletEarnings]) => {
       const currentDayEarnings =
-        walletEarnings.yearEarnings?.[currentYear].monthEarnings?.[currentMonth]
-          .dayEarnings?.[currentDayOfMonth];
+        walletEarnings.yearEarnings?.[currentYear]?.monthEarnings?.[
+          currentMonth
+        ]?.dayEarnings?.[currentDayOfMonth];
 
       if (currentDayEarnings) {
         return {
