@@ -10,6 +10,12 @@
   padding: 30px;
 }
 
+@media screen and (max-width: 768px) {
+  .overview-card {
+    width: 100%;
+  }
+}
+
 .overview-button {
   margin-left: 10px;
 }

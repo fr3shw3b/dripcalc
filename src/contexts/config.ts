@@ -16,6 +16,12 @@ export type Config = {
   depositBufferFees: number;
   defaultDripValue: number;
   defaultReinvest: number;
+  defaultGardenReinvest: number;
+  defaultDripBUSDLPValue: number;
+  defaultMaxPlantDripBUSDLPFraction: number;
+  minPlantDripBUSDLPFraction: number;
+  defaultAverageGardenYieldPercentage: number;
+  seedsPerPlant: number;
 };
 
 const MAX_PAYOUT_CAP = 100000;
@@ -51,8 +57,22 @@ export function config(): Config {
     cexFeePercentage: 0.018,
     // £50, $50 or €50 depending on the user's configured currency.
     defaultDripValue: 50,
-    // 100% reinvest is the default value users can adjust.
-    defaultReinvest: 0.5,
+    // 60% reinvest is the default value users can adjust.
+    defaultReinvest: 0.6,
+    // 60% reinvest is the default value users can adjust.
+    defaultGardenReinvest: 0.6,
+    // £30, $30 or €30 depending on the user's configured currency.
+    defaultDripBUSDLPValue: 25,
+    // Have a max default to a plant (2592000 seeds) being 10% of the value of a DRIP/BUSD LP token.
+    // Unless a user overrides the value of plant:LP ratio, this is the ceiling!
+    defaultMaxPlantDripBUSDLPFraction: 0.1,
+    // A plant:LP ratio can go as low as 0.01(Plant):1(LP) or 1%.
+    minPlantDripBUSDLPFraction: 0.01,
+    // Default to 1.2% for the garden daily yield.
+    // It tends to fluctuate between 1-3%.
+    defaultAverageGardenYieldPercentage: 0.012,
+    // As per the smart contract!
+    seedsPerPlant: 2592000,
   };
 }
 

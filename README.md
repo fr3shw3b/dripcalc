@@ -53,4 +53,4 @@ To learn React, check out the [React documentation](https://reactjs.org/).
 
 ## License
 
-This project is licensed with the Apache 2.0 license provided in the `LICENSE` file.
+This project is licensed with the Apache 2.0 license provided in the [LICENSE](/LICENSE) file.

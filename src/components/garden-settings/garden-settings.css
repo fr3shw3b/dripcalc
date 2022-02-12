@@ -1,0 +1,11 @@
+.garden-settings-form {
+  padding: 20px;
+}
+
+.currency-inline {
+  margin: 6px;
+}
+
+.garden-settings-wrapper {
+  overflow-y: auto;
+}

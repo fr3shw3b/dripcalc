@@ -1,5 +1,5 @@
 import { Callout, Intent } from "@blueprintjs/core";
-import "./information.css";
+import "./faucet-information.css";
 
 /**
  * This component does not use the content context
@@ -7,7 +7,7 @@ import "./information.css";
  *
  * In the future it might be worth moving all info to the content context.
  */
-function Information() {
+function FaucetInformation() {
   return (
     <div className="block information-content">
       <Callout intent={Intent.WARNING}>
@@ -63,12 +63,23 @@ function Information() {
         </ul>
       </p>
       <p className="info-content-block">
-        Depositing in the faucet is NOT staking! You get your tokens back in the
-        form of the 1% daily drip rewards. Deposit balance is not asset value
-        but instead a measure of the cash flow for which the daily 1% drip is
-        calculated (3.65 x deposit balance)
+        Depositing in the faucet is NOT staking in the sense that you can
+        withdraw your investment after a certain amount of time! When you
+        deposit into the faucet, you give up your tokens for daily rewards. You
+        get your tokens back in the form of the 1% daily drip rewards. Deposit
+        balance is not asset value but instead a measure of the cash flow for
+        which the daily 1% drip is calculated (3.65 x deposit balance)
       </p>
-
+      <p className="info-content-block">
+        <h3>About DRIP values for each day</h3>
+        <p>
+          The faucet calculator uses weighted randomisation to select the value
+          of DRIP for each day that is ultimately heading in the direction of
+          the trend that you configure in settings. A range of 15% variance is
+          applied, 7.5% in each direction. For this reason every time you
+          refresh the calculations, the values of earnings will differ.
+        </p>
+      </p>
       <p className="info-content-block">
         <h3>About claiming</h3>
         <p>
@@ -95,4 +106,4 @@ function Information() {
   );
 }
 
-export default Information;
+export default FaucetInformation;

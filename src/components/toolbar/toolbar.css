@@ -1,0 +1,34 @@
+.toolbar {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  padding: 15px 20px;
+  transition: transform 0.5s ease-in-out;
+  width: fit-content;
+}
+
+.toolbar .contents {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+
+.toolbar.collapsed {
+  transform: translateX(calc(-100% + 60px));
+}
+
+.toolbar.expanded {
+  transform: translateX(0);
+}
+
+.toolbar .menu-item {
+  margin-right: 5px;
+}
+
+.toolbar .menu-item-divider {
+  margin-right: 15px;
+}
+
+.toolbar .navbar-collapse-button {
+  margin-left: 15px;
+}

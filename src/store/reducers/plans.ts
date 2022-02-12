@@ -15,7 +15,7 @@ import {
   UpdatePlanLabelAction,
   UPDATE_PLAN_LABEL,
 } from "../actions/plans";
-import { HydrateFrequency } from "./settings";
+import { HydrateFrequency, SowFrequency } from "./settings";
 
 export type PlansState = {
   plans: PlanState[];
@@ -44,6 +44,39 @@ export type MonthInput = {
   reinvest?: number;
   deposits: Deposit[];
   hydrateStrategy?: "default" | HydrateFrequency;
+  gardenDeposits?: Deposit[];
+  // Fraction from 0 to 1.
+  gardenReinvest?: number;
+  sowStrategy?: "default" | SowFrequency;
+  gardenValues?: GardenValues;
+  customDayActions?: DayAction[];
+  // A mapping of day -> a list of actions for that day.
+  // A key for a day should be in the format "21/02/2023".
+  customGardenDayActions?: Record<string, GardenDayAction[]>;
+};
+
+export type DayAction = {
+  action: DayActionValue;
+  timestamp: number;
+};
+
+export type DayActionValue =
+  | "hydrate"
+  | "claim"
+  | "accumAvailable"
+  | "automatic";
+
+export type GardenDayAction = {
+  action: GardenDayActionValue;
+  timestamp: number;
+};
+
+export type GardenDayActionValue = "sow" | "harvest";
+
+export type GardenValues = {
+  dripBUSDLPValue: number;
+  plantDripBUSDLPFraction: number;
+  averageGardenYieldPercentage: number;
 };
 
 export type Deposit = {
@@ -74,6 +107,7 @@ function createDefaultWalletInfo() {
   const conf = config();
   const currentDate = new Date();
   const depositsId = nanoid();
+  const gardenDepositsId = nanoid();
 
   return {
     wallets: [
@@ -89,13 +123,24 @@ function createDefaultWalletInfo() {
             [monthMomentDate.format("01/MM/YYYY")]: {
               dripValue: conf.defaultDripValue,
               reinvest: conf.defaultReinvest,
-              hydrateFrequency: "default",
+              gardenReinvest: conf.defaultGardenReinvest,
+              hydrateStrategy: "default",
+              sowStrategy: "default",
               deposits: [
                 {
                   dayOfMonth: Number.parseInt(monthMomentDate.format("D")),
                   amountInCurrency: 100,
                   // Use same ID so the UI picks it up as a monthly deposit.
                   depositId: depositsId,
+                  timestamp: Number.parseInt(monthMomentDate.format("x")),
+                },
+              ],
+              gardenDeposits: [
+                {
+                  dayOfMonth: Number.parseInt(monthMomentDate.format("D")),
+                  amountInCurrency: 100,
+                  // Use same ID so the UI picks it up as a monthly deposit.
+                  depositId: gardenDepositsId,
                   timestamp: Number.parseInt(monthMomentDate.format("x")),
                 },
               ],

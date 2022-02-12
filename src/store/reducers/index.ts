@@ -2,6 +2,7 @@ import { combineReducers } from "redux";
 
 import views, {
   initialState as viewsInitialState,
+  ShowGardenTabView,
   ShowTabView,
   ViewsAction,
 } from "./views";
@@ -50,6 +51,7 @@ function createRootReducer() {
           // on first load.
           "default-plan": {
             showTabView: ShowTabView.Wallets,
+            showGardenTabView: ShowGardenTabView.Overview,
             isSettingsOpen: false,
           },
         },

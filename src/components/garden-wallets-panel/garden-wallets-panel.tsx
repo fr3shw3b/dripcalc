@@ -1,68 +1,54 @@
-import { Tab, Tabs, Button } from "@blueprintjs/core";
-import { nanoid } from "nanoid";
-
+import { Tab, Tabs } from "@blueprintjs/core";
 import React, { useCallback, useContext, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import moment from "moment";
 
-import ContentContext from "../../contexts/content";
 import ConfigContext, { Config } from "../../contexts/config";
 import {
-  addWallet,
   updateCurrentWallet,
-  updateWallet,
   updateWalletMonthInputs,
 } from "../../store/actions/plans";
 import { AppState } from "../../store/types";
 
 import WalletView from "../wallet-view";
-import WalletEditor from "../wallet-editor";
 import WalletDeposits from "../wallet-deposits";
 import WalletReinvestmentPlan from "../wallet-reinvestment-plan";
-import WalletCustomDripValues from "../wallet-custom-drip-values";
 
-import "./wallets-panel.css";
-import { Deposit, MonthInput, WalletState } from "../../store/reducers/plans";
+import "./garden-wallets-panel.css";
+import {
+  Deposit,
+  GardenValues,
+  MonthInput,
+  WalletState,
+} from "../../store/reducers/plans";
 import { DepositInEditor } from "../wallet-deposits/wallet-deposits";
 import { ReinvestmentInEditor } from "../wallet-reinvestment-plan/wallet-reinvestment-plan";
-import { DripValueInEditor } from "../wallet-custom-drip-values/wallet-custom-drip-values";
-import { HydrateFrequency } from "../../store/reducers/settings";
+import { SowFrequency } from "../../store/reducers/settings";
 import useMobileCheck from "../../hooks/use-mobile-check";
-
-type EditorState = {
-  isOpen: boolean;
-  action: string;
-  walletId: string | null;
-};
+import { GardenValuesInEditor } from "../wallet-custom-garden-values/wallet-custom-garden-values";
+import WalletCustomGardenValues from "../wallet-custom-garden-values";
 
 type MonthInputsState = {
   isDepositsOpen: boolean;
   isReinvestmentPlanOpen: boolean;
-  isCustomDripValuesOpen: boolean;
+  isCustomGardenValuesOpen: boolean;
   walletId: string;
   deposits: DepositInEditor[];
   reinvestments: ReinvestmentInEditor[];
-  dripValues: DripValueInEditor[];
+  gardenValues: GardenValuesInEditor[];
 };
 
-function WalletsPanel() {
+function GardenWalletsPanel() {
   const isMobile = useMobileCheck();
-  const [editorState, setEditorState] = useState<EditorState>({
-    isOpen: false,
-    action: "create",
-    walletId: null,
-  });
   const [monthInputsState, setMonthInputsState] = useState<MonthInputsState>({
     isDepositsOpen: false,
     isReinvestmentPlanOpen: false,
-    isCustomDripValuesOpen: false,
+    isCustomGardenValuesOpen: false,
     walletId: "default-wallet",
     deposits: [],
     reinvestments: [],
-    dripValues: [],
+    gardenValues: [],
   });
-  const [editorWalletName, setEditorWalletName] = useState("");
-  const [editorWalletDate, setEditorWalletDate] = useState(new Date());
   const dispatch = useDispatch();
   const { wallets, current, currentPlanId } = useSelector((state: AppState) => {
     const currentPlanIndex = state.plans.plans.findIndex(
@@ -74,79 +60,10 @@ function WalletsPanel() {
       currentPlanId: state.plans.current,
     };
   });
-  const { wallets: walletsContent } = useContext(ContentContext);
   const config = useContext(ConfigContext);
 
   const handleWalletChange = (newTabId: string) => {
     dispatch(updateCurrentWallet(newTabId, currentPlanId));
-  };
-
-  const handleEditorClose = () => {
-    setEditorState({
-      isOpen: false,
-      action: "create",
-      walletId: null,
-    });
-  };
-
-  const handleAddNewWalletClick: React.MouseEventHandler = (evt) => {
-    evt.preventDefault();
-    setEditorWalletName("");
-    setEditorWalletDate(new Date());
-    setEditorState({
-      isOpen: true,
-      action: "create",
-      walletId: null,
-    });
-  };
-
-  const handleEditorWalletNameChange = (walletName: string) => {
-    setEditorWalletName(walletName);
-  };
-
-  const handleEditorWalletDateChange = (selectedDate: Date) => {
-    setEditorWalletDate(selectedDate);
-  };
-
-  const handleEditorSaveClick = (id?: string | null) => {
-    if (!id || editorState.action === "create") {
-      dispatch(
-        addWallet(
-          nanoid(),
-          currentPlanId,
-          editorWalletName,
-          editorWalletDate.getTime()
-        )
-      );
-    } else {
-      dispatch(
-        updateWallet(
-          id,
-          currentPlanId,
-          editorWalletName,
-          editorWalletDate.getTime()
-        )
-      );
-    }
-
-    setEditorState({
-      isOpen: false,
-      action: "create",
-      walletId: null,
-    });
-  };
-
-  const handleEditWalletClick = (walletId: string) => {
-    const wallet = wallets.find(({ id: currentId }) => currentId === walletId);
-    if (wallet) {
-      setEditorWalletName(wallet.label);
-      setEditorWalletDate(new Date(wallet.startDate));
-    }
-    setEditorState({
-      isOpen: true,
-      action: "edit",
-      walletId,
-    });
   };
 
   const handleDepositsClick = useCallback(
@@ -338,8 +255,8 @@ function WalletsPanel() {
     });
   };
 
-  const handleChangeMonthHydrateStrategy = (
-    strategy: "default" | HydrateFrequency,
+  const handleChangeMonthSowStrategy = (
+    strategy: "default" | SowFrequency,
     index: number
   ) => {
     setMonthInputsState((prevState) => {
@@ -350,7 +267,7 @@ function WalletsPanel() {
           ...prevState.reinvestments.slice(0, index),
           {
             ...reinvestment,
-            hydrateStrategy: strategy,
+            sowStrategy: strategy,
           },
           ...prevState.reinvestments.slice(index + 1),
         ],
@@ -422,20 +339,20 @@ function WalletsPanel() {
     });
   };
 
-  const handleCustomDripValuesClose = () => {
+  const handleCustomGardenValuesClose = () => {
     setMonthInputsState((prevState) => ({
       ...prevState,
-      isCustomDripValuesOpen: false,
+      isCustomGardenValuesOpen: false,
     }));
   };
 
-  const handleDripCustomValuesClick = useCallback(
+  const handleGardenCustomValuesClick = useCallback(
     (walletId: string) => {
       setMonthInputsState((prevState) => ({
         ...prevState,
-        isCustomDripValuesOpen: true,
+        isCustomGardenValuesOpen: true,
         walletId,
-        dripValues: dripValuesFromMonthInputs(
+        gardenValues: gardenValuesFromMonthInputs(
           config,
           wallets.find(({ id }) => id === walletId)
         ),
@@ -444,31 +361,35 @@ function WalletsPanel() {
     [wallets, config]
   );
 
-  const handleChangeMonthDripValue = (dripValue: number, index: number) => {
+  const handleChangeMonthGardenValues = (
+    gardenValues: Partial<GardenValuesInEditor>,
+    index: number
+  ) => {
     setMonthInputsState((prevState) => {
-      const dripValueObj = prevState.dripValues[index];
+      const gardenValuesObj = prevState.gardenValues[index];
       return {
         ...prevState,
-        dripValues: [
-          ...prevState.dripValues.slice(0, index),
+        gardenValues: [
+          ...prevState.gardenValues.slice(0, index),
           {
-            timestamp: dripValueObj.timestamp,
-            dripValue,
+            ...gardenValuesObj,
+            // Patch changes in by overriding only the updated fields!
+            ...gardenValues,
           },
-          ...prevState.dripValues.slice(index + 1),
+          ...prevState.gardenValues.slice(index + 1),
         ],
       };
     });
   };
 
-  const handleCustomDripValuesSaveClick = useCallback(
+  const handleCustomGardenValuesSaveClick = useCallback(
     (walletId: string) => {
       dispatch(
         updateWalletMonthInputs(
           walletId,
           currentPlanId,
-          monthInputsFromDripValues(
-            monthInputsState.dripValues,
+          monthInputsFromGardenValues(
+            monthInputsState.gardenValues,
             wallets.find(({ id }) => id === walletId)
           )
         )
@@ -476,24 +397,29 @@ function WalletsPanel() {
 
       setMonthInputsState((prevState) => ({
         ...prevState,
-        isCustomDripValuesOpen: false,
+        isCustomGardenValuesOpen: false,
         dripValues: [],
       }));
     },
-    [wallets, currentPlanId, monthInputsState.dripValues, dispatch]
+    [wallets, currentPlanId, monthInputsState.gardenValues, dispatch]
   );
 
-  const handleAddAnotherDripValueMonth = () => {
+  const handleAddAnotherGardenValuesMonth = () => {
     setMonthInputsState((prevState) => ({
       ...prevState,
-      dripValues: [
-        ...prevState.dripValues,
+      gardenValues: [
+        ...prevState.gardenValues,
         {
-          dripValue: config.defaultDripValue,
+          dripBUSDLPValue: config.defaultDripBUSDLPValue,
+          plantDripBUSDLPFraction: config.defaultMaxPlantDripBUSDLPFraction,
+          averageGardenYieldPercentage:
+            config.defaultAverageGardenYieldPercentage,
           timestamp: Number.parseInt(
             moment(
               new Date(
-                prevState.dripValues[prevState.dripValues.length - 1].timestamp
+                prevState.gardenValues[
+                  prevState.gardenValues.length - 1
+                ].timestamp
               )
             )
               .add(1, "month")
@@ -504,19 +430,19 @@ function WalletsPanel() {
     }));
   };
 
-  const handleRemoveLastDripValueMonth = () => {
+  const handleRemoveLastGardenValuesMonth = () => {
     setMonthInputsState((prevState) => {
-      if (prevState.dripValues.length <= 1) {
+      if (prevState.gardenValues.length <= 1) {
         return {
           ...prevState,
-          dripValues: [],
+          gardenValues: [],
         };
       }
       return {
         ...prevState,
-        dripValues: prevState.dripValues.slice(
+        gardenValues: prevState.gardenValues.slice(
           0,
-          prevState.dripValues.length - 1
+          prevState.gardenValues.length - 1
         ),
       };
     });
@@ -543,38 +469,17 @@ function WalletsPanel() {
               <WalletView
                 walletId={id}
                 label={label}
+                forCalculator="garden"
                 startDate={startDate}
                 monthInputs={monthInputs}
-                onEditClick={handleEditWalletClick}
+                editMode={false}
                 onDepositsClick={handleDepositsClick}
                 onReinvestmentPlanClick={handleReinvestmentPlanClick}
-                onCustomDripValuesClick={handleDripCustomValuesClick}
+                onCustomValuesClick={handleGardenCustomValuesClick}
               />
             }
           />
         ))}
-        <Button
-          className="wallet-tabs-add-new"
-          icon="plus"
-          onClick={handleAddNewWalletClick}
-        >
-          {walletsContent.createNewWalletButtonText}
-        </Button>
-        <WalletEditor
-          walletId={editorState.walletId}
-          isOpen={editorState.isOpen}
-          walletName={editorWalletName}
-          onWalletNameFieldChange={handleEditorWalletNameChange}
-          walletDate={editorWalletDate}
-          onWalletDateChange={handleEditorWalletDateChange}
-          onSaveClick={handleEditorSaveClick}
-          onClose={handleEditorClose}
-          title={
-            editorState.action === "edit"
-              ? `Edit "${editorWalletName}"`
-              : undefined
-          }
-        />
         <WalletDeposits
           walletId={monthInputsState.walletId}
           isOpen={monthInputsState.isDepositsOpen}
@@ -589,6 +494,7 @@ function WalletsPanel() {
           onDepositEndDateChange={handleDepositEndDateChange}
           onDepositAmountInCurrencyChange={handleDepositAmountInCurrencyChange}
           onRemoveDeposit={handleRemoveDeposit}
+          forCalculator="garden"
         />
         <WalletReinvestmentPlan
           walletId={monthInputsState.walletId}
@@ -598,22 +504,23 @@ function WalletsPanel() {
           onClose={handleReinvestmentPlanClose}
           reinvestments={monthInputsState.reinvestments}
           onChangeMonthReinvestPercent={handleChangeMonthReinvestPercent}
-          onChangeMonthHydrateStrategy={handleChangeMonthHydrateStrategy}
+          onChangeMonthSowStrategy={handleChangeMonthSowStrategy}
           onSaveClick={handleReinvestSaveClick}
           onAddAnotherMonth={handleAddAnotherReinvestMonth}
           onRemoveLastMonth={handleRemoveLastReinvestMonth}
+          forCalculator="garden"
         />
-        <WalletCustomDripValues
+        <WalletCustomGardenValues
           walletId={monthInputsState.walletId}
-          isOpen={monthInputsState.isCustomDripValuesOpen}
+          isOpen={monthInputsState.isCustomGardenValuesOpen}
           walletName={monthInputsCurrentWallet?.label ?? ""}
           walletStartDate={monthInputsCurrentWallet?.startDate ?? 0}
-          onClose={handleCustomDripValuesClose}
-          dripValues={monthInputsState.dripValues}
-          onChangeMonthDripValue={handleChangeMonthDripValue}
-          onSaveClick={handleCustomDripValuesSaveClick}
-          onAddAnotherMonth={handleAddAnotherDripValueMonth}
-          onRemoveLastMonth={handleRemoveLastDripValueMonth}
+          onClose={handleCustomGardenValuesClose}
+          gardenValues={monthInputsState.gardenValues}
+          onChangeMonthGardenValues={handleChangeMonthGardenValues}
+          onSaveClick={handleCustomGardenValuesSaveClick}
+          onAddAnotherMonth={handleAddAnotherGardenValuesMonth}
+          onRemoveLastMonth={handleRemoveLastGardenValuesMonth}
         />
       </Tabs>
     </>
@@ -645,7 +552,7 @@ function depositsFromMonthInputs(wallet?: WalletState): DepositInEditor[] {
   const seed: DepositInEditor[] = [];
   return monthDates.reduce(
     (depositsForEditor: DepositInEditor[], monthDate): DepositInEditor[] => {
-      const deposits = wallet.monthInputs[monthDate].deposits ?? [];
+      const deposits = wallet.monthInputs[monthDate].gardenDeposits ?? [];
       return deposits.reduce(
         (
           accumDepositsForEditor: DepositInEditor[],
@@ -758,19 +665,19 @@ function monthInputsFromDeposits(
         ...inputs,
         // clear out existing deposits for existing entries before
         // adding the new set of deposits.
-        // We don't want to lose reinvestment plan and custom DRIP value inputs
+        // We don't want to lose reinvestment plan and custom DRIP/BUSD LP value inputs
         // when updating deposits.
-        deposits: [],
+        gardenDeposits: [],
       },
     };
   }, {} as Record<string, MonthInput>);
   return Object.entries(depositsGroupedByMonth).reduce(
-    (accumMonthInputs, [monthKey, deposits]) => {
+    (accumMonthInputs, [monthKey, gardenDeposits]) => {
       return {
         ...accumMonthInputs,
         [monthKey]: {
           ...(accumMonthInputs[monthKey] ?? {}),
-          deposits: deposits.map((deposit) => ({
+          gardenDeposits: gardenDeposits.map((deposit) => ({
             dayOfMonth: Number.parseInt(
               moment(new Date(deposit.timestamp)).format("D"),
               10
@@ -794,14 +701,14 @@ function reinvestmentsFromMonthInputs(
     return [];
   }
   const reinvestments = Object.entries(wallet.monthInputs)
-    .map(([monthKey, { reinvest, hydrateStrategy }]) => {
+    .map(([monthKey, { gardenReinvest, sowStrategy }]) => {
       return {
-        reinvest: reinvest,
+        reinvest: gardenReinvest,
         timestamp: Number.parseInt(
           moment(monthKey, "DD/MM/YYYY").format("x"),
           10
         ),
-        hydrateStrategy,
+        sowStrategy,
       };
     })
     .filter(
@@ -822,10 +729,10 @@ function reinvestmentsFromMonthInputs(
     );
     return {
       reinvest:
-        existingReinvestmentForTimestamp?.reinvest ?? config.defaultReinvest,
+        existingReinvestmentForTimestamp?.reinvest ??
+        config.defaultGardenReinvest,
       timestamp,
-      hydrateStrategy:
-        existingReinvestmentForTimestamp?.hydrateStrategy ?? "default",
+      sowStrategy: existingReinvestmentForTimestamp?.sowStrategy ?? "default",
     };
   });
 }
@@ -861,8 +768,8 @@ function monthInputsFromReinvestments(
         ...monthInputs,
         [monthKey]: {
           ...(wallet.monthInputs[monthKey] ?? {}),
-          reinvest: reinvestment.reinvest,
-          hydrateStrategy: reinvestment.hydrateStrategy,
+          gardenReinvest: reinvestment.reinvest,
+          sowStrategy: reinvestment.sowStrategy,
         },
       };
     },
@@ -870,38 +777,39 @@ function monthInputsFromReinvestments(
   );
 }
 
-function monthInputsFromDripValues(
-  dripValues: DripValueInEditor[],
+function monthInputsFromGardenValues(
+  gardenValues: GardenValuesInEditor[],
   wallet?: WalletState
 ): Record<string, MonthInput> {
   if (!wallet) {
     return {};
   }
 
-  const seedGrouped: Record<string, number> = {};
-  const dripValuesGroupedByMonth = dripValues.reduce(
-    (accumGrouped, dripValueObj) => {
+  const seedGrouped: Record<string, GardenValues> = {};
+  const gardenValuesGroupedByMonth = gardenValues.reduce(
+    (accumGrouped, gardenValuesObj) => {
       // Super important the key format is DD/MM/YYYYY as expected in the calculator middleware.
-      const monthKeyFormatted = moment(new Date(dripValueObj.timestamp)).format(
-        "01/MM/YYYY"
-      );
+      const monthKeyFormatted = moment(
+        new Date(gardenValuesObj.timestamp)
+      ).format("01/MM/YYYY");
 
+      const { timestamp: _timestamp, ...rest } = gardenValuesObj;
       return {
         ...accumGrouped,
-        [monthKeyFormatted]: dripValueObj.dripValue,
+        [monthKeyFormatted]: rest,
       };
     },
     seedGrouped
   );
 
   const seedMonthInputs: Record<string, MonthInput> = {};
-  return Object.entries(dripValuesGroupedByMonth).reduce(
-    (monthInputs, [monthKey, dripValue]) => {
+  return Object.entries(gardenValuesGroupedByMonth).reduce(
+    (monthInputs, [monthKey, gardenValues]) => {
       return {
         ...monthInputs,
         [monthKey]: {
           ...(wallet.monthInputs[monthKey] ?? {}),
-          dripValue,
+          gardenValues,
         },
       };
     },
@@ -909,30 +817,40 @@ function monthInputsFromDripValues(
   );
 }
 
-function dripValuesFromMonthInputs(
+function gardenValuesFromMonthInputs(
   config: Config,
   wallet?: WalletState
-): DripValueInEditor[] {
+): GardenValuesInEditor[] {
   if (!wallet) {
     return [];
   }
-  const dripValues = Object.entries(wallet.monthInputs)
-    .map(([monthKey, { dripValue }]) => {
+  const gardenValuesList = Object.entries(wallet.monthInputs)
+    .map(([monthKey, { gardenValues }]): Partial<GardenValuesInEditor> => {
       return {
-        dripValue,
+        dripBUSDLPValue: gardenValues?.dripBUSDLPValue,
+        plantDripBUSDLPFraction: gardenValues?.plantDripBUSDLPFraction,
+        averageGardenYieldPercentage:
+          gardenValues?.averageGardenYieldPercentage,
         timestamp: Number.parseInt(
           moment(monthKey, "DD/MM/YYYY").format("x"),
           10
         ),
       };
     })
-    // filter out months with undefined drip values.
+    // filter down to only months where none of the values are undefined!
     .filter(
-      ({ dripValue }) => typeof dripValue !== "undefined"
-    ) as DripValueInEditor[];
+      ({
+        dripBUSDLPValue,
+        plantDripBUSDLPFraction,
+        averageGardenYieldPercentage,
+      }) =>
+        typeof dripBUSDLPValue !== "undefined" ||
+        typeof plantDripBUSDLPFraction !== "undefined" ||
+        typeof averageGardenYieldPercentage !== "undefined"
+    ) as GardenValuesInEditor[];
 
   // Default with a year's worth of reinvestment.
-  return [...Array(Math.max(dripValues.length, 12))].map((_, i) => {
+  return [...Array(Math.max(gardenValuesList.length, 12))].map((_, i) => {
     const timestamp = Number.parseInt(
       moment(new Date(wallet.startDate))
         .add(i, "month")
@@ -940,15 +858,22 @@ function dripValuesFromMonthInputs(
         .format("x"),
       10
     );
-    const existingDripValueForTimestamp = dripValues.find(
-      (dripValue) => dripValue.timestamp === timestamp
+    const existingGardenValuesForTimestamp = gardenValuesList.find(
+      (gardenValues) => gardenValues.timestamp === timestamp
     );
     return {
-      dripValue:
-        existingDripValueForTimestamp?.dripValue ?? config.defaultDripValue,
+      dripBUSDLPValue:
+        existingGardenValuesForTimestamp?.dripBUSDLPValue ??
+        config.defaultDripBUSDLPValue,
+      plantDripBUSDLPFraction:
+        existingGardenValuesForTimestamp?.plantDripBUSDLPFraction ??
+        config.defaultMaxPlantDripBUSDLPFraction,
+      averageGardenYieldPercentage:
+        existingGardenValuesForTimestamp?.averageGardenYieldPercentage ??
+        config.defaultAverageGardenYieldPercentage,
       timestamp,
     };
   });
 }
 
-export default WalletsPanel;
+export default GardenWalletsPanel;

@@ -2,7 +2,7 @@ import { FormGroup, HTMLSelect, InputGroup } from "@blueprintjs/core";
 import React, { useContext } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import ContentContext from "../../contexts/content";
-import type { TrendPeriod } from "../../services/drip-value-provider";
+import type { TrendPeriod } from "../../services/token-value-provider";
 import {
   updateDripValueTrend,
   updateCurrency,

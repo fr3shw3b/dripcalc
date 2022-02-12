@@ -8,14 +8,16 @@ import {
 } from "@blueprintjs/table";
 import React, { useContext } from "react";
 
-import ContentContext from "../../contexts/content";
+import ContentContext, { WalletsContent } from "../../contexts/content";
 import moment from "moment";
-import { HydrateFrequency } from "../../store/reducers/settings";
+import { HydrateFrequency, SowFrequency } from "../../store/reducers/settings";
+import useMobileCheck from "../../hooks/use-mobile-check";
 
 export type ReinvestmentInEditor = {
   reinvest: number;
   timestamp: number;
   hydrateStrategy?: "default" | HydrateFrequency;
+  sowStrategy?: "default" | SowFrequency;
 };
 
 type Props = {
@@ -24,10 +26,15 @@ type Props = {
   walletStartDate: number;
   reinvestments: ReinvestmentInEditor[];
   isOpen: boolean;
+  forCalculator: "garden" | "faucet";
   onClose: (evt: React.SyntheticEvent<HTMLElement, Event>) => void | undefined;
   onChangeMonthReinvestPercent: (value: number, rowIndex: number) => void;
-  onChangeMonthHydrateStrategy: (
+  onChangeMonthHydrateStrategy?: (
     value: "default" | HydrateFrequency,
+    rowIndex: number
+  ) => void;
+  onChangeMonthSowStrategy?: (
+    value: "default" | SowFrequency,
     rowIndex: number
   ) => void;
   onSaveClick: (walletId: string) => void;
@@ -40,13 +47,16 @@ function WalletReinvestmentPlan({
   walletName,
   walletId,
   reinvestments,
+  forCalculator,
   onClose,
   onChangeMonthReinvestPercent,
   onChangeMonthHydrateStrategy,
+  onChangeMonthSowStrategy,
   onSaveClick,
   onAddAnotherMonth,
   onRemoveLastMonth,
 }: Props) {
+  const isMobile = useMobileCheck();
   const { wallets: walletsContent } = useContext(ContentContext);
 
   const handleSaveClick: React.MouseEventHandler = (evt) => {
@@ -69,29 +79,45 @@ function WalletReinvestmentPlan({
       onChangeMonthReinvestPercent(Number.parseFloat(value) / 100, rowIndex);
     };
 
-  const handleChangeHydrateStategy =
+  const handleChangeHydrateorSowStategy =
     (rowIndex: number) => (evt: React.ChangeEvent<HTMLSelectElement>) => {
-      onChangeMonthHydrateStrategy(
-        evt.currentTarget.value as "default" | HydrateFrequency,
-        rowIndex
-      );
+      if (forCalculator === "faucet" && onChangeMonthHydrateStrategy) {
+        onChangeMonthHydrateStrategy(
+          evt.currentTarget.value as "default" | HydrateFrequency,
+          rowIndex
+        );
+      } else if (onChangeMonthSowStrategy) {
+        onChangeMonthSowStrategy(
+          evt.currentTarget.value as "default" | SowFrequency,
+          rowIndex
+        );
+      }
     };
 
+  const {
+    reinvestmentPlanTableHelpText,
+    hydrateOrSowStrategyColumnLabel,
+    reinvestmentPlanHydrateOrSowStrategies,
+  } = getWalletsContentForCalculator(forCalculator, walletsContent);
   return (
     <>
       <Dialog
-        title={`"${walletName}" reinvestment plan`}
+        title={`"${walletName}" ${
+          forCalculator === "garden"
+            ? "garden reinvestment plan"
+            : "reinvestment plan"
+        }`}
         isOpen={isOpen}
         className="bp3-dark deposits-container"
         onClose={onClose}
-        style={{ minWidth: 768 }}
+        style={!isMobile ? { minWidth: 768 } : undefined}
         canOutsideClickClose={false}
       >
         <div className={Classes.DIALOG_BODY}>
           <form onSubmit={(evt) => evt.preventDefault()}>
             <div className="block block-bottom-lg">
               <p className="block block-bottom-lg">
-                {walletsContent.reinvestmentPlanTableHelpText}
+                {reinvestmentPlanTableHelpText}
               </p>
               <Table2
                 numRows={reinvestments.length}
@@ -134,18 +160,18 @@ function WalletReinvestmentPlan({
                   }}
                 />
                 <Column
-                  name={walletsContent.hydrateStrategyColumnLabel}
+                  name={hydrateOrSowStrategyColumnLabel}
                   cellRenderer={(rowIndex: number) => {
-                    const { hydrateStrategy } = reinvestments[rowIndex];
+                    const { sowStrategy } = reinvestments[rowIndex];
 
                     return (
                       <Cell>
                         <HTMLSelect
-                          value={hydrateStrategy ?? "default"}
-                          onChange={handleChangeHydrateStategy(rowIndex)}
+                          value={sowStrategy ?? "default"}
+                          onChange={handleChangeHydrateorSowStategy(rowIndex)}
                         >
                           {Object.entries(
-                            walletsContent.reinvestmentPlanHydrateStrategies
+                            reinvestmentPlanHydrateOrSowStrategies
                           ).map(([value, label]) => (
                             <option key={value} value={value}>
                               {label}
@@ -200,4 +226,33 @@ function DialogFooter(props: {
   );
 }
 
+type WalletsContentForCalculator = {
+  reinvestmentPlanTableHelpText: React.ReactNode;
+  hydrateOrSowStrategyColumnLabel: string;
+  reinvestmentPlanHydrateOrSowStrategies:
+    | Record<"default" | SowFrequency, string>
+    | Record<"default" | HydrateFrequency, string>;
+};
+
+function getWalletsContentForCalculator(
+  forCalculator: "garden" | "faucet",
+  walletsContent: WalletsContent
+): WalletsContentForCalculator {
+  return {
+    reinvestmentPlanTableHelpText:
+      forCalculator === "garden" ? (
+        <>{walletsContent.gardenReinvestmentPlanTableHelpText}</>
+      ) : (
+        walletsContent.reinvestmentPlanTableHelpText
+      ),
+    hydrateOrSowStrategyColumnLabel:
+      forCalculator === "garden"
+        ? walletsContent.gardenSowStrategyColumnLabel
+        : walletsContent.hydrateStrategyColumnLabel,
+    reinvestmentPlanHydrateOrSowStrategies:
+      forCalculator === "garden"
+        ? walletsContent.gardenReinvestmentPlanSowStrategies
+        : walletsContent.reinvestmentPlanHydrateStrategies,
+  };
+}
 export default WalletReinvestmentPlan;

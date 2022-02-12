@@ -1,3 +1,4 @@
+import { CalculationSet } from "../middleware/calculator";
 import { FSA } from "../types";
 
 export const REMOVE_NOTIFICATION = "REMOVE_NOTIFICATION";
@@ -25,6 +26,7 @@ export type SetNotFirstTimeAction = FSA<
   {
     calculator: {
       recalculate: boolean;
+      set: CalculationSet;
     };
   },
   {}
@@ -37,6 +39,7 @@ export function setNotFirstTime(): SetNotFirstTimeAction {
     meta: {
       calculator: {
         recalculate: true,
+        set: "all",
       },
     },
   };

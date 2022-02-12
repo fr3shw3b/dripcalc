@@ -1,0 +1,67 @@
+.nav-item {
+  margin-right: 5px;
+}
+
+.mobile-menu.expanded {
+  height: 100vh;
+  width: 100%;
+  z-index: 10;
+  opacity: 1;
+  background-color: #30404d;
+}
+
+.mobile-menu.collapsed {
+  height: 0;
+  width: 0;
+  z-index: -999;
+  opacity: 0;
+  background-color: #30404d;
+}
+
+.mobile-menu {
+  position: fixed;
+  padding: 15px;
+  transition: opacity 0.2s ease-in-out;
+}
+
+.mobile-menu .nav-item {
+  display: block;
+  margin-bottom: 20px;
+}
+
+.header ul {
+  margin: 0;
+  padding: 0;
+  list-style-type: none;
+}
+
+.header li {
+  list-style-type: none;
+}
+
+.desktop-menu-list {
+  display: flex;
+  flex-direction: row;
+}
+
+header ul.mobile-child-menu {
+  margin-left: 15px;
+}
+
+.github-section {
+  position: absolute;
+  right: 10px;
+}
+
+.mobile-menu .github-section {
+  position: relative;
+  margin-left: 15px;
+}
+
+.github-link:hover {
+  text-decoration: none;
+}
+
+.github-link {
+  margin-left: 5px;
+}

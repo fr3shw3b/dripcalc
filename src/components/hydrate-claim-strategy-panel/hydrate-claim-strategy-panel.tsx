@@ -1,30 +1,72 @@
-import { HTMLSelect, HTMLTable, Position } from "@blueprintjs/core";
+import { Button, HTMLSelect, HTMLTable, Position } from "@blueprintjs/core";
 import { useContext, useEffect, useState } from "react";
 import { useSelector } from "react-redux";
 import { AppState } from "../../store/types";
 
 import ContentContext from "../../contexts/content";
 import { Tooltip2 } from "@blueprintjs/popover2";
-import moment from "moment";
+import moment, { Moment } from "moment";
 import { DayEarnings } from "../../store/middleware/shared-calculator-types";
 import usePrevious from "../../hooks/use-previous";
 import ConfigContext from "../../contexts/config";
+import {
+  DayAction,
+  DayActionValue,
+  MonthInput,
+} from "../../store/reducers/plans";
 
 type Props = {
   walletId: string;
+  onSaveActionForDayOverride: (
+    timestamp: number,
+    actionForDayValue: DayActionValue
+  ) => void;
 };
 
-function HydrateClaimStrategyPanel({ walletId }: Props) {
+function HydrateClaimStrategyPanel({
+  walletId,
+  onSaveActionForDayOverride,
+}: Props) {
   const config = useContext(ConfigContext);
-  const { calculatedEarnings } = useSelector((state: AppState) => {
+  const [editActionOnDayStates, setEditActionOnDayStates] = useState<
+    Record<string, boolean>
+  >({});
+
+  const { calculatedEarnings, monthInputs } = useSelector((state: AppState) => {
     const currentPlanId = state.plans.current;
+    const currentPlan = state.plans.plans.find(
+      ({ id }) => id === currentPlanId
+    );
+    const currentWallet = currentPlan?.wallets.find(
+      ({ id }) => id === walletId
+    );
     return {
       ...state.general,
       calculatedEarnings: state.general.calculatedEarnings[currentPlanId],
       currency: state.settings[currentPlanId].currency,
+      monthInputs: currentWallet?.monthInputs,
     };
   });
   const { results: resultsContent } = useContext(ContentContext);
+
+  const [customActionOnDayValues, setCustomActionOnDayValues] = useState<
+    Record<string, DayActionValue>
+  >(
+    Object.entries(monthInputs ?? {}).reduce(
+      (accum, [_monthInputKey, monthInput]) => {
+        return (monthInput.customDayActions ?? []).reduce(
+          (customActionDaysAccum, dayAction) => {
+            return {
+              ...customActionDaysAccum,
+              [`${dayAction.timestamp}`]: dayAction.action,
+            };
+          },
+          accum
+        );
+      },
+      {} as Record<string, DayActionValue>
+    )
+  );
 
   const earningsTuple = Object.entries(
     calculatedEarnings?.walletEarnings ?? {}
@@ -76,6 +118,63 @@ function HydrateClaimStrategyPanel({ walletId }: Props) {
       setCurrentMonth(monthOptions[0][0]);
     }
   }, [currentYear, prevCurrentYear, setCurrentMonth, monthOptions]);
+
+  const handleEditActionOnDayClick: (date: Moment) => React.MouseEventHandler =
+    (date) => (evt) => {
+      evt.preventDefault();
+      setEditActionOnDayStates((prevState) => ({
+        ...prevState,
+        [date.format("x")]: true,
+      }));
+    };
+
+  const handleSaveActionOnDayClick: (date: Moment) => React.MouseEventHandler =
+    (date) => (evt) => {
+      evt.preventDefault();
+      const dateTimestamp = date.format("x");
+      onSaveActionForDayOverride(
+        Number.parseInt(dateTimestamp),
+        customActionOnDayValues[dateTimestamp]
+      );
+      setEditActionOnDayStates((prevState) => ({
+        ...prevState,
+        [dateTimestamp]: false,
+      }));
+    };
+
+  const handleDiscardActionOnDayClick: (
+    date: Moment
+  ) => React.MouseEventHandler = (date) => (evt) => {
+    evt.preventDefault();
+    setEditActionOnDayStates((prevState) => ({
+      ...prevState,
+      [date.format("x")]: false,
+    }));
+    // Reset value for day.
+    setCustomActionOnDayValues((prevState) => {
+      const dateTimestamp = date.format("x");
+      return {
+        ...prevState,
+        [dateTimestamp]:
+          findUserInputDayAction(
+            currentMonth + 1,
+            currentYear,
+            Number.parseInt(dateTimestamp),
+            monthInputs
+          )?.action ?? "automatic",
+      };
+    });
+  };
+
+  const handleSelectDayAction: (
+    date: Moment
+  ) => React.ChangeEventHandler<HTMLSelectElement> = (date) => (evt) => {
+    evt.preventDefault();
+    setCustomActionOnDayValues((prevState) => ({
+      ...prevState,
+      [date.format("x")]: evt.currentTarget.value as DayActionValue,
+    }));
+  };
 
   return (
     <div>
@@ -171,15 +270,13 @@ function HydrateClaimStrategyPanel({ walletId }: Props) {
                       currentMonth
                     ]?.dayEarnings[day];
 
+                  const date = moment(
+                    `${day}/${currentMonth + 1}/${currentYear}`,
+                    "D/M/YYYY"
+                  );
+                  const dateTimestamp = date.format("x");
                   const renderDay = () => {
-                    return (
-                      <strong>
-                        {moment(
-                          `${day}/${currentMonth + 1}/${currentYear}`,
-                          "D/M/YYYY"
-                        ).format("dddd Do")}
-                      </strong>
-                    );
+                    return <strong>{date.format("dddd Do")}</strong>;
                   };
 
                   const renderColumns = () => {
@@ -194,19 +291,97 @@ function HydrateClaimStrategyPanel({ walletId }: Props) {
                     ).toFixed(4);
                     const hydrateOnDay = dayEarnings?.reinvestAfterTax;
                     const claimOnDay = dayEarnings?.claimAfterTax;
-                    const actionForDay = selectActionForDay(dayEarnings);
+                    // Day earnings will reflect custom overrides if a user has provided
+                    // specific day actions.
+                    const actionForDayLabel = selectActionForDay(dayEarnings);
+                    const dayAction = findUserInputDayAction(
+                      currentMonth + 1,
+                      currentYear,
+                      Number.parseInt(dateTimestamp),
+                      monthInputs
+                    );
+
                     return (
                       <>
                         <td>{renderDay()}</td>
-                        <td>{actionForDay}</td>
-                        {actionForDay === "Hydrate" && (
+                        <td>
+                          {!editActionOnDayStates[dateTimestamp] && (
+                            <>
+                              {actionForDayLabel}
+                              <span className="left-small-margin">
+                                <Tooltip2
+                                  content="Override action for day"
+                                  position={Position.BOTTOM}
+                                  openOnTargetFocus={false}
+                                >
+                                  <Button
+                                    icon="edit"
+                                    small
+                                    onClick={handleEditActionOnDayClick(date)}
+                                  />
+                                </Tooltip2>
+                              </span>
+                            </>
+                          )}
+                          {editActionOnDayStates[dateTimestamp] && (
+                            <>
+                              <HTMLSelect
+                                id={`day-action-${dateTimestamp}-select`}
+                                className="select-in-table"
+                                value={
+                                  customActionOnDayValues[dateTimestamp] ??
+                                  dayAction?.action ??
+                                  "automatic"
+                                }
+                                onChange={handleSelectDayAction(date)}
+                              >
+                                {Object.entries(dayActionOptions).map(
+                                  ([key, label]) => (
+                                    <option key={`${key}`} value={`${key}`}>
+                                      {label}
+                                    </option>
+                                  )
+                                )}
+                              </HTMLSelect>
+                              <span className="left-small-margin">
+                                <Tooltip2
+                                  content="Save action for day"
+                                  position={Position.BOTTOM}
+                                  openOnTargetFocus={false}
+                                >
+                                  <Button
+                                    icon="tick"
+                                    small
+                                    onClick={handleSaveActionOnDayClick(date)}
+                                  />
+                                </Tooltip2>
+                              </span>
+                              <span className="left-xs-margin">
+                                <Tooltip2
+                                  content="Discard changes"
+                                  position={Position.BOTTOM}
+                                  openOnTargetFocus={false}
+                                >
+                                  <Button
+                                    icon="cross"
+                                    small
+                                    onClick={handleDiscardActionOnDayClick(
+                                      date
+                                    )}
+                                  />
+                                </Tooltip2>
+                              </span>
+                            </>
+                          )}
+                        </td>
+                        {actionForDayLabel === "Hydrate" && (
                           <td>{hydrateOnDay?.toFixed(4)}</td>
                         )}
-                        {actionForDay === "Claim" && (
+                        {actionForDayLabel === "Claim" && (
                           <td>{claimOnDay?.toFixed(4)}</td>
                         )}
-                        {(actionForDay === "Unknown" ||
-                          actionForDay ===
+                        {(actionForDayLabel === "Unknown" ||
+                          actionForDayLabel ===
                             "Leave to Accumulate in Available Rewards") && (
                           <td></td>
                         )}
@@ -246,6 +421,24 @@ function selectActionForDay(dayEarnings?: DayEarnings): string {
 
   return "Leave to Accumulate in Available Rewards";
 }
+
+function findUserInputDayAction(
+  currentMonth: number,
+  currentYear: number,
+  dateTimestamp: number,
+  monthInputs?: Record<string, MonthInput>
+): DayAction | undefined {
+  return monthInputs?.[
+    `01/${currentMonth}/${currentYear}`
+  ]?.customDayActions?.find(({ timestamp }) => timestamp === dateTimestamp);
+}
+
+const dayActionOptions = {
+  automatic: "Automatic - Calculate Based on Settings",
+  hydrate: "Hydrate",
+  claim: "Claim",
+  accumAvailable: "Leave to Accumulate in Available Rewards",
+};
 
 const monthLabels = [
   "January",

@@ -1,6 +1,7 @@
 import { expose } from "comlink";
 
 import {
+  AppState,
   DayEarnings,
   EarningsAndInfo,
   MonthEarningsAndInfo,
@@ -9,19 +10,26 @@ import {
   WalletEarnings,
   YearEarnings,
 } from "./shared-calculator-types";
-import createDripValueProvider from "../../services/drip-value-provider";
+import createTokenValueProvider from "../../services/token-value-provider";
 import type { HydrateFrequency, PlanSettings } from "../reducers/settings";
-import type { WalletState } from "../reducers/plans";
+import type { DayAction, WalletState } from "../reducers/plans";
 import type { Config } from "../../contexts/config";
 import moment from "moment";
+import { CalculationSet } from "./calculator";
+import { calculateGardenEarnings } from "./garden-calculator";
+import { getDaysInMonth } from "../../utils/date";
 
 export default {} as typeof Worker & { new (): Worker };
 
 const api = {
   calculateEarnings: (data: string): string => {
-    const { config, state }: { config: Config; state: AppState } =
+    const {
+      config,
+      state,
+      set,
+    }: { config: Config; state: AppState; set: CalculationSet } =
       JSON.parse(data);
-    const earningsAndInfo = calculateEarningsAndInfo(config, state);
+    const earningsAndInfo = calculateEarningsAndInfo(config, state, set);
     return JSON.stringify(earningsAndInfo);
   },
 };
@@ -32,21 +40,28 @@ export interface CalculatorWorkerApi {
   calculateEarnings(data: string): Promise<string>;
 }
 
-// An augmented version of AppState that is adapted to be compatible
-// with existing calculator functionality implemented before the introduction
-// of plans when you could only have one "plan" with wallets and settings
-// as top-level state.
-export type AppState = {
-  wallets: {
-    wallets: WalletState[];
-  };
-  settings: PlanSettings;
-};
-
 function calculateEarningsAndInfo(
   config: Config,
-  state: AppState
+  state: AppState,
+  set: CalculationSet
 ): EarningsAndInfo {
+  const { walletEarnings, info } =
+    ["faucet", "all"].includes(set) || !state.prevCalculatedEarnings
+      ? calculateFaucetEarningsAndInfo(config, state)
+      : state.prevCalculatedEarnings;
+
+  const { gardenEarnings } =
+    ["faucet", "all"].includes(set) || !state.prevCalculatedEarnings
+      ? calculateGardenEarnings(config, state)
+      : state.prevCalculatedEarnings;
+  return {
+    walletEarnings,
+    info,
+    gardenEarnings,
+  };
+}
+
+function calculateFaucetEarningsAndInfo(config: Config, state: AppState) {
   const walletEarningsMapSeed: Record<string, WalletEarnings> = {};
   const walletEarningsMap = state.wallets.wallets.reduce(
     calculateWalletEarnings(config, state),
@@ -382,7 +397,7 @@ type MonthEarningsCalculator = (
   date: Date
 ) => Record<number, MonthEarningsAndInfo>;
 
-const dripValueProvider = createDripValueProvider();
+const tokenValueProvider = createTokenValueProvider();
 
 function calculateMonthEarnings(
   config: Config,
@@ -426,7 +441,7 @@ function calculateMonthEarnings(
     const trendTargetDripValue = determineTrendTargetDripValue(state.settings);
     const dripValueForMonth =
       wallet.monthInputs[monthInputsKey]?.dripValue ??
-      dripValueProvider.getDripValueForMonth(
+      tokenValueProvider.getValueForMonth(
         new Date(earliestWalletStartTimestamp),
         date,
         getLastCustomDripValue(wallet, config.defaultDripValue),
@@ -687,10 +702,11 @@ function calculateDayEarnings(
       wallet.monthInputs[monthInputsKey]?.reinvest ?? config.defaultReinvest,
       maxPayout,
       prevDayEarningsData.accumConsumedRewards + initialAccumDayEarnings,
-      initialAccumDayEarnings
+      initialAccumDayEarnings,
+      wallet.monthInputs[monthInputsKey]?.customDayActions
     );
 
-    const dripValueForDay = dripValueProvider.applyVariance(dripValueForMonth);
+    const dripValueForDay = tokenValueProvider.applyVariance(dripValueForMonth);
 
     const { isHydrateDay, accumulateAvailableRewardsToHydrate } =
       shouldHydrateOnDay(
@@ -708,7 +724,8 @@ function calculateDayEarnings(
         state.settings,
         dripValueForDay,
         isClaimDay,
-        new Date(prevDayEarningsData.lastClaimTimestamp)
+        new Date(prevDayEarningsData.lastClaimTimestamp),
+        wallet.monthInputs[monthInputsKey]?.customDayActions
       );
 
     const leaveRewardsAvailableToAccumulate =
@@ -806,7 +823,7 @@ function calculateDayEarnings(
         isClaimDay,
         leaveRewardsToAccumulateForClaim: accumulateAvailableRewardsToClaim,
         leaveRewardsToAccumulateForHydrate: accumulateAvailableRewardsToHydrate,
-        isHydrateDay: isHydrateDay,
+        isHydrateDay,
         lastHydrateTimestamp: isHydrateDay
           ? Number.parseInt(moment(date).format("x"))
           : prevDayEarningsData.lastHydrateTimestamp,
@@ -857,8 +874,30 @@ function shouldClaimOnDay(
   reinvest: number,
   maxPayout: number,
   totalConsumedIncludingAccumulatedAvailableRewards: number,
-  accumulatedAvailableRewards: number
+  accumulatedAvailableRewards: number,
+  customDayActions?: DayAction[]
 ): { isClaimDay: boolean; accumulateAvailableRewardsToClaim: boolean } {
+  // Custom user daily overrides take precedence over everything!
+  const customDayAction = (customDayActions ?? []).find(({ timestamp }) =>
+    moment(new Date(timestamp)).isSame(moment(date), "day")
+  );
+
+  if (customDayAction && customDayAction.action !== "automatic") {
+    if (customDayAction.action === "claim") {
+      return { isClaimDay: true, accumulateAvailableRewardsToClaim: false };
+    }
+
+    if (customDayAction.action === "accumAvailable") {
+      return { isClaimDay: false, accumulateAvailableRewardsToClaim: true };
+    }
+
+    // Ensure if it is explicitly a hydrate day that we do not incorrectly
+    // report that rewards should be left to accumulate in available rewards for claiming.
+    if (customDayAction.action === "hydrate") {
+      return { isClaimDay: false, accumulateAvailableRewardsToClaim: false };
+    }
+  }
+
   const daysInMonth = getDaysInMonth(date);
   // When days in month are not even, we'll take the extra day for claims!
   const numberOfClaimDays = Math.ceil(daysInMonth * (1 - reinvest));
@@ -930,8 +969,32 @@ function shouldHydrateOnDay(
   settings: PlanSettings,
   dripPriceforDay: number,
   isClaimDay: boolean,
-  lastClaimDate: Date
+  lastClaimDate: Date,
+  customDayActions?: DayAction[]
 ): { isHydrateDay: boolean; accumulateAvailableRewardsToHydrate: boolean } {
+  // Custom user daily overrides take precedence over everything!
+  const customDayAction = (customDayActions ?? []).find(({ timestamp }) =>
+    moment(new Date(timestamp)).isSame(moment(date), "day")
+  );
+  if (customDayAction && customDayAction.action !== "automatic") {
+    if (customDayAction.action === "hydrate") {
+      return { isHydrateDay: true, accumulateAvailableRewardsToHydrate: false };
+    }
+
+    if (customDayAction.action === "accumAvailable") {
+      return { isHydrateDay: false, accumulateAvailableRewardsToHydrate: true };
+    }
+
+    // Ensure if it is explicitly a claim day that we do not incorrectly
+    // report that rewards should be left to accumulate in available rewards for hydrating.
+    if (customDayAction.action === "claim") {
+      return {
+        isHydrateDay: false,
+        accumulateAvailableRewardsToHydrate: false,
+      };
+    }
+  }
+
   // If the day has already been marked for claiming, that will
   // take priority!
   if (isClaimDay) {
@@ -1082,26 +1145,3 @@ const HYDRATE_FREQUENCY_DAYS: Record<"everyOtherDay" | "everyWeek", number> = {
   everyOtherDay: 2,
   everyWeek: 7,
 };
-
-function getDaysInMonth(date: Date): number {
-  const month = date.getMonth();
-  const year = date.getFullYear();
-  return [
-    31,
-    isLeapYear(year) ? 29 : 28,
-    31,
-    30,
-    31,
-    30,
-    31,
-    31,
-    30,
-    31,
-    30,
-    31,
-  ][month];
-}
-
-function isLeapYear(year: number): boolean {
-  return (year % 4 === 0 && year % 100 !== 0) || year % 400 === 0;
-}

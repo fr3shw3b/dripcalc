@@ -6,6 +6,7 @@ import ContentContext from "../../contexts/content";
 import moment from "moment";
 import { useSelector } from "react-redux";
 import { AppState } from "../../store/types";
+import useMobileCheck from "../../hooks/use-mobile-check";
 
 export type DripValueInEditor = {
   dripValue: number;
@@ -36,6 +37,7 @@ function WalletCustomDripValues({
   onAddAnotherMonth,
   onRemoveLastMonth,
 }: Props) {
+  const isMobile = useMobileCheck();
   const { wallets: walletsContent } = useContext(ContentContext);
   const { currency } = useSelector((state: AppState) => {
     const currentPlanId = state.plans.current;
@@ -69,7 +71,7 @@ function WalletCustomDripValues({
         className="bp3-dark deposits-container"
         onClose={onClose}
         canOutsideClickClose={false}
-        style={{ minWidth: 768 }}
+        style={!isMobile ? { minWidth: 768 } : undefined}
       >
         <div className={Classes.DIALOG_BODY}>
           <form onSubmit={(evt) => evt.preventDefault()}>

@@ -1,16 +1,48 @@
 .dashboard {
-  height: calc(100vh - 50px);
+  height: calc(100vh - 160px);
   padding: 20px 20px;
-  overflow: hidden;
+  overflow: auto;
   position: relative;
 }
 
-.settings-button {
-  position: absolute;
-  top: 25px;
-  right: 20px;
+.dashboard-intro {
+  max-width: 768px;
 }
 
-.intro {
-  max-width: 500px;
+.toolbar {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+}
+
+.dashboard-cards-container {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+}
+
+.dashboard-card {
+  padding: 30px;
+  margin-top: 30px;
+  margin-right: 30px;
+}
+
+.dashboard-card h3,
+.dashboard-card h2 {
+  margin-top: 0;
+}
+
+@media screen and (max-width: 768px) {
+  .dashboard-card {
+    width: 100%;
+  }
+
+  .dashboard-card:first-child {
+    margin-top: 0;
+  }
+}
+
+.dashboard-info {
+  padding: 20px;
+  max-width: 300px;
 }

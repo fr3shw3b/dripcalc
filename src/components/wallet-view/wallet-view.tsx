@@ -1,12 +1,12 @@
 import { useContext } from "react";
 import { Button, Tab, Tabs } from "@blueprintjs/core";
 
-import { MonthInput } from "../../store/reducers/plans";
-import ContentContext from "../../contexts/content";
+import { DayActionValue, MonthInput } from "../../store/reducers/plans";
+import ContentContext, { WalletsContent } from "../../contexts/content";
 import MomentDateRange from "../moment-date-range";
 
 import "./wallet-view.css";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { AppState } from "../../store/types";
 
 import MonthlyWalletPanel from "../monthly-wallet-panel";
@@ -15,16 +15,24 @@ import HydrateClaimStrategyPanel from "../hydrate-claim-strategy-panel";
 import { Popover2 } from "@blueprintjs/popover2";
 import { findLastYearForWallet } from "../../utils/wallets";
 import useMobileCheck from "../../hooks/use-mobile-check";
+import { EarningsAndInfo } from "../../store/middleware/shared-calculator-types";
+import moment from "moment";
+import { GeneralState } from "../../store/reducers/general";
+import GardenMonthlyWalletPanel from "../garden-monthly-wallet-panel";
+import GardenStrategyPanel from "../garden-strategy-panel";
+import { updateWalletMonthInputs } from "../../store/actions/plans";
 
 type Props = {
   walletId: string;
   label: string;
   startDate: number;
   monthInputs: Record<string, MonthInput>;
-  onEditClick: (walletId: string) => void;
+  editMode: boolean;
+  forCalculator: "garden" | "faucet";
+  onEditClick?: (walletId: string) => void;
   onDepositsClick: (walletId: string) => void;
   onReinvestmentPlanClick: (walletId: string) => void;
-  onCustomDripValuesClick: (walletId: string) => void;
+  onCustomValuesClick: (walletId: string) => void;
 };
 
 function WalletView({
@@ -32,23 +40,32 @@ function WalletView({
   label,
   startDate,
   monthInputs,
+  editMode,
+  forCalculator,
   onEditClick,
   onDepositsClick,
   onReinvestmentPlanClick,
-  onCustomDripValuesClick,
+  onCustomValuesClick,
 }: Props) {
+  const dispatch = useDispatch();
   const isMobile = useMobileCheck();
   const { wallets: walletsContent } = useContext(ContentContext);
-  const { isCalculating, calculatedEarnings, currentPlanId } = useSelector(
-    (state: AppState) => ({
-      ...state.general,
-      currentPlanId: state.plans.current,
-    })
-  );
+  const { isCalculating, calculatedEarnings, currentPlanId, gardenLastYear } =
+    useSelector(
+      (
+        state: AppState
+      ): GeneralState & { gardenLastYear: number; currentPlanId: string } => ({
+        ...state.general,
+        gardenLastYear: state.settings[state.plans.current].gardenLastYear,
+        currentPlanId: state.plans.current,
+      })
+    );
 
   const handleEditClick: React.MouseEventHandler = (evt) => {
     evt.preventDefault();
-    onEditClick(walletId);
+    if (onEditClick) {
+      onEditClick(walletId);
+    }
   };
 
   const handleDepositsClick: React.MouseEventHandler = (evt) => {
@@ -61,42 +78,76 @@ function WalletView({
     onReinvestmentPlanClick(walletId);
   };
 
-  const handleCustomDripValuesClick: React.MouseEventHandler = (evt) => {
+  const handleCustomValuesClick: React.MouseEventHandler = (evt) => {
     evt.preventDefault();
-    onCustomDripValuesClick(walletId);
+    onCustomValuesClick(walletId);
   };
+
+  const handleSaveActionForDayOverride = (
+    timestamp: number,
+    dayActionValue: DayActionValue
+  ) => {
+    dispatch(
+      updateWalletMonthInputs(
+        walletId,
+        currentPlanId,
+        updateMonthInputsDayAction(timestamp, dayActionValue, monthInputs)
+      )
+    );
+  };
+
+  const endDate = getWalletEndDate(
+    walletId,
+    new Date(startDate),
+    forCalculator,
+    gardenLastYear,
+    calculatedEarnings[currentPlanId]
+  );
+
+  const {
+    depositsButtonText,
+    reinvestButtonText,
+    customValueButtonText,
+    helpText,
+  } = determineTextForCalculator(forCalculator, walletsContent);
+
+  const MonthlyWalletPanelComp =
+    forCalculator === "garden" ? GardenMonthlyWalletPanel : MonthlyWalletPanel;
+
+  const StrategyPanel =
+    forCalculator === "garden"
+      ? GardenStrategyPanel
+      : HydrateClaimStrategyPanel;
 
   return (
     <div className="wallet-view-container">
       <h2 className="wallet-heading">{label} </h2>
-      <div className="wallet-ctas">
-        <Button icon="edit" small onClick={handleEditClick} />
+      <div className={`wallet-ctas`}>
+        {editMode && <Button icon="edit" small onClick={handleEditClick} />}
         <Button
           className="wallet-heading-cta"
           icon="bank-account"
           small
           onClick={handleDepositsClick}
-          text={isMobile ? "" : walletsContent.depositsButtonText}
+          text={isMobile ? "" : depositsButtonText}
         />
         <Button
           className="wallet-heading-cta"
           icon="percentage"
           small
           onClick={handleReinvestmentPlanClick}
-          text={isMobile ? "" : walletsContent.reinvestButtonText}
+          text={isMobile ? "" : reinvestButtonText}
         />
         <Button
           className="wallet-heading-cta"
           icon="tint"
           small
-          onClick={handleCustomDripValuesClick}
-          text={isMobile ? "" : walletsContent.customDripValuesButtonText}
+          onClick={handleCustomValuesClick}
+          text={isMobile ? "" : customValueButtonText}
         />
         <Popover2
           content={
-            <div className="wallet-help-popover-content">
-              {walletsContent.walletViewHelpText}
-            </div>
+            <div className="wallet-help-popover-content">{helpText}</div>
           }
           placement="auto"
           usePortal={false}
@@ -112,15 +163,7 @@ function WalletView({
       <div>
         <MomentDateRange
           className={`date-range${isCalculating ? " bp3-skeleton" : ""}`}
-          range={[
-            new Date(startDate),
-            new Date(
-              findLastYearForWallet(
-                walletId,
-                calculatedEarnings[currentPlanId]
-              ) ?? startDate
-            ),
-          ]}
+          range={[new Date(startDate), endDate]}
         />
         <div className="block">
           <Tabs
@@ -130,7 +173,7 @@ function WalletView({
             <Tab
               id={`monthly-${walletId}`}
               title="Monthly"
-              panel={<MonthlyWalletPanel walletId={walletId} />}
+              panel={<MonthlyWalletPanelComp walletId={walletId} />}
             />
             <Tab
               id={`yearly-${walletId}`}
@@ -139,14 +182,113 @@ function WalletView({
             />
             <Tab
               id={`hydrate-strategy-${walletId}`}
-              title="Hydrate & Claim Strategy"
-              panel={<HydrateClaimStrategyPanel walletId={walletId} />}
+              title={
+                forCalculator === "faucet"
+                  ? "Hydrate & Claim Strategy"
+                  : "Sow & Harvest Strategy"
+              }
+              panel={
+                <StrategyPanel
+                  walletId={walletId}
+                  onSaveActionForDayOverride={handleSaveActionForDayOverride}
+                />
+              }
             />
           </Tabs>
         </div>
       </div>
     </div>
   );
+}
+
+function getWalletEndDate(
+  walletId: string,
+  startDate: Date,
+  forCalculator: "garden" | "faucet",
+  lastYearForGarden?: number,
+  earnings?: EarningsAndInfo
+): Date {
+  if (forCalculator === "faucet") {
+    return new Date(findLastYearForWallet(walletId, earnings) ?? startDate);
+  }
+  return moment(`31/12/${lastYearForGarden}`, "DD/MM/YYYY").toDate();
+}
+
+type ButtonTextContent = {
+  depositsButtonText: string;
+  reinvestButtonText: string;
+  customValueButtonText: string;
+  helpText: React.ReactNode;
+};
+
+function determineTextForCalculator(
+  forCalculator: "garden" | "faucet",
+  walletsContent: WalletsContent
+): ButtonTextContent {
+  return {
+    depositsButtonText:
+      forCalculator === "garden"
+        ? walletsContent.gardenDepositsButtonText
+        : walletsContent.depositsButtonText,
+    reinvestButtonText:
+      forCalculator === "garden"
+        ? walletsContent.gardenReinvestButtonText
+        : walletsContent.reinvestButtonText,
+    customValueButtonText:
+      forCalculator === "garden"
+        ? walletsContent.customDripBUSDLPValuesButtonText
+        : walletsContent.customDripValuesButtonText,
+    helpText:
+      forCalculator === "garden"
+        ? walletsContent.walletViewGardenHelpText
+        : walletsContent.walletViewHelpText,
+  };
+}
+
+function updateMonthInputsDayAction(
+  timestamp: number,
+  dayActionValue: DayActionValue,
+  monthInputs: Record<string, MonthInput>
+): Record<string, MonthInput> {
+  const dateKeyForTimestamp = moment(new Date(timestamp)).format("01/MM/YYYY");
+  const monthInput = monthInputs[dateKeyForTimestamp];
+  if (!monthInput) {
+    return monthInputs;
+  }
+
+  const existingActionForDayIndex = (
+    monthInput.customDayActions ?? []
+  ).findIndex(
+    ({ timestamp: candidateTimestamp }) => candidateTimestamp === timestamp
+  );
+
+  const customDayActions =
+    existingActionForDayIndex > -1
+      ? [
+          ...(monthInput.customDayActions ?? []).slice(
+            0,
+            existingActionForDayIndex
+          ),
+          {
+            timestamp,
+            action: dayActionValue,
+          },
+          ...(monthInput.customDayActions ?? []).slice(
+            existingActionForDayIndex + 1
+          ),
+        ]
+      : [
+          ...(monthInput.customDayActions ?? []),
+          { timestamp, action: dayActionValue },
+        ];
+
+  return {
+    ...monthInputs,
+    [dateKeyForTimestamp]: {
+      ...monthInput,
+      customDayActions,
+    },
+  };
 }
 
 export default WalletView;

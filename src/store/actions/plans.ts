@@ -1,4 +1,5 @@
 import { Action } from "redux";
+import { CalculationSet } from "../middleware/calculator";
 import { MonthInput } from "../reducers/plans";
 import { FSA } from "../types";
 
@@ -52,6 +53,7 @@ export type UpdateWalletAction = Action<typeof UPDATE_WALLET> & {
   meta: {
     calculator: {
       recalculate: boolean;
+      set: CalculationSet;
     };
   };
 };
@@ -71,6 +73,7 @@ export function updateWallet(
     meta: {
       calculator: {
         recalculate: true,
+        set: "faucet",
       },
     },
   };
@@ -82,6 +85,7 @@ export type UpdateWalletMonthInputsAction = FSA<
   {
     calculator: {
       recalculate: boolean;
+      set: CalculationSet;
     };
   },
   {
@@ -106,6 +110,7 @@ export function updateWalletMonthInputs(
     meta: {
       calculator: {
         recalculate: true,
+        set: "faucet",
       },
     },
   };
@@ -117,6 +122,7 @@ export type SelectPlanAction = FSA<
   {
     calculator: {
       recalculate: boolean;
+      set: CalculationSet;
     };
   },
   {
@@ -135,6 +141,7 @@ export function selectPlan(id: string, label: string): SelectPlanAction {
     meta: {
       calculator: {
         recalculate: true,
+        set: "all",
       },
     },
   };
@@ -147,6 +154,7 @@ export type RefreshCurrentPlanCalculationsAction = FSA<
   {
     calculator: {
       recalculate: boolean;
+      set: CalculationSet;
     };
   },
   {
@@ -165,6 +173,7 @@ export function refreshCalculations(
     meta: {
       calculator: {
         recalculate: true,
+        set: "all",
       },
     },
   };

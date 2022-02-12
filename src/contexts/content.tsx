@@ -1,12 +1,14 @@
 import { createContext } from "react";
-import type { TrendPeriod } from "../services/drip-value-provider";
-import { HydrateFrequency } from "../store/reducers/settings";
+import type { TrendPeriod } from "../services/token-value-provider";
+import { HydrateFrequency, SowFrequency } from "../store/reducers/settings";
 
 export type Content = {
   settings: SettingsContent;
   wallets: WalletsContent;
   results: ResultsContent;
   overview: OverviewContent;
+  gardenOverview: GardenOverviewContent;
+  dashboard: DashboardContent;
 };
 
 export type SettingsContent = {
@@ -33,6 +35,30 @@ export type SettingsContent = {
   defaultHydrateFrequencyHelpText: string;
   defaultHydrateFrequencyLabel: string;
   defaultHydrateFrequencies: Record<HydrateFrequency, string>;
+  gardenValueTrendHelpText: string;
+  gardenValueTrendLabel: string;
+  gardenValueTrendOptions: Record<string, string>;
+  gardenUptrendMaxValueLabel: string;
+  gardenUptrendMaxValueHelpText: (currency: string) => string;
+  gardenDowntrendMinValueLabel: string;
+  gardenDownTrendMinValueHelpText: (currency: string) => string;
+  gardenStabilisesAtLabel: string;
+  gardenStabilisesAtHelpText: (currency: string) => string;
+  gardenAverageGasFeeLabel: string;
+  gardenAverageGasFeeHelpText: (currency: string) => string;
+  gardenAverageDepositGasFeeLabel: string;
+  gardenAverageDepositGasFeeHelpText: (currency: string) => string;
+  gardenHarvestDaysLabel: string;
+  gardenHarvestDaysHelpText: string;
+  gardenHarvestDays: Record<string, string>;
+  gardenTrendPeriodLabel: string;
+  gardenTrendPeriodHelpText: string;
+  gardenTrendPeriods: Record<TrendPeriod, string>;
+  defaultGardenSowFrequencyHelpText: string;
+  defaultGardenSowFrequencyLabel: string;
+  defaultGardenSowFrequencies: Record<SowFrequency, string>;
+  gardenLastYearLabel: string;
+  gardenLastYearHelpText: string;
 };
 
 export type WalletsContent = {
@@ -66,6 +92,20 @@ export type WalletsContent = {
     "default" | HydrateFrequency,
     string
   >;
+  // Garden content.
+  gardenDepositsButtonText: string;
+  gardenReinvestButtonText: string;
+  customDripBUSDLPValuesButtonText: string;
+  walletViewGardenHelpText: React.ReactNode;
+  gardenDepositDateHelpText: string;
+  gardenDepositAmountInCurrencyHelpText: (currency: string) => string;
+  gardenReinvestmentPlanTableHelpText: React.ReactNode;
+  gardenSowStrategyColumnLabel: string;
+  gardenReinvestmentPlanSowStrategies: Record<"default" | SowFrequency, string>;
+  customGardenValuesTableHelpText: (currency: string) => React.ReactNode;
+  dripBUSDLPValueColumnLabel: (currency: string) => string;
+  plantLPFractionColumnLabel: string;
+  averageGardenDailyYieldColumnLabel: string;
 };
 
 export type ResultsContent = {
@@ -117,6 +157,27 @@ export type ResultsContent = {
   hydrateClaimMaxPayoutEndOfDayHelpText: string;
   hydrateClaimConsumedRewardsEndOfDayLabel: string;
   hydrateClaimConsumedRewardsEndOfDayHelpText: string;
+  // Garden monthly section.
+  gardenPlantBalanceEndOfMonthLabel: string;
+  gardenPlantBalanceEndOfMonthHelpText: string;
+  seedsPerDayEndOfMonthHelpText: string;
+  seedsPerDayEndOfMonthLabel: string;
+  gardenEarningsMonthInDripBUSDLPLabel: string;
+  gardenEarningsMonthInDripBUSDLPHelpText: string;
+  gardenEarningsMonthInCurrencyLabel: (currency: string) => string;
+  gardenEarningsMonthInCurrencyHelpText: (currency: string) => string;
+  gardenReinvestMonthDripBUSDLPLabel: string;
+  gardenReinvestMonthDripBUSDLPHelpText: string;
+  gardenReinvestMonthInCurrencyLabel: (currency: string) => string;
+  gardenReinvestMonthInCurrencyHelpText: (currency: string) => string;
+  gardenClaimMonthDripBUSDLPLabel: string;
+  gardenClaimMonthDripBUSDLPHelpText: string;
+  gardenClaimMonthInCurrencyLabel: (currency: string) => string;
+  gardenClaimMonthInCurrencyHelpText: (currency: string) => string;
+  gardenLostSeedsInMonthLabel: string;
+  gardenLostSeedsInMonthHelpText: string;
+  gardenLostSeedsInMonthInCurrencyLabel: (currency: string) => string;
+  gardenLostSeedsInMonthInCurrencyHelpText: (currency: string) => string;
 };
 
 export type OverviewContent = {
@@ -136,12 +197,26 @@ export type OverviewContent = {
   depositsOutOfPocketDateHelpText: React.ReactNode;
 };
 
+export type GardenOverviewContent = {
+  totalRewardsHarvestedPrefixText: string;
+  totalRewardsHarvestedHelpText: (currency: string) => string;
+  totalPlantsPrefixText: string;
+  totalPlantsHelpText: string;
+};
+
+export type DashboardContent = {
+  faucetDayEarningsInCurrencyHelpText: (
+    currency: string,
+    dripValueInCurrency: string
+  ) => string;
+};
+
 export function content(): Content {
   return {
     settings: {
       currencyLabel: "Currency",
       currencyHelpText:
-        "Select the FIAT currency to convert DRIP to for the calculations",
+        "Select the FIAT currency to be used to convert tokens to across the calculators. (This is shared between all calculators)",
       currencies: {
         "£": "GBP (£)",
         $: "USD ($)",
@@ -196,6 +271,60 @@ export function content(): Content {
         everyWeek: "Every Week",
         automatic: "Automatic",
       },
+      gardenValueTrendLabel: "DRIP/BUSD LP Value Trend",
+      gardenValueTrendHelpText:
+        "The trend of the DRIP/BUSD LP token value from the moment you open your first wallet " +
+        " to the end of the last year configured in the garden settings. " +
+        "When you input custom DRIP/BUSD LP values for a wallet, the trend will begin from the date of the last custom DRIP/BUSD LP value you enter.",
+      gardenValueTrendOptions: {
+        downtrend: "Bearish",
+        stable: "Stable",
+        uptrend: "Bullish",
+      },
+      gardenUptrendMaxValueLabel: "Bullish Max Value",
+      gardenUptrendMaxValueHelpText: (currency: string) =>
+        `The maximum value the DRIP/BUSD LP token will reach in ${currency}`,
+      gardenDowntrendMinValueLabel: "Bearish Min Value",
+      gardenDownTrendMinValueHelpText: (currency: string) =>
+        `The minimum value the DRIP/BUSD LP token will fall to in ${currency}. Think about the potential size of the liquidity pool, the number of LPs with a share of the pool and the amount of LPs withdrawing liquidity when adding this value.`,
+      gardenStabilisesAtLabel: "Stabilises At Value",
+      gardenStabilisesAtHelpText: (currency: string) =>
+        `The value the DRIP/BUSD LP token will stabilise at in ${currency}`,
+      gardenAverageGasFeeLabel: "Average Gas Fee",
+      gardenAverageGasFeeHelpText: (currency: string) =>
+        `The average cost of gas per compound (sowing seeds) or claim (harvesting seeds) in ${currency}.`,
+      gardenAverageDepositGasFeeLabel: "Average Deposit Gas Fee",
+      gardenAverageDepositGasFeeHelpText: (currency: string) =>
+        `The average cost of gas per deposit (buying plants) in ${currency}. This is generally a lot higher than claiming or compounding.`,
+      gardenHarvestDaysLabel: "Harvest Days",
+      gardenHarvestDaysHelpText:
+        "The time of the month you will claim the percentage of your rewards that is not reinvested each month.",
+      gardenHarvestDays: {
+        startOfMonth: "Start of Month",
+        endOfMonth: "End of Month",
+      },
+      gardenTrendPeriodLabel: "Trend Period",
+      gardenTrendPeriodHelpText:
+        "The amount of years the DRIP/BUSD LP token value trend period is spread across. After this time period the value will remain the same as the target value unless you provide custom DRIP/BUSD LP token values in each wallet." +
+        " The target value is the maximum value for up trend, minimum value for down trend and stabilises at for stable trend.",
+      gardenTrendPeriods: {
+        oneYear: "One Year",
+        twoYears: "Two Years",
+        fiveYears: "Five Years",
+        tenYears: "Ten Years",
+      },
+      defaultGardenSowFrequencyHelpText:
+        "The default frequency at which to sow seeds (re-invest or compound), this is overridden if you provide fine-grained monthly hydrate/claim data in your reinvestment plan.",
+      defaultGardenSowFrequencyLabel: "Default Sow Frequency",
+      defaultGardenSowFrequencies: {
+        multipleTimesADay: "Multiple Times A Day",
+        everyDay: "Every Day",
+        everyOtherDay: "Every Other Day",
+        everyWeek: "Every Week",
+      },
+      gardenLastYearLabel: "Last Year in Garden",
+      gardenLastYearHelpText:
+        'The last year in the garden to calculate earnings for, unlike the faucet, the garden does not have a max payout of rewards so wallets don\'t have calculated "expiry" dates.',
     },
     wallets: {
       createNewWalletTitle: "Create New Wallet",
@@ -273,6 +402,109 @@ export function content(): Content {
         `DRIP Value ${currency}`,
       customDripValuesTableHelpText: (currency: string) =>
         `Edit the "DRIP Value ${currency}" column for each month and then save your changes. You can add more months if you need to.`,
+      gardenDepositsButtonText: "deposits (buy plants)",
+      customDripBUSDLPValuesButtonText: "custom drip/busd lp values",
+      gardenReinvestButtonText: "reinvest (sow seeds)",
+      walletViewGardenHelpText: (
+        <>
+          {" "}
+          <h3>Overview</h3>
+          <p>
+            This is a view where you can manage your DRIP/BUSD LP garden
+            strategy across over a significant period of time. You can configure
+            one off or monthly deposits (buying plants), devise a reinvestment
+            plan for a series of months and fill in custom DRIP/BUSD LP values
+            for months.
+          </p>
+          <p>
+            For custom DRIP/BUSD LP values, you can provide a value representing
+            the current fiat currency value for the the LP token. This is an
+            estimate that should be based on the formula used in the liquidity
+            provider contract relative to the total in the DRIP and BUSD
+            reserves in the liquidity pool.
+          </p>
+          <p>
+            You also need to specify the fraction of an LP token a plant
+            (2592000 seeds) is worth, this fluctuates based on the activity of
+            all the players in the DRIP garden. As time goes on you will most
+            likely want to fill in custom DRIP/BUSD LP and plant fraction values
+            for each month that passes.
+          </p>
+          <p>
+            The last of the values you can provide via the "custom drip/busd lp
+            values" modal is the average garden daily yield percentage for the
+            month. This fluctuates based on the activity of the whole community
+            of gardeners and can be up to 3%.
+          </p>
+          <h3>Tables</h3>
+          <p>
+            To find out more information about each column in the tables, you
+            can hover over the column headings that will reveal tooltips with
+            more information.
+          </p>
+        </>
+      ),
+      gardenDepositAmountInCurrencyHelpText: (currency: string) =>
+        `The amount of the deposit (plants bought) in ${currency}, fees will be subtracted before the deposit is added to your plants balance.` +
+        ` You can only buy whole plants so any left over will be left in your DRIP/BUSD LP Token balance.`,
+      gardenReinvestmentPlanTableHelpText: (
+        <>
+          <p>
+            Edit the "Reinvest %" column for each month and then save your
+            changes. You can add more months if you need to.
+          </p>
+          <p>
+            The "Reinvest %" column represents the percentage in which you will
+            sow seeds to grow plants (compound rewards) instead of harvesting
+            them (withdrawing).
+          </p>
+          <p>
+            The percentage provided here will not be 100% accurate as you can
+            only compound in whole plants."
+          </p>
+        </>
+      ),
+      gardenSowStrategyColumnLabel: "Sow Frequency",
+      gardenReinvestmentPlanSowStrategies: {
+        default: "Use Plan Settings",
+        multipleTimesADay: "Multiple Times A Day",
+        everyDay: "Every Day",
+        everyOtherDay: "Every Other Day",
+        everyWeek: "Every Week",
+      },
+      gardenDepositDateHelpText:
+        "The deposit date down to the second is really important for the garden in order to accurately calculate earnings based on seeds available from the moment the plants are bought!",
+      customGardenValuesTableHelpText: (currency: string) => (
+        <>
+          <p>
+            Edit the "DRIP/BUSD LP Value {currency}", "Plant LP Token %" and
+            "Average Garden Daily Yield %" columns for each month and then save
+            your changes. You can add more months if you need to.
+          </p>
+          <p>
+            "DRIP/BUSD LP Value {currency}" is the value of the DRIP/BUSD LP
+            Token for the month, the value of this would be derived from the
+            DRIP and BUSD reserves in the liquidity pool.
+          </p>
+          <p>
+            "Plant LP Token %" is the percentage of the LP token that a plant is
+            worth where a plant is 2592000 seeds in the garden. The garden
+            contract uses time and contract balance multipliers to give fair
+            share to all players over time incentivising new capital. What this
+            means is over time the "Plant LP Token %" reduces so factor this in
+            when providing custom values!
+          </p>
+          <p>
+            "Average Garden Daily Yield %" is the daily yield that can be up to
+            3% but fluctuates based on the activity of the wider community of
+            gardeners.
+          </p>
+        </>
+      ),
+      dripBUSDLPValueColumnLabel: (currency: string) =>
+        `DRIP/BUSD LP Value ${currency}`,
+      plantLPFractionColumnLabel: "Plant LP Token %",
+      averageGardenDailyYieldColumnLabel: "Average Garden Daily Yield %",
     },
     results: {
       earningsMonthLabel: "Earnings (DRIP)",
@@ -354,6 +586,41 @@ export function content(): Content {
       hydrateClaimConsumedRewardsEndOfDayHelpText:
         "The total accumulated consumed rewards in DRIP at the end of the day. If consumed rewards + available " +
         "rewards is within 10% of the current max payout then you will need to claim so your rewards do not stop.",
+      gardenPlantBalanceEndOfMonthLabel: "Plant Balance EOM",
+      gardenPlantBalanceEndOfMonthHelpText:
+        "The Plant Deposit Balance at the end of the month that your daily rewards in seeds are based on. This balance increases when you sow seeds (compound).",
+      seedsPerDayEndOfMonthLabel: "Seeds Per Day EOM",
+      seedsPerDayEndOfMonthHelpText:
+        "The amount of seeds you can receive a day by the end of the month. This balance increases when you sow seeds (compound).",
+      gardenEarningsMonthInDripBUSDLPLabel: "Earnings (DRIP/BUSD LP)",
+      gardenEarningsMonthInDripBUSDLPHelpText:
+        "The amount of earnings in daily rewards (seeds) over the course of a month, this is before deciding whether to sow (compound) or harvest (withdraw) seeds each day.",
+      gardenEarningsMonthInCurrencyLabel: (currency: string) =>
+        `Earnings ${currency} (Est.)`,
+      gardenEarningsMonthInCurrencyHelpText: (currency: string) =>
+        `The total estimated earnings in ${currency} for the month from your daily rewards (seeds). This is based on the value of the DRIP/BUSD LP token in ${currency} and the fraction of DRIP/BUSD LP a plant is worth each day. This is before deciding whether to sow (compound) or harvest (withdraw) seeds each day.`,
+      gardenReinvestMonthDripBUSDLPLabel: "Reinvest (DRIP/BUSD LP)",
+      gardenReinvestMonthDripBUSDLPHelpText:
+        "The total reinvested to sow seeds and grow plants to increase the seeds per day and therefore the plant balance which increases the daily rewards",
+      gardenReinvestMonthInCurrencyLabel: (currency: string) =>
+        `Reinvest ${currency} (Est.)`,
+      gardenReinvestMonthInCurrencyHelpText: (currency: string) =>
+        `The total estimated in ${currency} for the month that is reinvested into your plants balance by sowing seeds. This is based on the value of DRIP/BUSD LP in ${currency} each day.`,
+      gardenClaimMonthDripBUSDLPLabel: "Claimed (DRIP/BUSD LP)",
+      gardenClaimMonthDripBUSDLPHelpText:
+        "The total claimed in DRIP/BUSD LP (Harvested seeds) for the month.",
+      gardenClaimMonthInCurrencyLabel: (currency: string) =>
+        `Claimed ${currency} (Est.)`,
+      gardenClaimMonthInCurrencyHelpText: (currency: string) =>
+        `The total estimated in ${currency} for the month that has been withdrawn from the garden by harvesting seeds. This is based on the value of DRIP/BUSD LP token in ${currency} and the fraction of DRIP/BUSD LP a plant is worth each day.`,
+      gardenLostSeedsInMonthLabel: "Seeds Lost For Month",
+      gardenLostSeedsInMonthHelpText:
+        "The amount of seeds lost for the month due to inefficiencies in your compound schedule. When compounding your rewards, you will want to sow your seeds as close to the time when you have enough seeds for a whole plant as possible.",
+      gardenLostSeedsInMonthInCurrencyLabel: (currency: string) =>
+        `Seeds Lost For Month ${currency} (Est.)`,
+      gardenLostSeedsInMonthInCurrencyHelpText: (currency: string) =>
+        `The estimated amount of seeds lost for the month in ${currency} due to inefficiencies in your compound schedule. When compounding your rewards, you will want to sow your seeds as close to the time when you have enough seeds for a whole plant as possible.` +
+        ` The value in ${currency} is based on the value of DRIP/BUSD LP tokens on the day seeds were lost.`,
     },
     overview: {
       totalRewardsConsumedPrefixText: "Total Rewards Consumed by ",
@@ -437,6 +704,23 @@ export function content(): Content {
           </p>
         </>
       ),
+    },
+    gardenOverview: {
+      totalRewardsHarvestedPrefixText: "Total Harvested Rewards up to ",
+      totalRewardsHarvestedHelpText: (currency: string) =>
+        "The total rewards harvested (withdrawn) up to the final year configured in the current plan's garden settings. " +
+        `These rewards are shown in DRIP/BUSD LP and ${currency} and not in plants as harvested rewards (seeds) are in DRIP/BUSD LP.`,
+      totalPlantsPrefixText: "Total Plants by ",
+      totalPlantsHelpText:
+        "The total amount of plants you will have yielding rewards in your garden by the final year configured in the current plan's garden settings.",
+    },
+    dashboard: {
+      faucetDayEarningsInCurrencyHelpText: (
+        currency: string,
+        dripValueInCurrency: string
+      ) =>
+        `The total estimated rewards in ${currency} for today across all wallets in the selected plan.` +
+        ` This is based on the value of DRIP in ${currency} being ${dripValueInCurrency} today.`,
     },
   };
 }

@@ -14,6 +14,22 @@ body > div#root {
 
 html {
   height: 100%;
+  margin: 0;
+}
+
+.wrapper {
+  min-height: calc(100% - 160px);
+  margin-bottom: -50px;
+}
+
+.footer,
+.push {
+  height: 50px;
+}
+
+.footer {
+  text-align: center;
+  padding: 15px;
 }
 
 code {
@@ -23,6 +39,10 @@ code {
 
 .app.bp3-dark {
   height: 100%;
+  background-color: #30404d;
+}
+
+.app.bp3-dark .wrapper {
   background-color: #30404d;
 }
 
@@ -40,7 +60,7 @@ code {
 
 .wallet-tab-panel-container,
 .hydrate-claim-strategy-tab-panel-container {
-  height: calc(100vh - 250px);
+  height: calc(100vh - 320px);
   min-width: 720px;
   overflow: auto;
 }
@@ -103,6 +123,10 @@ tr.danger {
   margin-left: 15px;
 }
 
+.left-xs-margin {
+  margin-left: 7px;
+}
+
 .hydrate-strategy-year-month-select-block {
   padding-bottom: 20px;
 }
@@ -115,4 +139,8 @@ tr.danger {
   position: absolute;
   right: 15px;
   cursor: pointer;
+}
+
+.select-in-table {
+  width: 50%;
 }

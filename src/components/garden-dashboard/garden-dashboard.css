@@ -1,0 +1,26 @@
+.garden-dashboard {
+  height: calc(100vh - 160px);
+  padding: 20px 20px;
+  overflow: hidden;
+  position: relative;
+}
+
+.garden-dashboard .overview-container {
+  overflow: auto;
+}
+
+@media screen and (max-width: 768px) {
+  .garden-dashboard .overview-container {
+    height: calc(100vh - 250px);
+  }
+}
+
+.settings-button-wrapper {
+  position: absolute;
+  top: 25px;
+  right: 20px;
+}
+
+.garden-intro {
+  max-width: 500px;
+}

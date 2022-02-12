@@ -1,40 +1,40 @@
 import chance from "chance";
 import moment from "moment";
 
-export interface DripValueProvider {
-  getDripValueForMonth(
+export interface TokenValueProvider {
+  getValueForMonth(
     startDate: Date,
     monthDate: Date,
-    startDripValue: number,
-    targetDripValue: number,
-    dripValueTrend: string,
+    startTokenValue: number,
+    targetTokenValue: number,
+    tokenValueTrend: string,
     trendPeriod?: TrendPeriod,
-    lastCustomDripValueDate?: Date
+    lastCustomTokenValueDate?: Date
   ): number;
-  applyVariance(inputDripValue: number): number;
+  applyVariance(inputTokenValue: number): number;
 }
 
 export type TrendPeriod = "tenYears" | "fiveYears" | "twoYears" | "oneYear";
 
-function dripValueProvider(): DripValueProvider {
+function tokenValueProvider(): TokenValueProvider {
   return {
-    getDripValueForMonth: (
+    getValueForMonth: (
       startDate: Date,
       monthDate: Date,
-      startDripValue: number,
-      targetDripValue: number,
-      dripValueTrend: string,
+      startTokenValue: number,
+      targetTokenValue: number,
+      tokenValueTrend: string,
       trendPeriod: TrendPeriod = "tenYears",
-      lastCustomDripValueDate?: Date
+      lastCustomTokenValueDate?: Date
     ): number => {
-      const trendStartDate = lastCustomDripValueDate
-        ? // Add a month to last custom DRIP value date so the custom DRIP value
+      const trendStartDate = lastCustomTokenValueDate
+        ? // Add a month to last custom token value date so the custom token value
           // applies for the entirety of that month and the trend kicks in the following month.
-          moment(lastCustomDripValueDate).add(1, "month").toDate()
+          moment(lastCustomTokenValueDate).add(1, "month").toDate()
         : startDate;
       const yearArrIndex =
         monthDate.getFullYear() - trendStartDate.getFullYear();
-      const trendBoundaryIndex = DRIP_TREND_BOUNDARY_INDEX[trendPeriod];
+      const trendBoundaryIndex = TOKEN_TREND_BOUNDARY_INDEX[trendPeriod];
       if (yearArrIndex > 9) {
         console.warn(
           `Surpassed ${trendBoundaryIndex + 1} ${
@@ -45,51 +45,51 @@ function dripValueProvider(): DripValueProvider {
 
       const monthIndex = monthDate.getMonth();
       const dripTrendBaseValues =
-        DRIP_MONTH_BASE_VALUES[trendPeriod][dripValueTrend];
+        TOKEN_MONTH_BASE_VALUES[trendPeriod][tokenValueTrend];
       if (!dripTrendBaseValues) {
         throw new Error(
-          `"${dripValueTrend}" is not a valid drip trend, must be "downtrend", "uptrend" or "stable"`
+          `"${tokenValueTrend}" is not a valid token trend, must be "downtrend", "uptrend" or "stable"`
         );
       }
 
       const baseValueFraction =
         yearArrIndex <= trendBoundaryIndex
           ? dripTrendBaseValues[yearArrIndex][monthIndex]
-          : DEFAULT_DRIP_VALUE_TREND[dripValueTrend];
+          : DEFAULT_TOKEN_VALUE_TREND[tokenValueTrend];
 
-      if (dripValueTrend === "downtrend") {
-        const downtrendDiff = startDripValue - targetDripValue;
+      if (tokenValueTrend === "downtrend") {
+        const downtrendDiff = startTokenValue - targetTokenValue;
         // Example:
-        // startDripValue <- 65
-        // targetDripValue <- 30
+        // startTokenValue <- 65
+        // targetTokenValue <- 30
         // baseValueFraction <- 0.2
         //
         // 65 - 30 = 35
         // 30 + (35 * 0.2) = 37
-        return targetDripValue + baseValueFraction * downtrendDiff;
+        return targetTokenValue + baseValueFraction * downtrendDiff;
       }
 
-      if (dripValueTrend === "uptrend") {
-        const uptrendDiff = targetDripValue - startDripValue;
+      if (tokenValueTrend === "uptrend") {
+        const uptrendDiff = targetTokenValue - startTokenValue;
         // Example:
-        // startDripValue <- 65
-        // targetDripValue <- 800
+        // startTokenValue <- 65
+        // targetTokenValue <- 800
         // baseValueFraction <- 0.3
         //
         // 800 - 65 = 735
         // 65 + (735 * 0.2) = 212
-        return startDripValue + baseValueFraction * uptrendDiff;
+        return startTokenValue + baseValueFraction * uptrendDiff;
       }
 
-      if (targetDripValue < startDripValue) {
+      if (targetTokenValue < startTokenValue) {
         // Stable trend going down from start value.
-        const lowerBound = targetDripValue / 2;
-        const stableDiff = startDripValue - lowerBound;
+        const lowerBound = targetTokenValue / 2;
+        const stableDiff = startTokenValue - lowerBound;
         // Example:
-        // startDripValue <- 65
-        // targetDripValue <- 40 (stabilises at)
+        // startTokenValue <- 65
+        // targetTokenValue <- 40 (stabilises at)
         // baseValueFraction <- 0.3
-        // lowerBound <- targetDripValue / 2 = 20
+        // lowerBound <- targetTokenValue / 2 = 20
         //
         // 65 - 20 = 45
         // 20 + (45 * 0.3) = 33.5
@@ -99,31 +99,31 @@ function dripValueProvider(): DripValueProvider {
       // Stable trend going up from start value.
       // Simplified version where 0 = targetDripValue not 0.375!
       // In practise stabilising going up really stabilises at (diff * 0.375)!
-      const diff = targetDripValue - startDripValue;
+      const diff = targetTokenValue - startTokenValue;
       // Example:
-      // startDripValue <- 35
-      // targetDripValue <- 80 (stabilises at)
+      // startTokenValue <- 35
+      // targetTokenValue <- 80 (stabilises at)
       // baseValueFraction <- 0.3
       //
       // 80 - 35 = 45
       // 80 - (45 * 0.3) = 66.5
-      return targetDripValue - diff * baseValueFraction;
+      return targetTokenValue - diff * baseValueFraction;
     },
-    applyVariance: (inputDripValue: number): number => {
-      return applyDripValueVariance(inputDripValue);
+    applyVariance: (inputTokenValue: number): number => {
+      return applyTokenValueVariance(inputTokenValue);
     },
   } as const;
 }
 
-function applyDripValueVariance(dripValueForMonth: number): number {
-  // Applies a randomised variance to DRIP value for a day
+function applyTokenValueVariance(tokenValueForMonth: number): number {
+  // Applies a randomised variance to token value for a day
   // in a month to simulate daily price changes.
   // A range of 15% variance 7.5% in each direction.
-  const range = dripValueForMonth * 0.15;
+  const range = tokenValueForMonth * 0.15;
   return weightedRandomDistrib(
-    dripValueForMonth - range / 2,
-    dripValueForMonth + range / 2,
-    dripValueForMonth,
+    tokenValueForMonth - range / 2,
+    tokenValueForMonth + range / 2,
+    tokenValueForMonth,
     3
   );
 }
@@ -145,14 +145,14 @@ function weightedRandomDistrib(
   return chanceInstance.weighted(seq, prob);
 }
 
-const DRIP_TREND_BOUNDARY_INDEX: Record<TrendPeriod, number> = {
+const TOKEN_TREND_BOUNDARY_INDEX: Record<TrendPeriod, number> = {
   oneYear: 0,
   twoYears: 1,
   fiveYears: 4,
   tenYears: 9,
 };
 
-const DEFAULT_DRIP_VALUE_TREND: Record<string, number> = {
+const DEFAULT_TOKEN_VALUE_TREND: Record<string, number> = {
   downtrend: 0,
   stable: 0.375,
   uptrend: 1,
@@ -160,10 +160,10 @@ const DEFAULT_DRIP_VALUE_TREND: Record<string, number> = {
 
 // Provides 0 to 1 real numbers for each trend
 // that can apply up to N years. The start date should be the last
-// custom DRIP value input, this goes on the assumption that users fill
-// in actual DRIP values as months pass.
+// custom token value input, this goes on the assumption that users fill
+// in actual token values as months pass.
 // For each trend there is a 2d array [yearIndex][monthBaseValue].
-const DRIP_MONTH_BASE_VALUES: Record<
+const TOKEN_MONTH_BASE_VALUES: Record<
   TrendPeriod,
   Record<string, number[][]>
 > = {
@@ -372,4 +372,4 @@ const DRIP_MONTH_BASE_VALUES: Record<
   },
 };
 
-export default dripValueProvider;
+export default tokenValueProvider;

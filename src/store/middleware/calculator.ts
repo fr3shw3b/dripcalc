@@ -3,7 +3,7 @@ import { wrap } from "comlink";
 
 import type { AppState, FSA, MiddlewareFunction } from "../types";
 import type { Config } from "../../contexts/config";
-import type { AppState as AppStateForCalculator } from "./calculator.worker";
+import type { AppState as AppStateForCalculator } from "./shared-calculator-types";
 import reducer from "../reducers";
 import { SettingsAction } from "../reducers/settings";
 import { PlansAction } from "../reducers/plans";
@@ -16,11 +16,14 @@ import {
 
 import Worker, { CalculatorWorkerApi } from "./calculator.worker";
 
+export type CalculationSet = "all" | "faucet" | "garden" | "farm";
+
 type ActionWithCalculatorSupport<T extends unknown> = FSA<
   T,
   {
     calculator: {
       recalculate: boolean;
+      set: CalculationSet;
     };
   },
   Record<string, unknown>
@@ -36,7 +39,7 @@ function calculator<State extends AppState = AppState>(
     (next: Dispatch<AnyAction>) =>
     (action: AnyAction) => {
       if (supportsCalculator(action)) {
-        const { recalculate } = action.meta.calculator;
+        const { recalculate, set } = action.meta.calculator;
 
         if (recalculate) {
           store.dispatch(calculatingEarnings());
@@ -52,7 +55,7 @@ function calculator<State extends AppState = AppState>(
             .calculateEarnings(
               JSON.stringify({
                 config,
-
+                set,
                 state: adaptState(appliedState),
               })
             )
@@ -84,6 +87,7 @@ function adaptState<SourceState extends AppState>(
     wallets: {
       wallets: state.plans.plans[planIndex].wallets,
     },
+    prevCalculatedEarnings: state.general.calculatedEarnings[currentPlanId],
   };
 }
 

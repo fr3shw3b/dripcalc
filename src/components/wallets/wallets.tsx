@@ -1,11 +1,18 @@
-import WalletsPanel from "../wallets-panel";
+import FaucetWalletsPanel from "../faucet-wallets-panel";
+import GardenWalletsPanel from "../garden-wallets-panel";
+
 import "./wallets.css";
 
-function Wallets() {
+type Props = {
+  forCalculator: "garden" | "faucet";
+};
+
+function Wallets({ forCalculator }: Props) {
   return (
     <div className="wallets-container">
       <div className="wallet-panel-container">
-        <WalletsPanel />
+        {forCalculator === "faucet" && <FaucetWalletsPanel />}
+        {forCalculator === "garden" && <GardenWalletsPanel />}
       </div>
     </div>
   );

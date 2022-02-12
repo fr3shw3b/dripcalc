@@ -30,6 +30,7 @@ type Props = {
   walletId: string;
   walletStartDate: number;
   isOpen: boolean;
+  forCalculator: "garden" | "faucet";
   onClose: (evt: React.SyntheticEvent<HTMLElement, Event>) => void | undefined;
   onSaveClick: (walletId: string) => void;
   deposits: DepositInEditor[];
@@ -50,6 +51,7 @@ type Props = {
 
 function WalletDeposits({
   isOpen,
+  forCalculator,
   walletName,
   onClose,
   onSaveClick,
@@ -149,7 +151,9 @@ function WalletDeposits({
   return (
     <>
       <Dialog
-        title={`"${walletName}" deposits`}
+        title={`"${walletName}" ${
+          forCalculator === "garden" ? "garden deposits" : "deposits"
+        }`}
         isOpen={isOpen}
         className="bp3-dark deposits-container"
         onClose={onClose}
@@ -189,6 +193,11 @@ function WalletDeposits({
                         deposit.type === "monthly" ? "Start date: " : ""
                       }${moment(date).format("DD MMMM YYYY")}`}
                       labelFor={`deposit-date-${deposit.id}`}
+                      helperText={
+                        forCalculator === "garden"
+                          ? walletsContent.gardenDepositDateHelpText
+                          : ""
+                      }
                     >
                       <Button
                         text={
@@ -206,6 +215,9 @@ function WalletDeposits({
                           defaultValue={new Date(deposit.timestamp)}
                           minDate={new Date(minWalletStartDate)}
                           maxDate={new Date(maxWalletStartDate)}
+                          timePrecision={
+                            forCalculator === "garden" ? "second" : undefined
+                          }
                         />
                       )}
                     </FormGroup>
@@ -216,6 +228,11 @@ function WalletDeposits({
                           "DD MMMM YYYY"
                         )}`}
                         labelFor={`deposit-end-date-${deposit.id}`}
+                        helperText={
+                          forCalculator === "garden"
+                            ? walletsContent.gardenDepositDateHelpText
+                            : ""
+                        }
                       >
                         <Button
                           text={
@@ -237,6 +254,7 @@ function WalletDeposits({
                             }
                             minDate={new Date(deposit.timestamp)}
                             maxDate={new Date(maxWalletStartDate)}
+                            timePrecision={forCalculator ? "second" : undefined}
                           />
                         )}
                       </FormGroup>
@@ -248,9 +266,15 @@ function WalletDeposits({
                         currency
                       )}
                       labelFor={`deposit-${deposit.id}`}
-                      helperText={walletsContent.depositAmountInCurrencyHelpText(
-                        currency
-                      )}
+                      helperText={
+                        forCalculator === "faucet"
+                          ? walletsContent.depositAmountInCurrencyHelpText(
+                              currency
+                            )
+                          : walletsContent.gardenDepositAmountInCurrencyHelpText(
+                              currency
+                            )
+                      }
                     >
                       <InputGroup
                         id={`deposit-amount-in-currency-${deposit.id}`}

@@ -2,9 +2,13 @@ import { SelectPlanAction, SELECT_PLAN } from "../actions/plans";
 import {
   HideSettingsPanelAction,
   HIDE_SETTINGS_PANEL,
+  ShowGardenOverviewAction,
+  ShowGardenPlanAction,
   ShowOverviewAction,
   ShowSettingsPanelAction,
   ShowWalletsAction,
+  SHOW_GARDEN_OVERVIEW,
+  SHOW_GARDEN_PLAN,
   SHOW_OVERVIEW,
   SHOW_SETTINGS_PANEL,
   SHOW_WALLETS,
@@ -15,9 +19,15 @@ export enum ShowTabView {
   Wallets,
 }
 
+export enum ShowGardenTabView {
+  Overview = 1,
+  Plan,
+}
+
 export type ViewsState = {
   [planId: string]: {
     showTabView: ShowTabView;
+    showGardenTabView: ShowGardenTabView;
     isSettingsOpen: boolean;
   };
 };
@@ -26,6 +36,7 @@ export function initialState(): ViewsState {
   return {
     "default-plan": {
       showTabView: ShowTabView.Overview,
+      showGardenTabView: ShowGardenTabView.Overview,
       isSettingsOpen: false,
     },
   };
@@ -34,6 +45,8 @@ export function initialState(): ViewsState {
 export type ViewsAction =
   | SelectPlanAction
   | ShowOverviewAction
+  | ShowGardenOverviewAction
+  | ShowGardenPlanAction
   | ShowWalletsAction
   | ShowSettingsPanelAction
   | HideSettingsPanelAction;
@@ -53,6 +66,7 @@ const reducers = {
       ...state,
       [finalAction.payload.id]: {
         showTabView: ShowTabView.Overview,
+        showGardenTabView: ShowGardenTabView.Overview,
         isSettingsOpen: false,
       },
     };
@@ -74,6 +88,29 @@ const reducers = {
       [finalAction.planId]: {
         ...state[finalAction.planId],
         showTabView: ShowTabView.Wallets,
+      },
+    };
+  },
+  [SHOW_GARDEN_OVERVIEW]: (
+    state: ViewsState,
+    action: ViewsAction
+  ): ViewsState => {
+    const finalAction = action as ShowOverviewAction;
+    return {
+      ...state,
+      [finalAction.planId]: {
+        ...state[finalAction.planId],
+        showGardenTabView: ShowGardenTabView.Overview,
+      },
+    };
+  },
+  [SHOW_GARDEN_PLAN]: (state: ViewsState, action: ViewsAction): ViewsState => {
+    const finalAction = action as ShowWalletsAction;
+    return {
+      ...state,
+      [finalAction.planId]: {
+        ...state[finalAction.planId],
+        showGardenTabView: ShowGardenTabView.Plan,
       },
     };
   },
