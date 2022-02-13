@@ -119,12 +119,7 @@ export function updateWalletMonthInputs(
 export const SELECT_PLAN = "SELECT_PLAN";
 export type SelectPlanAction = FSA<
   typeof SELECT_PLAN,
-  {
-    calculator: {
-      recalculate: boolean;
-      set: CalculationSet;
-    };
-  },
+  {},
   {
     id: string;
     label: string;
@@ -138,12 +133,7 @@ export function selectPlan(id: string, label: string): SelectPlanAction {
       id,
       label,
     },
-    meta: {
-      calculator: {
-        recalculate: true,
-        set: "all",
-      },
-    },
+    meta: {},
   };
 }
 
