@@ -60,7 +60,7 @@ code {
 
 .wallet-tab-panel-container,
 .hydrate-claim-strategy-tab-panel-container {
-  height: calc(100vh - 320px);
+  height: calc(100vh - 480px);
   min-width: 720px;
   overflow: auto;
 }
