@@ -9,6 +9,13 @@ that give long-term views of potential earnings over a period of years across mu
 
 These calculators are extremely configurable and allow users to establish detailed strategies.
 
+## Environment
+
+Feature toggles are set as environment variables that are prefixed with `REACT_APP_` that are exposed
+to the client application.
+
+For local environments, copy .env.local.example to .env.local.
+
 ## Available Scripts
 
 In the project directory, you can run:

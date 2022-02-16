@@ -8,10 +8,13 @@ import { Toast, Toaster } from "@blueprintjs/core";
 import { useDispatch, useSelector } from "react-redux";
 import { AppState } from "../../store/types";
 import { removeNotification } from "../../store/actions/general";
-// import GardenDashboard from "../garden-dashboard";
+import { useContext } from "react";
+import GardenDashboard from "../garden-dashboard";
+import FeatureTogglesContext from "../../contexts/feature-toggles";
 
 function App() {
   const dispatch = useDispatch();
+  const featureToggles = useContext(FeatureTogglesContext);
   const { notifications } = useSelector((state: AppState) => state.general);
 
   const handleDismiss = (notificationId: string) => () => {
@@ -42,11 +45,18 @@ function App() {
           />
           <Route path="/faucet/dashboard" element={<FaucetDashboard />} />
           <Route path="/faucet/information" element={<FaucetInformation />} />
-          {/* <Route
-            path="/drip-garden"
-            element={<Navigate replace to="/drip-garden/dashboard" />}
-          />
-          <Route path="/drip-garden/dashboard" element={<GardenDashboard />} /> */}
+          {featureToggles.gardenCalculator && (
+            <>
+              <Route
+                path="/drip-garden"
+                element={<Navigate replace to="/drip-garden/dashboard" />}
+              />
+              <Route
+                path="/drip-garden/dashboard"
+                element={<GardenDashboard />}
+              />
+            </>
+          )}
         </Routes>
         <div className="push" />
       </div>

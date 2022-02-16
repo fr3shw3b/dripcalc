@@ -16,6 +16,9 @@ import reportWebVitals from "./reportWebVitals";
 import configureStore from "./store/configure";
 import ContentContext, { content } from "./contexts/content";
 import ConfigContext, { config } from "./contexts/config";
+import FeatureTogglesContext, {
+  featureToggles,
+} from "./contexts/feature-toggles";
 
 FocusStyleManager.onlyShowFocusOnTabs();
 
@@ -27,11 +30,13 @@ configureStore().then((store) => {
     <React.StrictMode>
       <BrowserRouter>
         <Provider store={store}>
-          <ContentContext.Provider value={content()}>
-            <ConfigContext.Provider value={config()}>
-              <App />
-            </ConfigContext.Provider>
-          </ContentContext.Provider>
+          <FeatureTogglesContext.Provider value={featureToggles()}>
+            <ContentContext.Provider value={content()}>
+              <ConfigContext.Provider value={config()}>
+                <App />
+              </ConfigContext.Provider>
+            </ContentContext.Provider>
+          </FeatureTogglesContext.Provider>
         </Provider>
       </BrowserRouter>
     </React.StrictMode>,

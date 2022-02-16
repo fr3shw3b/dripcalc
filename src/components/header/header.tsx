@@ -1,7 +1,9 @@
 import { Navbar, Alignment, Button, Icon } from "@blueprintjs/core";
-import { MouseEventHandler, useEffect, useState } from "react";
+import { MouseEventHandler, useContext, useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useSelector } from "react-redux";
+
+import FeatureTogglesContext from "../../contexts/feature-toggles";
 
 import Toolbar from "../toolbar";
 import useMobileCheck from "../../hooks/use-mobile-check";
@@ -15,6 +17,7 @@ function Header() {
   const isFirstTime = useSelector(
     (state: AppState) => state.general.isFirstTime
   );
+  const featureToggles = useContext(FeatureTogglesContext);
   const [isMobileMenuExpanded, setMobileMenuExpanded] = useState(false);
   const isMobile = useMobileCheck();
   const navigate = useNavigate();
@@ -61,15 +64,17 @@ function Header() {
               onClick={handleNavButtonClick("faucet/dashboard")}
             />
           </li>
-          {/* <li>
-            <Button
-              className="bp3-minimal nav-item"
-              icon="tree"
-              text="drip garden"
-              active={location.pathname.startsWith("/drip-garden")}
-              onClick={handleNavButtonClick("drip-garden/dashboard")}
-            />
-          </li> */}
+          {featureToggles.gardenCalculator && (
+            <li>
+              <Button
+                className="bp3-minimal nav-item"
+                icon="tree"
+                text="drip garden"
+                active={location.pathname.startsWith("/drip-garden")}
+                onClick={handleNavButtonClick("drip-garden/dashboard")}
+              />
+            </li>
+          )}
           {/* <li>
             <Button
               className="bp3-minimal nav-item"
@@ -130,35 +135,37 @@ function Header() {
               </ul>
             )}
           </li>
-          {/* <li>
-            <Button
-              className="bp3-minimal nav-item"
-              icon="tree"
-              text="drip garden"
-              active={location.pathname.startsWith("/drip-garden")}
-              onClick={handleNavButtonClick("/drip-garden/dashboard")}
-            />
-            {location.pathname.startsWith("/drip-garden") && (
-              <ul className="mobile-child-menu">
-                <li>
-                  <Button
-                    className="bp3-minimal nav-item"
-                    text="garden dashboard"
-                    active={location.pathname === "/drip-garden/dashboard"}
-                    onClick={handleNavButtonClick("/drip-garden/dashboard")}
-                  />
-                </li>
-                <li>
-                  <Button
-                    className="bp3-minimal nav-item"
-                    text="information"
-                    active={location.pathname === "/drip-garden/information"}
-                    onClick={handleNavButtonClick("/drip-garden/information")}
-                  />
-                </li>
-              </ul>
-            )}
-          </li> */}
+          {featureToggles.gardenCalculator && (
+            <li>
+              <Button
+                className="bp3-minimal nav-item"
+                icon="tree"
+                text="drip garden"
+                active={location.pathname.startsWith("/drip-garden")}
+                onClick={handleNavButtonClick("/drip-garden/dashboard")}
+              />
+              {location.pathname.startsWith("/drip-garden") && (
+                <ul className="mobile-child-menu">
+                  <li>
+                    <Button
+                      className="bp3-minimal nav-item"
+                      text="garden dashboard"
+                      active={location.pathname === "/drip-garden/dashboard"}
+                      onClick={handleNavButtonClick("/drip-garden/dashboard")}
+                    />
+                  </li>
+                  <li>
+                    <Button
+                      className="bp3-minimal nav-item"
+                      text="information"
+                      active={location.pathname === "/drip-garden/information"}
+                      onClick={handleNavButtonClick("/drip-garden/information")}
+                    />
+                  </li>
+                </ul>
+              )}
+            </li>
+          )}
           {/* <li>
             <Button
               className="bp3-minimal nav-item"

@@ -11,6 +11,7 @@ import { AppState } from "../../store/types";
 import formatCurrency from "../../utils/currency";
 import Help from "../help";
 import ContentContext from "../../contexts/content";
+import FeatureTogglesContext from "../../contexts/feature-toggles";
 
 import "./dashboard.css";
 
@@ -18,6 +19,7 @@ function Dashboard() {
   const navigate = useNavigate();
 
   const { dashboard: dashboardContent } = useContext(ContentContext);
+  const featureToggles = useContext(FeatureTogglesContext);
   const {
     dayEarnings,
     dayDripValue,
@@ -59,10 +61,10 @@ function Dashboard() {
     navigate("/faucet/dashboard");
   };
 
-  // const handleGetStartedGardenClick: MouseEventHandler = (evt) => {
-  //   evt.preventDefault();
-  //   navigate("/drip-garden/dashboard");
-  // };
+  const handleGetStartedGardenClick: MouseEventHandler = (evt) => {
+    evt.preventDefault();
+    navigate("/drip-garden/dashboard");
+  };
 
   // const handleGetStartedFarmClick: MouseEventHandler = (evt) => {
   //   evt.preventDefault();
@@ -121,16 +123,20 @@ function Dashboard() {
                 </a>
                 .
               </p>
-              <p>
-                <strong>DRIP Garden Calculator Coming Soon!</strong>
-              </p>
-              {/* <Button
-                className="block"
-                intent="primary"
-                icon="chevron-right"
-                text="Get started in the Garden"
-                onClick={handleGetStartedGardenClick}
-              /> */}
+
+              {featureToggles.gardenCalculator ? (
+                <Button
+                  className="block"
+                  intent="primary"
+                  icon="chevron-right"
+                  text="Get started in the Garden"
+                  onClick={handleGetStartedGardenClick}
+                />
+              ) : (
+                <p>
+                  <strong>DRIP Garden Calculator Coming Soon!</strong>
+                </p>
+              )}
             </Card>
             <Card
               className="dashboard-card"
@@ -221,31 +227,33 @@ function Dashboard() {
               onClick={handleGetStartedFaucetClick}
             />
           </Card>
-          {/* <Card
-            className="dashboard-card"
-            interactive={false}
-            elevation={Elevation.TWO}
-          >
-            <h3>DRIP LP Garden</h3>
-            <p>
-              Plan your strategy in the{" "}
-              <a
-                href="https://theanimal.farm/garden"
-                target="_blank"
-                rel="noreferrer"
-              >
-                DRIP/BUSD LP Garden
-              </a>
-              .
-            </p>
-            <Button
-              className="block"
-              intent="primary"
-              icon="chevron-right"
-              text="Garden Calculator"
-              onClick={handleGetStartedGardenClick}
-            />
-          </Card> */}
+          {featureToggles.gardenCalculator && (
+            <Card
+              className="dashboard-card"
+              interactive={false}
+              elevation={Elevation.TWO}
+            >
+              <h3>DRIP LP Garden</h3>
+              <p>
+                Plan your strategy in the{" "}
+                <a
+                  href="https://theanimal.farm/garden"
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  DRIP/BUSD LP Garden
+                </a>
+                .
+              </p>
+              <Button
+                className="block"
+                intent="primary"
+                icon="chevron-right"
+                text="Garden Calculator"
+                onClick={handleGetStartedGardenClick}
+              />
+            </Card>
+          )}
           {/* <Card
             className="dashboard-card"
             interactive={false}
