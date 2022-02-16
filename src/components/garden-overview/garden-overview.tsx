@@ -34,17 +34,6 @@ function GardenOverview() {
   lastWalletYears.sort((a, b) => a - b);
   const finalYear = lastWalletYears[lastWalletYears.length - 1];
   const finalYearFormatted = moment(new Date(finalYear)).format("MMMM YYYY");
-  const netPositiveUpToFormatted = moment(
-    new Date(calculatedEarnings?.info.netPositiveUpToDate as number)
-  ).format("MMMM YYYY");
-  const depositsOutOfPocketCoveredByFormatted =
-    (calculatedEarnings?.info.depositsOutOfPocketCoveredBy ?? 0) > 0
-      ? moment(
-          new Date(
-            calculatedEarnings?.info.depositsOutOfPocketCoveredBy as number
-          )
-        ).format("MMMM YYYY")
-      : "Not Covered";
 
   return (
     <div className="garden-overview-container">
