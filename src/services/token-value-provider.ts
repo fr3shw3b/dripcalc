@@ -43,18 +43,25 @@ function tokenValueProvider(): TokenValueProvider {
         );
       }
 
+      if (yearArrIndex < 0) {
+        console.warn(
+          `Wallet start date has changed. current month has no custom value, ' + 
+          'will use target value will be used (max for up trend, min for down trend and stabilise at value for the stable trend).`
+        );
+      }
+
       const monthIndex = monthDate.getMonth();
-      const dripTrendBaseValues =
+      const tokenTrendBaseValues =
         TOKEN_MONTH_BASE_VALUES[trendPeriod][tokenValueTrend];
-      if (!dripTrendBaseValues) {
+      if (!tokenTrendBaseValues) {
         throw new Error(
           `"${tokenValueTrend}" is not a valid token trend, must be "downtrend", "uptrend" or "stable"`
         );
       }
 
       const baseValueFraction =
-        yearArrIndex <= trendBoundaryIndex
-          ? dripTrendBaseValues[yearArrIndex][monthIndex]
+        yearArrIndex <= trendBoundaryIndex && yearArrIndex >= 0
+          ? tokenTrendBaseValues[yearArrIndex][monthIndex]
           : DEFAULT_TOKEN_VALUE_TREND[tokenValueTrend];
 
       if (tokenValueTrend === "downtrend") {
@@ -97,7 +104,7 @@ function tokenValueProvider(): TokenValueProvider {
       }
 
       // Stable trend going up from start value.
-      // Simplified version where 0 = targetDripValue not 0.375!
+      // Simplified version where 0 = targetTokenValue not 0.375!
       // In practise stabilising going up really stabilises at (diff * 0.375)!
       const diff = targetTokenValue - startTokenValue;
       // Example:
