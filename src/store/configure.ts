@@ -59,7 +59,7 @@ export default async function configure(): Promise<
       ...preloadedState,
       // Make sure any new settings that are added get default values when a user
       // first opens the up with the new features that have been added with new settings!
-      settings: { ...preloadedState?.settings, ...defaultState.settings },
+      settings: { ...defaultState.settings, ...preloadedState?.settings },
     },
     enhancers
   );
