@@ -79,7 +79,8 @@ function GardenInformation() {
           once a month. For example, if you are re-investing 70% in January and
           your harvest days are at the end of the month you will stop sowing
           (compounding) on the 23rd and claim the rewards for the rest of the
-          month.
+          month. You can override this behaviour by creating custom day
+          schedules.
         </p>
       </p>
       <p className="info-content-block">
