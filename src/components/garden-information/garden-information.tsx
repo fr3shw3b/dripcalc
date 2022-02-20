@@ -1,4 +1,4 @@
-import { Callout, Icon, Intent } from "@blueprintjs/core";
+import { Callout, Intent } from "@blueprintjs/core";
 import "./garden-information.css";
 
 /**
