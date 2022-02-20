@@ -1,0 +1,18 @@
+.garden-information-content {
+  margin: 30px;
+  max-width: 1024px;
+}
+
+.garden-info-content-block {
+  margin-top: 40px;
+}
+
+.garden-information-content-list {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+}
+
+.garden-information-content-list > li {
+  margin-top: 10px;
+}

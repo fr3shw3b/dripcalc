@@ -105,8 +105,8 @@ function createDefaultSettings(): PlanSettings {
     gardenHarvestDays: "startOfMonth",
     gardenTrendPeriod: "tenYears",
     defaultGardenSowFrequency: "multipleTimesADay",
-    // Default to 10 years from now!
-    gardenLastYear: new Date().getFullYear() + 10,
+    // Default to 3 years from now!
+    gardenLastYear: new Date().getFullYear() + 3,
   };
 }
 

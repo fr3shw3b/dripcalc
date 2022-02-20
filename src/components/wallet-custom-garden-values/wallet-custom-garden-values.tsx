@@ -137,7 +137,7 @@ function WalletCustomGardenValues({
           <form onSubmit={(evt) => evt.preventDefault()}>
             <div className="block block-bottom-lg">
               <Button
-                icon={showDetails ? "caret-up" : "caret-down"}
+                icon={showDetails ? "minus" : "caret-down"}
                 text={showDetails ? "hide details" : "show details"}
                 onClick={handleToggleDetailsClick}
               />

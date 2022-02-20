@@ -10,6 +10,7 @@ import { AppState } from "../../store/types";
 import { removeNotification } from "../../store/actions/general";
 import { useContext } from "react";
 import GardenDashboard from "../garden-dashboard";
+import GardenInformation from "../garden-information";
 import FeatureTogglesContext from "../../contexts/feature-toggles";
 
 function App() {
@@ -54,6 +55,10 @@ function App() {
               <Route
                 path="/drip-garden/dashboard"
                 element={<GardenDashboard />}
+              />
+              <Route
+                path="/drip-garden/information"
+                element={<GardenInformation />}
               />
             </>
           )}

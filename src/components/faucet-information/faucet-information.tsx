@@ -14,7 +14,7 @@ function FaucetInformation() {
         <strong>
           None of the information, tips or help provided in this tool is
           financial advice. Do your own research before investing in the DRIP
-          network!
+          network faucet!
         </strong>
       </Callout>
       <p className="info-content-block">
@@ -63,15 +63,16 @@ function FaucetInformation() {
         </ul>
       </p>
       <p className="info-content-block">
-        Depositing in the faucet is NOT staking in the sense that you can
-        withdraw your investment after a certain amount of time! When you
-        deposit into the faucet, you give up your tokens for daily rewards. You
-        get your tokens back in the form of the 1% daily drip rewards. Deposit
-        balance is not asset value but instead a measure of the cash flow for
-        which the daily 1% drip is calculated (3.65 x deposit balance)
+        Depositing in the faucet is NOT staking in the sense that you would
+        expect to be able to withdraw your investment after a certain amount of
+        time! When you deposit into the faucet, you give up your tokens for
+        daily rewards. You get your tokens back in the form of the 1% daily drip
+        rewards. Deposit balance is not asset value but instead a measure of the
+        cash flow for which the daily 1% drip is calculated (3.65 x deposit
+        balance)
       </p>
       <p className="info-content-block">
-        <h3>About DRIP values for each day</h3>
+        <h3>Calculator DRIP values for each day</h3>
         <p>
           The faucet calculator uses weighted randomisation to select the value
           of DRIP for each day that is ultimately heading in the direction of

@@ -54,7 +54,13 @@ export default async function configure(): Promise<
   const defaultState = initialState();
   const store = createStore(
     createRootReducer(), // root reducer with router state
-    { ...defaultState, ...preloadedState },
+    {
+      ...defaultState,
+      ...preloadedState,
+      // Make sure any new settings that are added get default values when a user
+      // first opens the up with the new features that have been added with new settings!
+      settings: { ...preloadedState?.settings, ...defaultState.settings },
+    },
     enhancers
   );
   store.subscribe(async () => {

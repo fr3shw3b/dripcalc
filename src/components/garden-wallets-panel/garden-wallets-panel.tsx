@@ -861,13 +861,15 @@ function gardenValuesFromMonthInputs(
     const existingGardenValuesForTimestamp = gardenValuesList.find(
       (gardenValues) => gardenValues.timestamp === timestamp
     );
+    // Default to a downtrend for LP value and Plant:LP ratio first 12 months!
+    const divideDefaultBy = i > 0 ? i : 1;
     return {
       dripBUSDLPValue:
         existingGardenValuesForTimestamp?.dripBUSDLPValue ??
-        config.defaultDripBUSDLPValue,
+        config.defaultDripBUSDLPValue / divideDefaultBy,
       plantDripBUSDLPFraction:
         existingGardenValuesForTimestamp?.plantDripBUSDLPFraction ??
-        config.defaultMaxPlantDripBUSDLPFraction,
+        config.defaultMaxPlantDripBUSDLPFraction / divideDefaultBy,
       averageGardenYieldPercentage:
         existingGardenValuesForTimestamp?.averageGardenYieldPercentage ??
         config.defaultAverageGardenYieldPercentage,
