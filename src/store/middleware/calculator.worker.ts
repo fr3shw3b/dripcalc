@@ -51,7 +51,7 @@ function calculateEarningsAndInfo(
       : state.prevCalculatedEarnings;
 
   const { gardenEarnings } =
-    ["faucet", "all"].includes(set) || !state.prevCalculatedEarnings
+    ["garden", "all"].includes(set) || !state.prevCalculatedEarnings
       ? calculateGardenEarnings(config, state)
       : state.prevCalculatedEarnings;
   return {

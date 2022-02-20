@@ -86,8 +86,8 @@ function GardenMonthlyWalletPanel({ walletId }: Props) {
     };
 
   return (
-    <div className="wallet-tab-panel-container">
-      <div className="wallet-tab-panel-inner-container block-bottom-lg">
+    <div className="wallet-tab-panel-container garden">
+      <div className="wallet-tab-panel-inner-container garden block-bottom-lg">
         {earningYears.map((year) => {
           const yearEarnings = walletEarnings?.yearEarnings[year];
 
@@ -256,9 +256,19 @@ function GardenMonthlyWalletPanel({ walletId }: Props) {
                           return (
                             <>
                               <td>{renderMonth()}</td>
-                              <td>{monthEarnings?.plantBalanceEndOfMonth}</td>
                               <td>
-                                {Math.round(
+                                {Intl.NumberFormat("en-US", {
+                                  notation: "compact",
+                                  maximumFractionDigits: 1,
+                                }).format(
+                                  monthEarnings?.plantBalanceEndOfMonth ?? 0
+                                )}
+                              </td>
+                              <td>
+                                {Intl.NumberFormat("en-US", {
+                                  notation: "compact",
+                                  maximumFractionDigits: 1,
+                                }).format(
                                   monthEarnings?.seedsPerDayEndOfMonth ?? 0
                                 )}
                               </td>
@@ -296,7 +306,10 @@ function GardenMonthlyWalletPanel({ walletId }: Props) {
                                 )}
                               </td>
                               <td>
-                                {Math.round(
+                                {Intl.NumberFormat("en-US", {
+                                  notation: "compact",
+                                  maximumFractionDigits: 1,
+                                }).format(
                                   monthEarnings?.seedsLostForMonth ?? 0
                                 )}
                               </td>

@@ -1,0 +1,12 @@
+.garden-day-schedule-container {
+  padding: 30px;
+}
+
+.schedule-inputs-action {
+  display: flex;
+  flex-direction: row;
+}
+
+.schedule-inputs-action > * {
+  margin-right: 10px;
+}

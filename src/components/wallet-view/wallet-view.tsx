@@ -21,6 +21,7 @@ import { GeneralState } from "../../store/reducers/general";
 import GardenMonthlyWalletPanel from "../garden-monthly-wallet-panel";
 import GardenStrategyPanel from "../garden-strategy-panel";
 import { updateWalletMonthInputs } from "../../store/actions/plans";
+import GardenYearlyWalletPanel from "../garden-yearly-wallet-panel";
 
 type Props = {
   walletId: string;
@@ -119,6 +120,9 @@ function WalletView({
       ? GardenStrategyPanel
       : HydrateClaimStrategyPanel;
 
+  const YearlyWalletPanelComp =
+    forCalculator === "garden" ? GardenYearlyWalletPanel : YearlyWalletPanel;
+
   return (
     <div className="wallet-view-container">
       <h2 className="wallet-heading">{label} </h2>
@@ -178,7 +182,7 @@ function WalletView({
             <Tab
               id={`yearly-${walletId}`}
               title="Yearly"
-              panel={<YearlyWalletPanel walletId={walletId} />}
+              panel={<YearlyWalletPanelComp walletId={walletId} />}
             />
             <Tab
               id={`hydrate-strategy-${walletId}`}

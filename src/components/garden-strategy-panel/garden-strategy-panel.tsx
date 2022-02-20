@@ -1,14 +1,24 @@
-import { HTMLSelect, HTMLTable, Position } from "@blueprintjs/core";
+import { Button, HTMLSelect, HTMLTable, Position } from "@blueprintjs/core";
 import { useContext, useEffect, useState } from "react";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { AppState } from "../../store/types";
 
 import ContentContext from "../../contexts/content";
 import { Tooltip2 } from "@blueprintjs/popover2";
-import moment from "moment";
-import { GardenDayEarnings } from "../../store/middleware/shared-calculator-types";
+import moment, { Moment } from "moment";
+import {
+  EarningsAndInfo,
+  GardenDayEarnings,
+} from "../../store/middleware/shared-calculator-types";
 import usePrevious from "../../hooks/use-previous";
-import { DayActionValue } from "../../store/reducers/plans";
+import {
+  DayActionValue,
+  GardenDayAction,
+  MonthInput,
+} from "../../store/reducers/plans";
+import GardenDaySchedule from "../garden-day-schedule";
+import { updateWalletMonthInputs } from "../../store/actions/plans";
+import { GeneralState } from "../../store/reducers/general";
 
 type Props = {
   walletId: string;
@@ -18,22 +28,47 @@ type Props = {
   ) => void;
 };
 
+type DayScheduleState = {
+  isDayScheduleDialogOpen: boolean;
+  dayScheduleForCurrentDay: GardenDayAction[];
+  currentDayEarnings?: GardenDayEarnings;
+  currentDate?: Moment;
+};
+
+type StoreStateForGardenStrategy = Omit<GeneralState, "calculatedEarnings"> & {
+  calculatedEarnings?: EarningsAndInfo;
+  currency: string;
+  monthInputs?: Record<string, MonthInput>;
+  currentPlanId: string;
+  currentWalletLabel: string;
+};
+
 function GardenStrategyPanel({ walletId }: Props) {
-  const { calculatedEarnings } = useSelector((state: AppState) => {
-    const currentPlanId = state.plans.current;
-    const currentPlan = state.plans.plans.find(
-      ({ id }) => id === currentPlanId
-    );
-    const currentWallet = currentPlan?.wallets.find(
-      ({ id }) => id === walletId
-    );
-    return {
-      ...state.general,
-      calculatedEarnings: state.general.calculatedEarnings[currentPlanId],
-      currency: state.settings[currentPlanId].currency,
-      monthInputs: currentWallet?.monthInputs,
-    };
+  const dispatch = useDispatch();
+  const { calculatedEarnings, monthInputs, currentPlanId, currentWalletLabel } =
+    useSelector((state: AppState): StoreStateForGardenStrategy => {
+      const currentPlanIdInSelector = state.plans.current;
+      const currentPlan = state.plans.plans.find(
+        ({ id }) => id === currentPlanIdInSelector
+      );
+      const currentWallet = currentPlan?.wallets.find(
+        ({ id }) => id === walletId
+      );
+      return {
+        ...state.general,
+        calculatedEarnings:
+          state.general.calculatedEarnings[currentPlanIdInSelector],
+        currency: state.settings[currentPlanIdInSelector].currency,
+        monthInputs: currentWallet?.monthInputs,
+        currentPlanId: currentPlanIdInSelector,
+        currentWalletLabel: currentWallet?.label ?? "Wallet",
+      };
+    });
+  const [dayScheduleState, setDayScheduleState] = useState<DayScheduleState>({
+    isDayScheduleDialogOpen: false,
+    dayScheduleForCurrentDay: [],
   });
+
   const { results: resultsContent } = useContext(ContentContext);
 
   const earningsTuple = Object.entries(
@@ -81,68 +116,57 @@ function GardenStrategyPanel({ walletId }: Props) {
 
   const prevCurrentYear = usePrevious(currentYear);
 
+  const handleEditActionOnDayClick: (date: Moment) => React.MouseEventHandler =
+    (date) => (evt) => {
+      evt.preventDefault();
+      const monthKey = date.format("01/MM/YYYY");
+      const dayKey = date.format("DD/MM/YYYY");
+      const day = date.date();
+      const inputsForMonth = monthInputs?.[monthKey];
+      const dayActions = inputsForMonth?.customGardenDayActions?.[dayKey];
+      setDayScheduleState({
+        isDayScheduleDialogOpen: true,
+        dayScheduleForCurrentDay: dayActions ?? [],
+        currentDayEarnings:
+          walletEarnings?.yearEarnings[currentYear]?.monthEarnings[currentMonth]
+            ?.dayEarnings[day],
+        currentDate: date,
+      });
+    };
+
+  const handleSaveGardenDayCustomSchedule = (
+    updateWalletId: string,
+    date?: Moment,
+    daySchedule?: GardenDayAction[]
+  ): void => {
+    if (date && daySchedule) {
+      const monthKey = date.format("01/MM/YYYY");
+      const dayKey = date.format("DD/MM/YYYY");
+
+      dispatch(
+        updateWalletMonthInputs(
+          updateWalletId,
+          currentPlanId,
+          monthInputsWithNewDaySchedule(
+            monthKey,
+            dayKey,
+            daySchedule,
+            monthInputs
+          )
+        )
+      );
+      setDayScheduleState({
+        isDayScheduleDialogOpen: false,
+        dayScheduleForCurrentDay: [],
+      });
+    }
+  };
+
   useEffect(() => {
     if (currentYear !== prevCurrentYear) {
       setCurrentMonth(monthOptions[0][0]);
     }
   }, [currentYear, prevCurrentYear, setCurrentMonth, monthOptions]);
-
-  // const handleEditActionOnDayClick: (date: Moment) => React.MouseEventHandler =
-  //   (date) => (evt) => {
-  //     evt.preventDefault();
-  //     setEditActionOnDayStates((prevState) => ({
-  //       ...prevState,
-  //       [date.format("x")]: true,
-  //     }));
-  //   };
-
-  // const handleSaveActionOnDayClick: (date: Moment) => React.MouseEventHandler =
-  //   (date) => (evt) => {
-  //     evt.preventDefault();
-  //     const dateTimestamp = date.format("x");
-  //     onSaveActionForDayOverride(
-  //       Number.parseInt(dateTimestamp),
-  //       customActionOnDayValues[dateTimestamp]
-  //     );
-  //     setEditActionOnDayStates((prevState) => ({
-  //       ...prevState,
-  //       [dateTimestamp]: false,
-  //     }));
-  //   };
-
-  // const handleDiscardActionOnDayClick: (
-  //   date: Moment
-  // ) => React.MouseEventHandler = (date) => (evt) => {
-  //   evt.preventDefault();
-  //   setEditActionOnDayStates((prevState) => ({
-  //     ...prevState,
-  //     [date.format("x")]: false,
-  //   }));
-  //   // Reset value for day.
-  //   setCustomActionOnDayValues((prevState) => {
-  //     const dateTimestamp = date.format("x");
-  //     return {
-  //       ...prevState,
-  //       [dateTimestamp]:
-  //         findUserInputDayAction(
-  //           currentMonth + 1,
-  //           currentYear,
-  //           Number.parseInt(dateTimestamp),
-  //           monthInputs
-  //         )?.action ?? "automatic",
-  //     };
-  //   });
-  // };
-
-  // const handleSelectDayAction: (
-  //   date: Moment
-  // ) => React.ChangeEventHandler<HTMLSelectElement> = (date) => (evt) => {
-  //   evt.preventDefault();
-  //   setCustomActionOnDayValues((prevState) => ({
-  //     ...prevState,
-  //     [date.format("x")]: evt.currentTarget.value as DayActionValue,
-  //   }));
-  // };
 
   return (
     <div>
@@ -179,55 +203,42 @@ function GardenStrategyPanel({ walletId }: Props) {
                 <th>{resultsContent.dayTableColumnLabel}</th>
                 <th>
                   <Tooltip2
-                    content={resultsContent.hydrateClaimActionColumnHelpText}
+                    content={resultsContent.gardenActionsColumnHelpText}
                     position={Position.BOTTOM}
                     openOnTargetFocus={false}
                   >
-                    {resultsContent.hydrateClaimActionColumnLabel}
+                    {resultsContent.gardenActionsColumnLabel}
+                  </Tooltip2>
+                </th>
+                <th>
+                  <Tooltip2
+                    content={resultsContent.gardenSowOrHarvestColumnHelpText}
+                    position={Position.BOTTOM}
+                    openOnTargetFocus={false}
+                  >
+                    {resultsContent.gardenSowOrHarvestColumnLabel}
                   </Tooltip2>
                 </th>
                 <th>
                   <Tooltip2
                     content={
-                      resultsContent.hydrateClaimClaimedOrHydratedHelpText
+                      resultsContent.gardenPlantsBalanceEndOfDayColumnHelpText
                     }
                     position={Position.BOTTOM}
                     openOnTargetFocus={false}
                   >
-                    {resultsContent.hydrateClaimClaimedOrHydratedLabel}
+                    {resultsContent.gardenPlantsBalanceEndOfDayColumnLabel}
                   </Tooltip2>
                 </th>
                 <th>
                   <Tooltip2
                     content={
-                      resultsContent.hydrateClaimAccumDripRewardsHelpText
+                      resultsContent.gardenSeedsPerDayEndOfDayColumnHelpText
                     }
                     position={Position.BOTTOM}
                     openOnTargetFocus={false}
                   >
-                    {resultsContent.hydrateClaimAccumDripRewardsLabel}
-                  </Tooltip2>
-                </th>
-                <th>
-                  <Tooltip2
-                    content={
-                      resultsContent.hydrateClaimConsumedRewardsEndOfDayHelpText
-                    }
-                    position={Position.BOTTOM}
-                    openOnTargetFocus={false}
-                  >
-                    {resultsContent.hydrateClaimConsumedRewardsEndOfDayLabel}
-                  </Tooltip2>
-                </th>
-                <th>
-                  <Tooltip2
-                    content={
-                      resultsContent.hydrateClaimMaxPayoutEndOfDayHelpText
-                    }
-                    position={Position.BOTTOM}
-                    openOnTargetFocus={false}
-                  >
-                    {resultsContent.hydrateClaimMaxPayoutEndOfDayLabel}
+                    {resultsContent.gardenSeedsPerDayEndOfDayColumnLabel}
                   </Tooltip2>
                 </th>
               </thead>
@@ -247,119 +258,52 @@ function GardenStrategyPanel({ walletId }: Props) {
                   };
 
                   const renderColumns = () => {
-                    // const accumDailyRewards =
-                    //   dayEarnings?.accumDailyRewards ?? 0;
-                    // const maxPayout = (
-                    //   (dayEarnings?.dripDepositBalance ?? 0) *
-                    //   config.depositMultiplier
-                    // ).toFixed(4);
-                    // const consumedRewards = (
-                    //   dayEarnings?.accumConsumedRewards ?? 0
-                    // ).toFixed(4);
-                    // const hydrateOnDay = dayEarnings?.reinvestAfterTax;
-                    // const claimOnDay = dayEarnings?.claimAfterTax;
                     // Day earnings will reflect custom overrides if a user has provided
                     // specific day actions.
-                    const actionForDayLabel = selectActionForDay(dayEarnings);
-                    // const dayAction = findUserInputDayAction(
-                    //   currentMonth + 1,
-                    //   currentYear,
-                    //   Number.parseInt(dateTimestamp),
-                    //   monthInputs
-                    // );
+                    const actionsForDay = extractActionsForDay(dayEarnings);
+                    const claimedInDripBUSDLP =
+                      dayEarnings?.claimInDripBUSDLP ?? 0;
+                    const reinvestInDripBUSDLP =
+                      dayEarnings?.reinvestInDripBUSDLP ?? 0;
+                    const plantsBalance = dayEarnings?.plantsBalance ?? 0;
+                    const seedsPerDay = dayEarnings?.seedsPerDay ?? 0;
 
                     return (
                       <>
                         <td>{renderDay()}</td>
-                        <td>{actionForDayLabel}</td>
-                        {/* <td>
-                          {!editActionOnDayStates[dateTimestamp] && (
-                            <>
-                              {actionForDayLabel}
-                              <span className="left-small-margin">
-                                <Tooltip2
-                                  content="Override action for day"
-                                  position={Position.BOTTOM}
-                                  openOnTargetFocus={false}
-                                >
-                                  <Button
-                                    icon="edit"
-                                    small
-                                    onClick={handleEditActionOnDayClick(date)}
-                                  />
-                                </Tooltip2>
-                              </span>
-                            </>
-                          )}
-                          {editActionOnDayStates[dateTimestamp] && (
-                            <>
-                              <HTMLSelect
-                                id={`day-action-${dateTimestamp}-select`}
-                                className="select-in-table"
-                                value={
-                                  customActionOnDayValues[dateTimestamp] ??
-                                  dayAction?.action ??
-                                  "automatic"
-                                }
-                                onChange={handleSelectDayAction(date)}
-                              >
-                                {Object.entries(dayActionOptions).map(
-                                  ([key, label]) => (
-                                    <option key={`${key}`} value={`${key}`}>
-                                      {label}
-                                    </option>
-                                  )
-                                )}
-                              </HTMLSelect>
-                              <span className="left-small-margin">
-                                <Tooltip2
-                                  content="Save action for day"
-                                  position={Position.BOTTOM}
-                                  openOnTargetFocus={false}
-                                >
-                                  <Button
-                                    icon="tick"
-                                    small
-                                    onClick={handleSaveActionOnDayClick(date)}
-                                  />
-                                </Tooltip2>
-                              </span>
-                              <span className="left-xs-margin">
-                                <Tooltip2
-                                  content="Discard changes"
-                                  position={Position.BOTTOM}
-                                  openOnTargetFocus={false}
-                                >
-                                  <Button
-                                    icon="cross"
-                                    small
-                                    onClick={handleDiscardActionOnDayClick(
-                                      date
-                                    )}
-                                  />
-                                </Tooltip2>
-                              </span>
-                            </>
-                          )}
-                        </td>
-                        {actionForDayLabel === "Hydrate" && (
-                          <td>{hydrateOnDay?.toFixed(4)}</td>
-                        )}
-                        {actionForDayLabel === "Claim" && (
-                          <td>{claimOnDay?.toFixed(4)}</td>
-                        )}
-                        {(actionForDayLabel === "Unknown" ||
-                          actionForDayLabel ===
-                            "Leave to Accumulate in Available Rewards") && (
-                          <td></td>
-                        )}
                         <td>
-                          {accumDailyRewards > 0
-                            ? accumDailyRewards.toFixed(4)
-                            : ""}
+                          {actionsForDay}{" "}
+                          <div className="top-small-margin">
+                            <Tooltip2
+                              content="Override actions for day"
+                              position={Position.BOTTOM}
+                              openOnTargetFocus={false}
+                            >
+                              <Button
+                                icon="edit"
+                                small
+                                onClick={handleEditActionOnDayClick(date)}
+                              />
+                            </Tooltip2>
+                          </div>
                         </td>
-                        <td>{consumedRewards}</td>
-                        <td>{maxPayout}</td> */}
+                        <td>
+                          {(claimedInDripBUSDLP + reinvestInDripBUSDLP).toFixed(
+                            4
+                          )}
+                        </td>
+                        <td>
+                          {Intl.NumberFormat("en-US", {
+                            notation: "compact",
+                            maximumFractionDigits: 1,
+                          }).format(plantsBalance)}
+                        </td>
+                        <td>
+                          {Intl.NumberFormat("en-US", {
+                            notation: "compact",
+                            maximumFractionDigits: 1,
+                          }).format(seedsPerDay)}
+                        </td>
                       </>
                     );
                   };
@@ -370,47 +314,79 @@ function GardenStrategyPanel({ walletId }: Props) {
           </div>
         </div>
       </div>
+      <GardenDaySchedule
+        walletId={walletId}
+        walletName={currentWalletLabel}
+        daySchedule={dayScheduleState.dayScheduleForCurrentDay}
+        calculatedDayEarnings={dayScheduleState.currentDayEarnings}
+        date={dayScheduleState.currentDate}
+        isOpen={dayScheduleState.isDayScheduleDialogOpen}
+        onClose={() =>
+          setDayScheduleState({
+            isDayScheduleDialogOpen: false,
+            dayScheduleForCurrentDay: [],
+          })
+        }
+        onSaveClick={handleSaveGardenDayCustomSchedule}
+      />
     </div>
   );
 }
 
-function selectActionForDay(dayEarnings?: GardenDayEarnings): string {
+function extractActionsForDay(
+  dayEarnings?: GardenDayEarnings
+): React.ReactNode {
   if (!dayEarnings) {
     return "Unknown";
   }
 
-  if (dayEarnings.isSowDay && dayEarnings.isHarvestDay) {
-    return "Sow & Harvest";
-  }
-
-  if (dayEarnings.isSowDay) {
-    return "Sow";
-  }
-
-  if (dayEarnings.isHarvestDay) {
-    return "Harvest";
+  if (dayEarnings.isSowDay || dayEarnings.isHarvestDay) {
+    return (
+      <ul className="action-list">
+        {dayEarnings.sowHarvestSchedule.map((dayAction) => {
+          return (
+            <li>
+              <strong>
+                <i>{actionLabels[dayAction.action]}</i>
+              </strong>{" "}
+              at {moment(new Date(dayAction.timestamp)).format("HH:mm:ss")}
+            </li>
+          );
+        })}
+      </ul>
+    );
   }
 
   return "Leave Seeds to Accumulate";
 }
 
-// function findUserInputDayAction(
-//   currentMonth: number,
-//   currentYear: number,
-//   dateTimestamp: number,
-//   monthInputs?: Record<string, MonthInput>
-// ): DayAction | undefined {
-//   return monthInputs?.[
-//     `01/${currentMonth}/${currentYear}`
-//   ]?.customDayActions?.find(({ timestamp }) => timestamp === dateTimestamp);
-// }
+function monthInputsWithNewDaySchedule(
+  monthKey: string,
+  dayKey: string,
+  daySchedule: GardenDayAction[],
+  monthInputs?: Record<string, MonthInput>
+): Record<string, MonthInput> {
+  const monthInput = monthInputs?.[monthKey];
+  if (!monthInput) {
+    return monthInputs ?? {};
+  }
 
-// const dayActionOptions = {
-//   automatic: "Automatic - Calculate Based on Settings",
-//   hydrate: "Hydrate",
-//   claim: "Claim",
-//   accumAvailable: "Leave to Accumulate in Available Rewards",
-// };
+  return {
+    ...monthInputs,
+    [monthKey]: {
+      ...monthInput,
+      customGardenDayActions: {
+        ...monthInput.customGardenDayActions,
+        [dayKey]: daySchedule,
+      },
+    },
+  };
+}
+
+const actionLabels = {
+  sow: "Sow",
+  harvest: "Harvest",
+} as const;
 
 const monthLabels = [
   "January",

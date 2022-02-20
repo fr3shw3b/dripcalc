@@ -146,6 +146,7 @@ export type ResultsContent = {
   yearClaimedHelpText: string;
   yearClaimedInCurrencyLabel: (currency: string) => string;
   yearClaimedInCurrencyHelpText: (currency: string) => string;
+  // Faucet strategy section.
   dayTableColumnLabel: string;
   hydrateClaimActionColumnLabel: string;
   hydrateClaimActionColumnHelpText: string;
@@ -178,6 +179,32 @@ export type ResultsContent = {
   gardenLostSeedsInMonthHelpText: string;
   gardenLostSeedsInMonthInCurrencyLabel: (currency: string) => string;
   gardenLostSeedsInMonthInCurrencyHelpText: (currency: string) => string;
+  // Garden strategy section.
+  gardenActionsColumnHelpText: string;
+  gardenActionsColumnLabel: string;
+  gardenSowOrHarvestColumnHelpText: string;
+  gardenSowOrHarvestColumnLabel: string;
+  gardenPlantsBalanceEndOfDayColumnHelpText: string;
+  gardenPlantsBalanceEndOfDayColumnLabel: string;
+  gardenSeedsPerDayEndOfDayColumnHelpText: string;
+  gardenSeedsPerDayEndOfDayColumnLabel: string;
+  // Garden yearly section.
+  gardenPlantBalanceEndOfYearHelpText: string;
+  gardenPlantBalanceEndOfYearLabel: string;
+  gardenSeedsPerDayEndOfYearHelpText: string;
+  gardenSeedsPerDayEndOfYearLabel: string;
+  gardenYearEarningsHelpText: string;
+  gardenYearEarningsLabel: string;
+  gardenYearEarningsInCurrencyHelpText: (currency: string) => string;
+  gardenYearEarningsInCurrencyLabel: (currency: string) => string;
+  gardenYearClaimedLabel: string;
+  gardenYearClaimedHelpText: string;
+  gardenYearClaimedInCurrencyLabel: (currency: string) => string;
+  gardenYearClaimedInCurrencyHelpText: (currency: string) => string;
+  gardenYearAccumClaimedLabel: string;
+  gardenYearAccumClaimedHelpText: string;
+  gardenYearAccumClaimedInCurrencyLabel: (currency: string) => string;
+  gardenYearAccumClaimedInCurrencyHelpText: (currency: string) => string;
 };
 
 export type OverviewContent = {
@@ -290,12 +317,12 @@ export function content(): Content {
       gardenStabilisesAtLabel: "Stabilises At Value",
       gardenStabilisesAtHelpText: (currency: string) =>
         `The value the DRIP/BUSD LP token will stabilise at in ${currency}`,
-      gardenAverageGasFeeLabel: "Average Gas Fee",
+      gardenAverageGasFeeLabel: "Average Sow Gas Fee",
       gardenAverageGasFeeHelpText: (currency: string) =>
-        `The average cost of gas per compound (sowing seeds) or claim (harvesting seeds) in ${currency}.`,
-      gardenAverageDepositGasFeeLabel: "Average Deposit Gas Fee",
+        `The average cost of gas per compound (sowing seeds) in ${currency}.`,
+      gardenAverageDepositGasFeeLabel: "Average Deposit or Harvest Gas Fee",
       gardenAverageDepositGasFeeHelpText: (currency: string) =>
-        `The average cost of gas per deposit (buying plants) in ${currency}. This is generally a lot higher than claiming or compounding.`,
+        `The average cost of gas per deposit (buying plants)  or claim (harvesting seeds) in ${currency}. This is generally a lot higher than compounding.`,
       gardenHarvestDaysLabel: "Harvest Days",
       gardenHarvestDaysHelpText:
         "The time of the month you will claim the percentage of your rewards that is not reinvested each month.",
@@ -481,23 +508,36 @@ export function content(): Content {
             "Average Garden Daily Yield %" columns for each month and then save
             your changes. You can add more months if you need to.
           </p>
+          <h3>DRIP/BUSD LP Value {currency}</h3>
           <p>
             "DRIP/BUSD LP Value {currency}" is the value of the DRIP/BUSD LP
             Token for the month, the value of this would be derived from the
             DRIP and BUSD reserves in the liquidity pool.
           </p>
+          <h3>Plant LP Token %</h3>
           <p>
             "Plant LP Token %" is the percentage of the LP token that a plant is
-            worth where a plant is 2592000 seeds in the garden. The garden
+            worth where a plant is 2,592,000 seeds in the garden. The garden
             contract uses time and contract balance multipliers to give fair
             share to all players over time incentivising new capital. What this
             means is over time the "Plant LP Token %" reduces so factor this in
             when providing custom values!
           </p>
+          <strong>Inflation</strong>
+          <p>
+            If the contract balance of the garden in DRIP/BUSD LP does not
+            increase, the value of plants will drop as every plant compounded
+            will be worth less DRIP/BUSD LP. The number of plants in existence
+            are always increasing; plants are a representation of a percentage
+            of a DRIP/BUSD LP token.
+          </p>
+          <h3>Average Garden Daily Yield %</h3>
           <p>
             "Average Garden Daily Yield %" is the daily yield that can be up to
             3% but fluctuates based on the activity of the wider community of
-            gardeners.
+            gardeners and your personal habits. This value can also be seen as
+            the daily seed rate that can be produced that reduces when you
+            harvest more than you compound.
           </p>
         </>
       ),
@@ -621,6 +661,45 @@ export function content(): Content {
       gardenLostSeedsInMonthInCurrencyHelpText: (currency: string) =>
         `The estimated amount of seeds lost for the month in ${currency} due to inefficiencies in your compound schedule. When compounding your rewards, you will want to sow your seeds as close to the time when you have enough seeds for a whole plant as possible.` +
         ` The value in ${currency} is based on the value of DRIP/BUSD LP tokens on the day seeds were lost.`,
+      gardenActionsColumnHelpText:
+        "The actions to carry out on this day, either sow, harvest or leave available seeds to accumulate.",
+      gardenActionsColumnLabel: "Actions",
+      gardenSowOrHarvestColumnLabel: "Harv. or Comp. (DRIP/BUSD LP)",
+      gardenSowOrHarvestColumnHelpText:
+        "The estimated amount of DRIP/BUSD LP harvested or compounded on a given day",
+      gardenPlantsBalanceEndOfDayColumnLabel: "Plants Balance EOD",
+      gardenPlantsBalanceEndOfDayColumnHelpText:
+        "Your plants balance at the end of a given day",
+      gardenSeedsPerDayEndOfDayColumnLabel: "Seeds per Day EOD",
+      gardenSeedsPerDayEndOfDayColumnHelpText:
+        "The rate at which your plants will produce seeds at the end of a given day",
+      gardenPlantBalanceEndOfYearLabel: "Plant Balance EOY",
+      gardenPlantBalanceEndOfYearHelpText:
+        "Your balance of plants producing seeds every day by the end of the year",
+      gardenSeedsPerDayEndOfYearLabel: "Seeds per Day EOY",
+      gardenSeedsPerDayEndOfYearHelpText:
+        "The rate at which your plants will produce seeds by the end of the year",
+      gardenYearEarningsLabel: "Earnings DRIP/BUSD LP (Est.)",
+      gardenYearEarningsHelpText:
+        "The estimated earnings in DRIP/BUSD LP for the year. This is before claiming or compounding.",
+      gardenYearEarningsInCurrencyLabel: (currency: string) =>
+        `Earnings ${currency} (Est.)`,
+      gardenYearEarningsInCurrencyHelpText: (currency: string) =>
+        `The estimated earnings in ${currency} for the year. This is before claiming or compounding.`,
+      gardenYearClaimedLabel: "Claimed DRIP/BUSD LP (Est.)",
+      gardenYearClaimedHelpText:
+        "The estimated claimed earnings (harvested seeds) in DRIP/BUSD LP for the year",
+      gardenYearClaimedInCurrencyLabel: (currency: string) =>
+        `Claimed ${currency} (Est.)`,
+      gardenYearClaimedInCurrencyHelpText: (currency: string) =>
+        `The estimated claimed earnings (harvested seeds) in ${currency} for the year`,
+      gardenYearAccumClaimedLabel: "Accum Claimed DRIP/BUSD LP (Est.)",
+      gardenYearAccumClaimedHelpText:
+        "The estimated accumulation of claimed earnings over years in DRIP/BUSD LP",
+      gardenYearAccumClaimedInCurrencyLabel: (currency: string) =>
+        `Accum Claimed ${currency} (Est.)`,
+      gardenYearAccumClaimedInCurrencyHelpText: (currency: string) =>
+        `The estimated accumulation of claimed earnings over years in ${currency}`,
     },
     overview: {
       totalRewardsConsumedPrefixText: "Total Rewards Consumed by ",

@@ -80,6 +80,15 @@ code {
   }
 }
 
+@media screen and (max-width: 2000px) {
+  .wallet-tab-panel-container.garden .bp3-collapse,
+  .wallet-tab-panel-container.garden .block {
+    overflow-x: auto;
+    white-space: nowrap;
+    width: calc(100vw - 200px);
+  }
+}
+
 @media screen and (max-width: 768px) {
   .wallet-tab-panel-container .bp3-collapse,
   .wallet-tab-panel-container .block,
@@ -143,4 +152,19 @@ tr.danger {
 
 .select-in-table {
   width: 50%;
+}
+
+ul.action-list {
+  list-style-type: none;
+  margin: 0;
+  padding: 0;
+}
+
+ul.action-list li {
+  list-style-type: none;
+  padding-bottom: 10px;
+}
+
+.top-small-margin {
+  margin-top: 8px;
 }

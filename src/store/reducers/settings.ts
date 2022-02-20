@@ -27,8 +27,8 @@ import {
   UpdateDripBUSDLPDowntrendMinValueChangeAction,
   UPDATE_DRIP_BUSD_LP_STABILISES_AT,
   UpdateDripBUSDLPStabilisesAtAction,
-  UPDATE_GARDEN_AVERAGE_GAS_FEE,
-  UpdateGardenAverageGasFeeAction,
+  UPDATE_GARDEN_AVERAGE_SOW_GAS_FEE,
+  UpdateGardenAverageSowGasFeeAction,
   UpdateGardenTrendPeriodAction,
   UPDATE_GARDEN_TREND_PERIOD,
   UpdateGardenSowFrequencyAction,
@@ -37,8 +37,8 @@ import {
   UPDATE_GARDEN_LAST_YEAR,
   UpdateGardenHarvestmDaysAction,
   UPDATE_GARDEN_HARVEST_DAYS,
-  UPDATE_GARDEN_AVERAGE_DEPOSIT_GAS_FEE,
-  UpdateGardenAverageDepositGasFeeAction,
+  UPDATE_GARDEN_AVERAGE_DEPOSIT_HARVEST_GAS_FEE,
+  UpdateGardenAverageDepositHarvestGasFeeAction,
 } from "../actions/settings";
 
 export type SettingsState = Record<string, PlanSettings>;
@@ -57,10 +57,10 @@ export type PlanSettings = {
   dripBUSDLPUptrendMaxValue: number;
   dripBUSDLPDowntrendMinValue: number;
   dripBUSDLPStabilisesAt: number;
-  // sowing and harvesting seeds (<$0.20) and harvesting seeds.
-  gardenAverageGasFee: number;
-  // Average across deposits (can be up to $3.50),
-  gardenAverageDepositGasFee: number;
+  // sowing seeds (<$0.20).
+  gardenAverageSowGasFee: number;
+  // Average across deposits and harvesting seeds (can be up to $3.50),
+  gardenAverageDepositHarvestGasFee: number;
   gardenHarvestDays: string;
   gardenTrendPeriod: TrendPeriod;
   defaultGardenSowFrequency: SowFrequency;
@@ -100,8 +100,8 @@ function createDefaultSettings(): PlanSettings {
     dripBUSDLPUptrendMaxValue: 100,
     dripBUSDLPDowntrendMinValue: 1,
     dripBUSDLPStabilisesAt: 20,
-    gardenAverageGasFee: 0.15,
-    gardenAverageDepositGasFee: 3,
+    gardenAverageSowGasFee: 0.15,
+    gardenAverageDepositHarvestGasFee: 3,
     gardenHarvestDays: "startOfMonth",
     gardenTrendPeriod: "tenYears",
     defaultGardenSowFrequency: "multipleTimesADay",
@@ -125,8 +125,8 @@ export type SettingsAction =
   | UpdateDripBUSDLPUptrendMaxValueChangeAction
   | UpdateDripBUSDLPDowntrendMinValueChangeAction
   | UpdateDripBUSDLPStabilisesAtAction
-  | UpdateGardenAverageGasFeeAction
-  | UpdateGardenAverageDepositGasFeeAction
+  | UpdateGardenAverageSowGasFeeAction
+  | UpdateGardenAverageDepositHarvestGasFeeAction
   | UpdateGardenTrendPeriodAction
   | UpdateGardenSowFrequencyAction
   | UpdateGardenHarvestmDaysAction
@@ -310,29 +310,29 @@ const reducers = {
       },
     };
   },
-  [UPDATE_GARDEN_AVERAGE_GAS_FEE]: (
+  [UPDATE_GARDEN_AVERAGE_SOW_GAS_FEE]: (
     state: SettingsState,
     action: SettingsAction
   ): SettingsState => {
-    const finalAction = action as UpdateGardenAverageGasFeeAction;
+    const finalAction = action as UpdateGardenAverageSowGasFeeAction;
     return {
       ...state,
       [finalAction.payload.planId]: {
         ...state[finalAction.payload.planId],
-        gardenAverageGasFee: finalAction.payload.value,
+        gardenAverageSowGasFee: finalAction.payload.value,
       },
     };
   },
-  [UPDATE_GARDEN_AVERAGE_DEPOSIT_GAS_FEE]: (
+  [UPDATE_GARDEN_AVERAGE_DEPOSIT_HARVEST_GAS_FEE]: (
     state: SettingsState,
     action: SettingsAction
   ): SettingsState => {
-    const finalAction = action as UpdateGardenAverageDepositGasFeeAction;
+    const finalAction = action as UpdateGardenAverageDepositHarvestGasFeeAction;
     return {
       ...state,
       [finalAction.payload.planId]: {
         ...state[finalAction.payload.planId],
-        gardenAverageDepositGasFee: finalAction.payload.value,
+        gardenAverageDepositHarvestGasFee: finalAction.payload.value,
       },
     };
   },

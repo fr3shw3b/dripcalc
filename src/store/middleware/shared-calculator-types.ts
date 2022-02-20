@@ -121,6 +121,8 @@ export type GardenYearEarnings = {
   monthEarnings: Record<number, GardenMonthEarningsAndInfo>;
   totalYearHarvestedInDripBUSDLP: number;
   totalYearHarvestedInCurrency: number;
+  accumYearHarvestedInDripBUSDLP: number;
+  accumYearHarvestedInCurrency: number;
   seedsPerDayEndOfYear: number;
   seedsLostForYear: number;
   seedsLostForYearInCurrency: number;
@@ -163,6 +165,10 @@ export type GardenDayEarnings = {
   seedsLostInCurrency: number;
   plantsGrown: number;
   seedsPerDay: number;
+  // INTERNAL USE ONLY - this is used to keep track of the seeds accumulated
+  // when forming schedules to prevent circular dependencies between behaviour to calculate
+  // earnings from schedules and behaviour to create schedules!
+  seedsAccumulatedFromPreviousDaySchedules: number;
   // The accumulated daily rewards from previous days
   // that have not yet been compounded or claimed!
   // This is in raw seeds!
@@ -179,6 +185,9 @@ export type GardenDayEarnings = {
   // Sow/harvest schedule for the day, this is an array to allow for
   // a sow schedule for multiple times a day.
   sowHarvestSchedule: GardenDayAction[];
+  // Sow/harvest schedule for other days that have been captured
+  // due to optimisations made on the fly.
+  sowHarvestScheduleSpillOver: GardenDayAction[];
   leaveRewardsToAccumulate: boolean;
   lastSowTimestamp: number;
   lastHarvestTimestamp: number;

@@ -8,13 +8,13 @@ import {
   updateCurrency,
   updateDripBUSDLPUptrendMaxValueChange,
   updateDripBUSDLPDowntrendMinValueChange,
-  updateGardenAverageGasFee,
+  updateGardenAverageSowGasFee,
   updateGardenHarvestDays,
   updateGardenTrendPeriod,
   updateGardenSowFrequency,
   updateDripBUSDLPStabilisesAt,
   updateGardenLastYear,
-  updateGardenAverageDepositGasFee,
+  updateGardenAverageDepositHarvestGasFee,
 } from "../../store/actions/settings";
 import { SowFrequency } from "../../store/reducers/settings";
 import { AppState } from "../../store/types";
@@ -30,13 +30,13 @@ function GardenSettings() {
     dripBUSDLPDowntrendMinValue,
     dripBUSDLPUptrendMaxValue,
     dripBUSDLPStabilisesAt,
-    gardenAverageGasFee,
+    gardenAverageSowGasFee,
     gardenHarvestDays,
     gardenTrendPeriod,
     gardenLastYear,
     currentPlanId,
     defaultGardenSowFrequency,
-    gardenAverageDepositGasFee,
+    gardenAverageDepositHarvestGasFee,
   } = useSelector((state: AppState) => {
     const currentPlanId = state.plans.current;
     return { ...state.settings[currentPlanId], currentPlanId };
@@ -91,22 +91,22 @@ function GardenSettings() {
     );
   };
 
-  const handleAverageGasFeeChange: React.ChangeEventHandler<
+  const handleAverageSowGasFeeChange: React.ChangeEventHandler<
     HTMLInputElement
   > = (evt) => {
     dispatch(
-      updateGardenAverageGasFee(
+      updateGardenAverageSowGasFee(
         Number.parseFloat(evt.currentTarget.value),
         currentPlanId
       )
     );
   };
 
-  const handleAverageDepositGasFeeChange: React.ChangeEventHandler<
+  const handleAverageDepositHarvestGasFeeChange: React.ChangeEventHandler<
     HTMLInputElement
   > = (evt) => {
     dispatch(
-      updateGardenAverageDepositGasFee(
+      updateGardenAverageDepositHarvestGasFee(
         Number.parseFloat(evt.currentTarget.value),
         currentPlanId
       )
@@ -280,9 +280,9 @@ function GardenSettings() {
             type="number"
             asyncControl={true}
             leftElement={<div className="currency-inline">{currency}</div>}
-            placeholder="Enter average garden gas fee"
-            value={`${gardenAverageGasFee}` ?? 0}
-            onChange={handleAverageGasFeeChange}
+            placeholder="Enter average garden sow gas fee"
+            value={`${gardenAverageSowGasFee}` ?? 0}
+            onChange={handleAverageSowGasFeeChange}
           />
         </FormGroup>
         <FormGroup
@@ -295,9 +295,9 @@ function GardenSettings() {
             type="number"
             asyncControl={true}
             leftElement={<div className="currency-inline">{currency}</div>}
-            placeholder="Enter average garden deposit gas fee"
-            value={`${gardenAverageDepositGasFee}` ?? 0}
-            onChange={handleAverageDepositGasFeeChange}
+            placeholder="Enter average garden harvest/deposit gas fee"
+            value={`${gardenAverageDepositHarvestGasFee}` ?? 0}
+            onChange={handleAverageDepositHarvestGasFeeChange}
           />
         </FormGroup>
         <FormGroup
@@ -348,7 +348,7 @@ function GardenSettings() {
             value={gardenLastYear}
             onChange={handleSelectGardenLastYear}
           >
-            {nextNYears(new Date(), 30).map((year) => (
+            {nextNYears(new Date(), 7).map((year) => (
               <option key={year} value={year}>
                 {year}
               </option>

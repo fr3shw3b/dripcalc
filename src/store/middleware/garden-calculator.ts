@@ -52,7 +52,7 @@ function calculateGardenWalletEarnings(
     const yearEarningsMap: Record<number, GardenYearEarnings> = {};
     const startDate = new Date(wallet.startDate);
     let currentDate = startDate;
-    while (currentDate.getFullYear() < state.settings.gardenLastYear) {
+    while (currentDate.getFullYear() <= state.settings.gardenLastYear) {
       const yearEarnings = calculateGardenYearEarnings(
         config,
         state,
@@ -104,6 +104,7 @@ function calculateGardenYearEarnings(
   });
   const lastMonthOfPrevYearEarnings =
     accumYearEarnings?.[startDate.getFullYear() - 1]?.monthEarnings[11];
+  const lastYearEarnings = accumYearEarnings?.[startDate.getFullYear() - 1];
   const monthEarningsMap = monthEarningDates.reduce(
     calculateGardenMonthEarnings(
       config,
@@ -167,6 +168,12 @@ function calculateGardenYearEarnings(
     monthEarnings: monthEarningsMap,
     totalYearHarvestedInDripBUSDLP,
     totalYearHarvestedInCurrency,
+    accumYearHarvestedInDripBUSDLP:
+      (lastYearEarnings?.accumYearHarvestedInDripBUSDLP ?? 0) +
+      totalYearHarvestedInDripBUSDLP,
+    accumYearHarvestedInCurrency:
+      (lastYearEarnings?.accumYearHarvestedInCurrency ?? 0) +
+      totalYearHarvestedInCurrency,
     seedsPerDayEndOfYear,
     seedsLostForYear,
     seedsLostForYearInCurrency,
@@ -227,7 +234,7 @@ function calculateGardenMonthEarnings(
       state.settings
     );
     const dripBUSDLPValueForMonth =
-      wallet.monthInputs[monthInputsKey]?.dripValue ??
+      wallet.monthInputs[monthInputsKey]?.gardenValues?.dripBUSDLPValue ??
       tokenValueProvider.getValueForMonth(
         new Date(earliestWalletStartTimestamp),
         date,
@@ -246,7 +253,12 @@ function calculateGardenMonthEarnings(
       wallet.monthInputs[monthInputsKey]?.gardenValues
         ?.plantDripBUSDLPFraction ??
       decliningPlantLPRatioValue(
-        config.defaultMaxPlantDripBUSDLPFraction,
+        lastMonthOfPrevYearEarnings?.plantDripBUSDLPFractionForMonth
+          ? Math.min(
+              config.defaultMaxPlantDripBUSDLPFraction,
+              lastMonthOfPrevYearEarnings?.plantDripBUSDLPFractionForMonth
+            )
+          : config.defaultMaxPlantDripBUSDLPFraction,
         config.minPlantDripBUSDLPFraction,
         date,
         new Date(earliestWalletStartTimestamp),
@@ -418,12 +430,16 @@ const gardenEmptyDayEarnings: GardenDayEarnings = {
   seedsLost: 0,
   seedsLostInCurrency: 0,
   plantsGrown: 0,
+  seedsAccumulatedFromPreviousDaySchedules: 0,
   accumSeedsToHarvestOrSow: 0,
   accumSeedsToHarvestOrSowInDripBUSDLP: 0,
   isHarvestDay: false,
   leaveRewardsToAccumulate: false,
   isSowDay: false,
   sowHarvestSchedule: [],
+  // Sow and harvest schedule actions for other days
+  // captured by optimising the day's sow/harvest schedule.
+  sowHarvestScheduleSpillOver: [],
   lastSowTimestamp: 0,
   lastHarvestTimestamp: 0,
   lastDepositTimestamp: 0,
@@ -458,6 +474,12 @@ function calculateGardenDayEarnings(
 
     const plantsLastAddedAt = Math.max(
       prevDayEarningsData.lastSowTimestamp,
+      prevDayEarningsData.lastDepositTimestamp
+    );
+
+    const lastActionTimestamp = Math.max(
+      prevDayEarningsData.lastSowTimestamp,
+      prevDayEarningsData.lastHarvestTimestamp,
       prevDayEarningsData.lastDepositTimestamp
     );
 
@@ -510,28 +532,39 @@ function calculateGardenDayEarnings(
       plantDripBUSDLPFractionForDay
     );
 
-    const { schedule, isHarvestDay, isSowDay } =
-      determineSowHarvestScheduleAndInfo(
-        monthInput?.customGardenDayActions,
-        prevDayEarningsData,
+    const {
+      schedule,
+      isHarvestDay,
+      isSowDay,
+      seedsAccumulated: seedsAccumulatedFromScheduleCreation,
+    } = determineSowHarvestScheduleAndInfo(
+      monthInput?.customGardenDayActions,
+      prevDayEarningsData,
+      date,
+      midDayTimestamp,
+      state,
+      monthInput?.gardenReinvest ?? config.defaultGardenReinvest,
+      dripBUSDLPValueForDay,
+      determineSowFrequency(
+        monthInput?.sowStrategy,
+        state.settings.defaultGardenSowFrequency
+      ),
+      // This is used for harvest days when a custom schedule is not
+      // being used for the day. The default is to harvest mid-day
+      // on harvest days.
+      prevDayEarningsData.accumSeedsToHarvestOrSowInDripBUSDLP +
+        seedsUpToMidDayInDripBUSDLP,
+      gardenYieldPercentangeForDay,
+      config.seedsPerPlant,
+      plantDripBUSDLPFractionForDay,
+      depositsTodayInSeeds
+    );
+
+    const { daySchedule, scheduleSpillOver } =
+      splitScheduleAndCombineFromPrevSpillOver(
+        schedule,
         date,
-        midDayTimestamp,
-        state,
-        monthInput?.gardenReinvest ?? config.defaultGardenReinvest,
-        dripBUSDLPValueForDay,
-        determineSowFrequency(
-          monthInput?.sowStrategy,
-          state.settings.defaultGardenSowFrequency
-        ),
-        // This is used for harvest days when a custom schedule is not
-        // being used for the day. The default is to harvest mid-day
-        // on harvest days.
-        prevDayEarningsData.accumSeedsToHarvestOrSowInDripBUSDLP +
-          seedsUpToMidDayInDripBUSDLP,
-        gardenYieldPercentangeForDay,
-        config.seedsPerPlant,
-        plantDripBUSDLPFractionForDay,
-        depositsTodayInSeeds
+        prevDayEarningsData.sowHarvestScheduleSpillOver
       );
 
     const {
@@ -545,9 +578,9 @@ function calculateGardenDayEarnings(
       accumSeedsToHarvestOrSow,
       accumSeedsToHarvestOrSowInDripBUSDLP,
     } = calculateScheduleEarningsAndLosses(
-      schedule,
+      daySchedule,
       depositsToday,
-      plantsLastAddedAt,
+      lastActionTimestamp,
       dripBUSDLPValueForDay,
       plantDripBUSDLPFractionForDay,
       gardenYieldPercentangeForDay,
@@ -561,13 +594,18 @@ function calculateGardenDayEarnings(
       config.depositBufferFees
     );
 
-    const harvestOrSowGasFee =
-      schedule.length * state.settings.gardenAverageGasFee;
+    const sowGasFee =
+      daySchedule.filter((action) => action.action === "sow").length *
+      state.settings.gardenAverageSowGasFee;
+    const harvestGasFee =
+      daySchedule.filter((action) => action.action === "harvest").length *
+      state.settings.gardenAverageDepositHarvestGasFee;
     const estimatedGasFees =
       depositsToday.length > 0
-        ? harvestOrSowGasFee +
-          state.settings.gardenAverageDepositGasFee * depositsToday.length
-        : harvestOrSowGasFee;
+        ? sowGasFee +
+          state.settings.gardenAverageDepositHarvestGasFee *
+            depositsToday.length
+        : sowGasFee + harvestGasFee;
 
     return {
       ...accum,
@@ -584,6 +622,8 @@ function calculateGardenDayEarnings(
         plantsBalance,
         // Seeds per day by end of the day.
         seedsPerDay,
+        seedsAccumulatedFromPreviousDaySchedules:
+          seedsAccumulatedFromScheduleCreation,
         estimatedGasFees,
         seedsLost,
         seedsLostInCurrency:
@@ -607,12 +647,13 @@ function calculateGardenDayEarnings(
         isSowDay,
         // Sow/harvest schedule for the day, this is an array to allow for
         // a sow/harvest schedule for multiple times a day.
-        sowHarvestSchedule: schedule,
+        sowHarvestSchedule: daySchedule,
+        sowHarvestScheduleSpillOver: scheduleSpillOver,
         lastSowTimestamp:
-          getLastTimestamp(schedule, "sow") ??
+          getLastTimestamp(daySchedule, "sow") ??
           prevDayEarningsData.lastSowTimestamp,
         lastHarvestTimestamp:
-          getLastTimestamp(schedule, "harvest") ??
+          getLastTimestamp(daySchedule, "harvest") ??
           prevDayEarningsData.lastDepositTimestamp,
         // deposits today are sorted!
         lastDepositTimestamp:
@@ -621,6 +662,52 @@ function calculateGardenDayEarnings(
             : prevDayEarningsData.lastDepositTimestamp,
       },
     };
+  };
+}
+
+type SplitSchedule = {
+  daySchedule: GardenDayAction[];
+  scheduleSpillOver: GardenDayAction[];
+};
+
+function splitScheduleAndCombineFromPrevSpillOver(
+  schedule: GardenDayAction[],
+  dayDate: Date,
+  prevDaySpillOver: GardenDayAction[]
+): SplitSchedule {
+  const { daySchedule, scheduleSpillOver } = schedule.reduce(
+    (accum, action) => {
+      const sameDay = moment(dayDate).isSame(
+        moment(new Date(action.timestamp)),
+        "day"
+      );
+      if (sameDay) {
+        return {
+          ...accum,
+          daySchedule: [...accum.daySchedule, action],
+        };
+      }
+      return {
+        ...accum,
+        scheduleSpillOver: [...accum.scheduleSpillOver, action],
+      };
+    },
+    {
+      daySchedule: [],
+      scheduleSpillOver: [],
+    } as SplitSchedule
+  );
+  const finalDaySchedule = [
+    ...daySchedule,
+    ...prevDaySpillOver.filter(({ timestamp }) =>
+      moment(dayDate).isSame(moment(new Date(timestamp)), "day")
+    ),
+  ];
+  finalDaySchedule.sort((a, b) => a.timestamp - b.timestamp);
+
+  return {
+    daySchedule: schedule,
+    scheduleSpillOver,
   };
 }
 
@@ -639,7 +726,7 @@ type DayScheduleEarningsAndLosses = {
 function calculateScheduleEarningsAndLosses(
   schedule: GardenDayAction[],
   depositsToday: Deposit[],
-  plantsLastAddedAt: number,
+  lastActionTimestamp: number,
   dripBUSDLPValueForDay: number,
   plantDripBUSDLPFractionForDay: number,
   gardenYieldPercentageForDay: number,
@@ -670,7 +757,7 @@ function calculateScheduleEarningsAndLosses(
       seedsPerPlant,
       plantDripBUSDLPFractionForDay
     ),
-    prevTimestamp: plantsLastAddedAt,
+    prevTimestamp: lastActionTimestamp,
   };
   const { prevTimestamp: _prevTimestamp, ...results } = combinedSchedule.reduce(
     (accum, action) => {
@@ -761,11 +848,14 @@ function calculateScheduleEarningsAndLosses(
         };
       }
 
-      // Action is sow at this point.
-      const seedsToSow =
+      // Action is sow at this point if a whole plant can be grown!
+      const seedsToSowOrAccumulate =
         accum.accumSeedsToHarvestOrSow + seedsEarnedInTimeWindow;
-      const newPlantsGrown = getWholePlantsFromSeeds(seedsToSow, seedsPerPlant);
-      const newSeedsLost = getSeedsLost(seedsToSow, seedsPerPlant);
+      const newPlantsGrown = getWholePlantsFromSeeds(
+        seedsToSowOrAccumulate,
+        seedsPerPlant
+      );
+      const newSeedsLost = getSeedsLost(seedsToSowOrAccumulate, seedsPerPlant);
       const newPlantsBalanceFromSowing = accum.plantsBalance + newPlantsGrown;
       return {
         ...accum,
@@ -775,7 +865,8 @@ function calculateScheduleEarningsAndLosses(
           gardenYieldPercentageForDay *
           newPlantsBalanceFromSowing *
           seedsPerPlant,
-        seedsLost: accum.seedsLost + newSeedsLost,
+        seedsLost:
+          newPlantsGrown > 0 ? accum.seedsLost + newSeedsLost : accum.seedsLost,
         reinvestInDripBUSDLP:
           accum.reinvestInDripBUSDLP +
           plantsToDripBUSDLP(newPlantsGrown, plantDripBUSDLPFractionForDay),
@@ -785,9 +876,17 @@ function calculateScheduleEarningsAndLosses(
         earningsInDripBUSDLP:
           accum.earningsInDripBUSDLP + earningsInDripBUSDLPForWindow,
         // sowing is consuming all accumulated seeds available
-        // up to this point. (Most compounded, some lost)
-        accumSeedsToHarvestOrSow: 0,
-        accumSeedsToHarvestOrSowInDripBUSDLP: 0,
+        // up to this point if at least 1 new plant can be grown. (Most compounded, some lost)
+        accumSeedsToHarvestOrSow:
+          newPlantsGrown > 0 ? 0 : seedsToSowOrAccumulate,
+        accumSeedsToHarvestOrSowInDripBUSDLP:
+          newPlantsGrown > 0
+            ? 0
+            : seedsToDripBUSDLP(
+                seedsToSowOrAccumulate,
+                seedsPerPlant,
+                plantDripBUSDLPFractionForDay
+              ),
         prevTimestamp: action.timestamp,
       };
     },
@@ -974,6 +1073,7 @@ type ScheduleAndInfo = {
   schedule: GardenDayAction[];
   isSowDay: boolean;
   isHarvestDay: boolean;
+  seedsAccumulated: number;
 };
 
 /**
@@ -990,7 +1090,7 @@ function determineSowHarvestScheduleAndInfo(
   gardenReinvest: number,
   dripBUSDLPValueForDay: number,
   sowFrequency: SowFrequency,
-  accumSeedsToHarvestOrInDripBUSDLP: number,
+  accumSeedsToHarvestInDripBUSDLP: number,
   gardenPercentageYieldEstimate: number,
   seedsPerPlant: number,
   plantDripBUSDLPFractionForDay: number,
@@ -1007,6 +1107,7 @@ function determineSowHarvestScheduleAndInfo(
       isHarvestDay: !!gardenDayActionsCopy.find(
         ({ action }) => action === "harvest"
       ),
+      seedsAccumulated: 0,
     };
   }
 
@@ -1018,7 +1119,7 @@ function determineSowHarvestScheduleAndInfo(
     state,
     gardenReinvest,
     dripBUSDLPValueForDay,
-    accumSeedsToHarvestOrInDripBUSDLP,
+    accumSeedsToHarvestInDripBUSDLP,
     new Date(prevDayEarningsData.lastSowTimestamp),
     sowFrequency
   );
@@ -1033,6 +1134,7 @@ function determineSowHarvestScheduleAndInfo(
           timestamp: midDayTimestamp,
         },
       ],
+      seedsAccumulated: 0,
     };
   }
 
@@ -1041,6 +1143,7 @@ function determineSowHarvestScheduleAndInfo(
       isHarvestDay: false,
       isSowDay: false,
       schedule: [],
+      seedsAccumulated: 0,
     };
   }
 
@@ -1049,27 +1152,43 @@ function determineSowHarvestScheduleAndInfo(
     prevDayEarningsData.lastDepositTimestamp
   );
 
+  const lastActionTimestamp = Math.max(
+    prevDayEarningsData.lastSowTimestamp,
+    prevDayEarningsData.lastHarvestTimestamp,
+    prevDayEarningsData.lastDepositTimestamp
+  );
+
+  const { dayActions: schedule, seedsAccumulated } = calculateSowScheduleForDay(
+    date,
+    plantsLastAddedAt,
+    lastActionTimestamp,
+    dripBUSDLPValueForDay,
+    sowFrequency,
+    state,
+    prevDayEarningsData,
+    gardenPercentageYieldEstimate,
+    seedsPerPlant,
+    plantDripBUSDLPFractionForDay,
+    depositsToday
+  );
+
   return {
-    schedule: calculateSowScheduleForDay(
-      date,
-      plantsLastAddedAt,
-      dripBUSDLPValueForDay,
-      sowFrequency,
-      state,
-      prevDayEarningsData,
-      gardenPercentageYieldEstimate,
-      seedsPerPlant,
-      plantDripBUSDLPFractionForDay,
-      depositsToday
-    ),
-    isSowDay: true,
+    schedule,
+    isSowDay: schedule.length > 0,
     isHarvestDay: false,
+    seedsAccumulated,
   };
 }
+
+type SowScheduleInfoForDay = {
+  seedsAccumulated: number;
+  dayActions: GardenDayAction[];
+};
 
 function calculateSowScheduleForDay(
   date: Date,
   plantsLastAddedAt: number,
+  lastActionTimestamp: number,
   dripBUSDLPValueForDay: number,
   sowFrequency: SowFrequency,
   state: AppState,
@@ -1078,17 +1197,17 @@ function calculateSowScheduleForDay(
   seedsPerPlant: number,
   plantDripBUSDLPFractionForDay: number,
   depositsToday: DepositInSeeds[]
-): GardenDayAction[] {
+): SowScheduleInfoForDay {
   if (plantsLastAddedAt === 0 && depositsToday.length === 0) {
     // There is no action to take if no plants have been added to the garden
     // and no new deposits are coming in for the day!
-    return [];
+    return { dayActions: [], seedsAccumulated: 0 };
   }
 
   const depositsTodaySorted = [...depositsToday];
   depositsTodaySorted.sort((a, b) => a.timestamp - b.timestamp);
   const { plantsBalance, seedsPerDay } = prevDayEarningsData;
-  const { gardenAverageGasFee } = state.settings;
+  const { gardenAverageSowGasFee } = state.settings;
 
   // Get the most plants we can accumulate today and
   // sow once at the latest possible time we can today.
@@ -1097,23 +1216,26 @@ function calculateSowScheduleForDay(
   // full transparency on their standing with the seeds lost stats.
   // This feature would be useful for people who don't want to input
   // their own precise schedule every day.
-  const endOfDayTimestamp = Number.parseInt(
-    moment(date)
-      .set({
-        hour: 23,
-        minute: 59,
-        second: 59,
-      })
-      .format("x")
-  );
+  const endOfDayMoment = moment(date).set({
+    hour: 23,
+    minute: 59,
+    second: 59,
+  });
+  const endOfDayTimestamp = Number.parseInt(endOfDayMoment.format("x"));
+  const startOfDayMoment = moment(date).set({
+    hour: 0,
+    minute: 0,
+    second: 0,
+  });
+  const startOfDayTimestamp = Number.parseInt(startOfDayMoment.format("x"));
   const isStartOfGarden = plantsLastAddedAt === 0;
   const firstDepositToday =
     depositsTodaySorted.length > 0 ? depositsTodaySorted[0] : null;
   let prevTimestamp = isStartOfGarden
-    ? firstDepositToday?.timestamp ?? plantsLastAddedAt
-    : plantsLastAddedAt;
+    ? firstDepositToday?.timestamp ?? lastActionTimestamp
+    : lastActionTimestamp;
+  let prevOptimisedEndTimestamp: number | null = null;
   let plantsGrownToday = false;
-  let seedsAccumulated = prevDayEarningsData.accumSeedsToHarvestOrSow;
   let plantsGrown = 0;
   let currentPlantBalance =
     isStartOfGarden && firstDepositToday
@@ -1122,6 +1244,9 @@ function calculateSowScheduleForDay(
   let currentSeedsPerDay = isStartOfGarden
     ? gardenPercentageYieldEstimate * currentPlantBalance * seedsPerPlant
     : seedsPerDay;
+  // Make sure we pick up any seeds accumulated before the start of the day!
+  let seedsAccumulated =
+    prevDayEarningsData.seedsAccumulatedFromPreviousDaySchedules;
 
   // It becomes very inefficient very quickly to take one plant at a time
   // when you start getting to 100s
@@ -1138,17 +1263,27 @@ function calculateSowScheduleForDay(
   // There will also be more tolerance for seed loss with this approach, users should
   // create their own day schedules for now to optimise their strategy to reduce seed loss!
   const timeWindows = createDayScheduleTimeWindows(
-    prevTimestamp,
+    // Time windows begin at 00:00 today!
+    startOfDayTimestamp,
     endOfDayTimestamp,
     sowFrequency
   );
 
+  // As we go, we need to optimise the time windows
+  // to sow when we get enough for a whole plant!
+  let optimisedTimeWindows: ScheduleTimeWindow[] = [];
+
   // todo: refactor to functional using reduce now we have predetermined time windows!
-  for (let i = 0; i < timeWindows.length; i += 1) {
-    const timeWindow = timeWindows[i];
+  for (const timeWindow of timeWindows) {
+    // Priorities to reduce seed loss:
+    // 1. previous optimised sow timestamp in the same day.
+    // 2. last action timestamp from the previous day.
+    // 3. start timestamp of current time window
+    let optimisedStartTimestamp =
+      prevOptimisedEndTimestamp ?? prevTimestamp ?? timeWindow.startTimestamp;
     // Factor in new deposits before the time window starts!
     const depositBeforeTimeWindow = depositsToday.find(
-      depositBetweenTimestamps(prevTimestamp, timeWindow.startTimestamp)
+      depositBetweenTimestamps(prevTimestamp, optimisedStartTimestamp)
     );
     if (depositBeforeTimeWindow) {
       const newPlantsDeposited = getWholePlantsFromSeeds(
@@ -1157,34 +1292,65 @@ function calculateSowScheduleForDay(
       );
       currentPlantBalance += newPlantsDeposited;
 
+      // Make the new start time that of the deposit and added any accumulated seeds
+      // before the deposit.
+      seedsAccumulated += getSeedsBetweenTimestamps(
+        currentSeedsPerDay,
+        optimisedStartTimestamp,
+        depositBeforeTimeWindow.timestamp
+      );
+      optimisedStartTimestamp = depositBeforeTimeWindow.timestamp;
+
       // Re-calculate seeds per day using new current plant balance which includes
       // the newly deposited plants.
       currentSeedsPerDay =
         gardenPercentageYieldEstimate * currentPlantBalance * seedsPerPlant;
     }
 
-    const newPlantsGrown = getWholePlantsGrownBetween(
-      seedsPerPlant,
-      currentSeedsPerDay,
-      timeWindow.startTimestamp,
-      timeWindow.endTimestamp,
-      seedsAccumulated
-    );
-    if (newPlantsGrown > 0) {
-      plantsGrownToday = true;
+    const { plantsGrown: newPlantsGrown, timestampForWholePlants } =
+      getWholePlantsGrownBetween(
+        seedsPerPlant,
+        currentSeedsPerDay,
+        optimisedStartTimestamp,
+        timeWindow.endTimestamp,
+        seedsAccumulated
+      );
+
+    // Make sure we can get at a whole plant today.
+    if (
+      newPlantsGrown > 0 &&
+      timestampForWholePlants >= optimisedStartTimestamp &&
+      timestampForWholePlants <= endOfDayTimestamp
+    ) {
+      optimisedTimeWindows.push({
+        startTimestamp: optimisedStartTimestamp,
+        endTimestamp: timestampForWholePlants,
+      });
+
+      if (newPlantsGrown > 0) {
+        plantsGrownToday = true;
+      }
+      plantsGrown += newPlantsGrown;
+      currentPlantBalance += newPlantsGrown;
+      // Re-calculate seeds per day using new current plant balance which includes the plants grown!
+      currentSeedsPerDay =
+        gardenPercentageYieldEstimate * currentPlantBalance * seedsPerPlant;
+      prevTimestamp = optimisedStartTimestamp;
+      prevOptimisedEndTimestamp = timestampForWholePlants;
+
+      // Reset seeds accumulated as the initial seeds accumulated have contributed to growing whole plants.
+      seedsAccumulated = 0;
+    } else {
+      seedsAccumulated += getSeedsBetweenTimestamps(
+        currentSeedsPerDay,
+        optimisedStartTimestamp,
+        timeWindow.endTimestamp
+      );
     }
-    plantsGrown += newPlantsGrown;
-    currentPlantBalance += newPlantsGrown;
-    // Re-calculate seeds per day using new current plant balance which includes the plants grown!
-    currentSeedsPerDay =
-      gardenPercentageYieldEstimate * currentPlantBalance * seedsPerPlant;
-    prevTimestamp = timeWindow.startTimestamp;
-    // Reset seeds accumulated as the initial seeds accumulated have contributed to growing whole plants.
-    seedsAccumulated = 0;
   }
 
   if (!plantsGrownToday) {
-    return [];
+    return { dayActions: [], seedsAccumulated };
   }
 
   // When gas fees are >= 25% of plants grown then we'll skip sowing.
@@ -1195,14 +1361,17 @@ function calculateSowScheduleForDay(
   // to make this look at each individual sow event when sowing multiple times a day.
   const plantsGrownInDripBUSDLP = plantsGrown * plantDripBUSDLPFractionForDay;
   const plantsGrownInCurrency = plantsGrownInDripBUSDLP * dripBUSDLPValueForDay;
-  if (gardenAverageGasFee > plantsGrownInCurrency * 0.25) {
-    return [];
+  if (gardenAverageSowGasFee > plantsGrownInCurrency * 0.25) {
+    return { dayActions: [], seedsAccumulated };
   }
 
-  return timeWindows.map((timeWindow) => ({
-    timestamp: timeWindow.endTimestamp,
-    action: "sow",
-  }));
+  return {
+    dayActions: optimisedTimeWindows.map((timeWindow) => ({
+      timestamp: timeWindow.endTimestamp,
+      action: "sow",
+    })),
+    seedsAccumulated,
+  };
 }
 
 type ScheduleTimeWindow = {
@@ -1242,22 +1411,62 @@ function depositBetweenTimestamps(
     deposit.timestamp > startTimestamp && deposit.timestamp < endTimestamp;
 }
 
+type PlantsGrownInfo = {
+  plantsGrown: number;
+  timestampForWholePlants: number;
+};
+
 function getWholePlantsGrownBetween(
   seedsPerPlant: number,
   seedsPerDay: number,
   startTimestampInMilliseconds: number,
   endTimestampInMilliseconds: number,
   seedsAccumulated: number
-): number {
+): PlantsGrownInfo {
   const seedsForTimePeriod = getSeedsBetweenTimestamps(
     seedsPerDay,
     startTimestampInMilliseconds,
     endTimestampInMilliseconds
   );
+
   const totalSeeds = seedsAccumulated + seedsForTimePeriod;
   // Use floor as we deal in whole plants only and the rest of the seeds
   // will be lost for compounding and will remain in LP token balance for depositing.
-  return Math.floor(totalSeeds / seedsPerPlant);
+  const plantsGrown = Math.floor(totalSeeds / seedsPerPlant);
+
+  // Get the precise timestamp a plant is grown to optimise schedule!
+  const secondsToGrowPlants = getSecondsToGrowNWholePlants(
+    seedsPerPlant,
+    seedsPerDay,
+    // Seeds accumulated is seeds available at start of time window.
+    seedsAccumulated,
+    // Get timestamp to grow at least 1 plant even if we are not ready
+    // to plant at the end of this time period.
+    Math.max(plantsGrown, 1)
+  );
+  return {
+    plantsGrown,
+    timestampForWholePlants:
+      // Get the next whole number of seconds as it's better to lose a few left
+      // offer seeds than almost a whole plant's worth!
+      startTimestampInMilliseconds + Math.ceil(secondsToGrowPlants) * 1000,
+  };
+}
+
+function getSecondsToGrowNWholePlants(
+  seedsPerPlant: number,
+  seedsPerDay: number,
+  seedsAvailable: number,
+  amountOfPlants: number
+): number {
+  const currentPlantGrowth = seedsAvailable / seedsPerPlant;
+  const nextWholeNumberOfPlants =
+    Math.trunc(currentPlantGrowth) + amountOfPlants;
+  const seedsNeededForWholePlants = seedsPerPlant * nextWholeNumberOfPlants;
+  const remainingSeedsNeeded = seedsNeededForWholePlants - seedsAvailable;
+  const seedsPerSecond = seedsPerDay / 24 / 60 / 60;
+  const secondsRemaining = remainingSeedsNeeded / seedsPerSecond;
+  return secondsRemaining;
 }
 
 function getSeedsBetweenTimestamps(
@@ -1304,7 +1513,8 @@ function determineDedicatedActionForDay(
     const accumSeedsToHarvestInCurrency =
       accumSeedsToHarvestInDripBUSDLP * dripBUSDLPPriceForDay;
     const isHarvestGasFeeLessThan25Percent =
-      state.settings.gardenAverageGasFee < accumSeedsToHarvestInCurrency * 0.25;
+      state.settings.gardenAverageDepositHarvestGasFee <
+      accumSeedsToHarvestInCurrency * 0.25;
     return isHarvestGasFeeLessThan25Percent ? "harvest" : "doNothing";
   }
 

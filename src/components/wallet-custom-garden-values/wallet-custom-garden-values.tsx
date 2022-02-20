@@ -2,11 +2,13 @@ import { Dialog, Classes, Button, Intent } from "@blueprintjs/core";
 import { Cell, Column, EditableCell2, Table2 } from "@blueprintjs/table";
 import React, { useContext, useState } from "react";
 
-import ContentContext from "../../contexts/content";
 import moment from "moment";
 import { useSelector } from "react-redux";
+
 import { AppState } from "../../store/types";
 import useMobileCheck from "../../hooks/use-mobile-check";
+import ContentContext from "../../contexts/content";
+import ConfigContext from "../../contexts/config";
 
 export type GardenValuesInEditor = {
   dripBUSDLPValue: number;
@@ -53,6 +55,7 @@ function WalletCustomGardenValues({
 
   const [showDetails, setShowDetails] = useState(false);
   const { wallets: walletsContent } = useContext(ContentContext);
+  const config = useContext(ConfigContext);
   const { currency } = useSelector((state: AppState) => {
     const currentPlanId = state.plans.current;
     return state.settings[currentPlanId];
@@ -108,7 +111,10 @@ function WalletCustomGardenValues({
   ) => {
     const dataKey = `${rowIndex}-${columnIndex}`;
     return (value: string) => {
-      const intent = Number.parseFloat(value) <= 3 ? null : Intent.DANGER;
+      const intent =
+        Number.parseFloat(value) / 100 <= config.maxGardenDailyYieldPercentage
+          ? null
+          : Intent.DANGER;
       setAverageGardenYeildPercentageValidationState((prevState) => ({
         ...prevState,
         [dataKey]: intent,

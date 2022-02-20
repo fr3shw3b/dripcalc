@@ -21,6 +21,7 @@ export type Config = {
   defaultMaxPlantDripBUSDLPFraction: number;
   minPlantDripBUSDLPFraction: number;
   defaultAverageGardenYieldPercentage: number;
+  maxGardenDailyYieldPercentage: number;
   seedsPerPlant: number;
 };
 
@@ -65,12 +66,18 @@ export function config(): Config {
     defaultDripBUSDLPValue: 25,
     // Have a max default to a plant (2592000 seeds) being 10% of the value of a DRIP/BUSD LP token.
     // Unless a user overrides the value of plant:LP ratio, this is the ceiling!
+    // This is a conservative limit, a plant can be worth more than 10% of an LP token.
     defaultMaxPlantDripBUSDLPFraction: 0.1,
-    // A plant:LP ratio can go as low as 0.01(Plant):1(LP) or 1%.
-    minPlantDripBUSDLPFraction: 0.01,
-    // Default to 1.2% for the garden daily yield.
-    // It tends to fluctuate between 1-3%.
-    defaultAverageGardenYieldPercentage: 0.012,
+    // A plant:LP ratio can go as low as 0.0000001(Plant):1(LP) or 0.00001%.
+    minPlantDripBUSDLPFraction: 0.0000001,
+    // Default to 1.5% for the garden daily yield to be cautious.
+    // It tends to fluctuate between 1-3% based on activity of
+    // gardeners as well as personal habits.
+    defaultAverageGardenYieldPercentage: 0.015,
+    // It's possible this can go higher for some people, to be on the cautious
+    // side let's set a limit of 3.33% as that is ~86400 daily seed rate
+    // that seems to be consistent when only compounding.
+    maxGardenDailyYieldPercentage: 0.03333,
     // As per the smart contract!
     seedsPerPlant: 2592000,
   };

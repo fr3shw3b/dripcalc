@@ -110,7 +110,8 @@ export function updateWalletMonthInputs(
     meta: {
       calculator: {
         recalculate: true,
-        set: "faucet",
+        // Month inputs are for the garden and faucet calculators!
+        set: "all",
       },
     },
   };

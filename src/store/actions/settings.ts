@@ -301,9 +301,10 @@ export function updateAverageGasFee(
   };
 }
 
-export const UPDATE_GARDEN_AVERAGE_GAS_FEE = "UPDATE_GARDEN_AVERAGE_GAS_FEE";
-export type UpdateGardenAverageGasFeeAction = FSA<
-  typeof UPDATE_GARDEN_AVERAGE_GAS_FEE,
+export const UPDATE_GARDEN_AVERAGE_SOW_GAS_FEE =
+  "UPDATE_GARDEN_AVERAGE_SOW_GAS_FEE";
+export type UpdateGardenAverageSowGasFeeAction = FSA<
+  typeof UPDATE_GARDEN_AVERAGE_SOW_GAS_FEE,
   CalculatorMeta,
   {
     value: number;
@@ -311,12 +312,12 @@ export type UpdateGardenAverageGasFeeAction = FSA<
   }
 >;
 
-export function updateGardenAverageGasFee(
+export function updateGardenAverageSowGasFee(
   value: number,
   planId: string
-): UpdateGardenAverageGasFeeAction {
+): UpdateGardenAverageSowGasFeeAction {
   return {
-    type: UPDATE_GARDEN_AVERAGE_GAS_FEE,
+    type: UPDATE_GARDEN_AVERAGE_SOW_GAS_FEE,
     payload: {
       value,
       planId,
@@ -330,10 +331,10 @@ export function updateGardenAverageGasFee(
   };
 }
 
-export const UPDATE_GARDEN_AVERAGE_DEPOSIT_GAS_FEE =
-  "UPDATE_GARDEN_AVERAGE_DEPOSIT_GAS_FEE";
-export type UpdateGardenAverageDepositGasFeeAction = FSA<
-  typeof UPDATE_GARDEN_AVERAGE_DEPOSIT_GAS_FEE,
+export const UPDATE_GARDEN_AVERAGE_DEPOSIT_HARVEST_GAS_FEE =
+  "UPDATE_GARDEN_AVERAGE_DEPOSIT_HARVEST_GAS_FEE";
+export type UpdateGardenAverageDepositHarvestGasFeeAction = FSA<
+  typeof UPDATE_GARDEN_AVERAGE_DEPOSIT_HARVEST_GAS_FEE,
   CalculatorMeta,
   {
     value: number;
@@ -341,12 +342,12 @@ export type UpdateGardenAverageDepositGasFeeAction = FSA<
   }
 >;
 
-export function updateGardenAverageDepositGasFee(
+export function updateGardenAverageDepositHarvestGasFee(
   value: number,
   planId: string
-): UpdateGardenAverageDepositGasFeeAction {
+): UpdateGardenAverageDepositHarvestGasFeeAction {
   return {
-    type: UPDATE_GARDEN_AVERAGE_DEPOSIT_GAS_FEE,
+    type: UPDATE_GARDEN_AVERAGE_DEPOSIT_HARVEST_GAS_FEE,
     payload: {
       value,
       planId,
