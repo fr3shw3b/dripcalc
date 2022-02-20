@@ -236,6 +236,10 @@ export type DashboardContent = {
     currency: string,
     dripValueInCurrency: string
   ) => string;
+  gardenDayEarningsInCurrencyHelpText: (
+    currency: string,
+    dripBUSDLPValueInCurrency: string
+  ) => string;
 };
 
 export function content(): Content {
@@ -800,6 +804,12 @@ export function content(): Content {
       ) =>
         `The total estimated rewards in ${currency} for today across all wallets in the selected plan.` +
         ` This is based on the value of DRIP in ${currency} being ${dripValueInCurrency} today.`,
+      gardenDayEarningsInCurrencyHelpText: (
+        currency: string,
+        dripBUSDLPValueInCurrency: string
+      ) =>
+        `The total estimated rewards in ${currency} for today across all wallets in the selected plan.` +
+        ` This is based on the value of DRIP/BUSD LP in ${currency} being ${dripBUSDLPValueInCurrency} today.`,
     },
   };
 }

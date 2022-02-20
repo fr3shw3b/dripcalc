@@ -14,6 +14,8 @@ import ContentContext from "../../contexts/content";
 import FeatureTogglesContext from "../../contexts/feature-toggles";
 
 import "./dashboard.css";
+import { GardenDayAction } from "../../store/reducers/plans";
+import moment from "moment";
 
 function Dashboard() {
   const navigate = useNavigate();
@@ -28,6 +30,7 @@ function Dashboard() {
     wallets,
     currency,
     isFirstTime,
+    gardenDayEarningsInfo,
   } = useSelector((state: AppState) => {
     const currentPlanId = state.plans.current;
     const currentPlan = state.plans.plans.find(
@@ -44,6 +47,12 @@ function Dashboard() {
       currentDayOfMonth,
       calculatedEarnings
     );
+    const gardenDayEarningsInfo = getGardenDayEarnings(
+      currentYear,
+      currentMonth,
+      currentDayOfMonth,
+      calculatedEarnings
+    );
     return {
       ...state.general,
       dayEarnings: dayEarningsInfo.dayEarnings,
@@ -53,6 +62,7 @@ function Dashboard() {
       currency: state.settings[currentPlanId].currency,
       wallets: currentPlan?.wallets ?? [],
       isFirstTime: state.general.isFirstTime,
+      gardenDayEarningsInfo,
     };
   });
 
@@ -234,17 +244,67 @@ function Dashboard() {
               elevation={Elevation.TWO}
             >
               <h3>DRIP LP Garden</h3>
+              <h3>Estimated earnings for today</h3>
               <p>
-                Plan your strategy in the{" "}
-                <a
-                  href="https://theanimal.farm/garden"
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  DRIP/BUSD LP Garden
-                </a>
-                .
+                <strong>DRIP/BUSD LP: </strong>
+                {gardenDayEarningsInfo.gardenDayEarnings.toFixed(4)}
               </p>
+              <p className="block-bottom-lg">
+                <Help
+                  helpContent={
+                    <div className="dashboard-info">
+                      {dashboardContent.gardenDayEarningsInCurrencyHelpText(
+                        currency,
+                        formatCurrency(
+                          currency,
+                          gardenDayEarningsInfo.dripBUSDLPValue
+                        )
+                      )}
+                    </div>
+                  }
+                >
+                  <span>
+                    {formatCurrency(
+                      currency,
+                      gardenDayEarningsInfo.gardenDayEarningsInCurrency
+                    )}
+                  </span>
+                </Help>
+              </p>
+
+              <h3>Actions for today</h3>
+
+              <div className="block-bottom-lg">
+                {gardenDayEarningsInfo.walletActionsForDay.map(
+                  ([walletId, actions]) => {
+                    const wallet = wallets.find(
+                      (current) => current.id === walletId
+                    );
+                    return (
+                      <p key={walletId}>
+                        <strong>
+                          <i>For {wallet?.label}</i>
+                        </strong>
+                        <div className="top-small-margin">
+                          <ul className="action-list">
+                            {actions.map((action) => (
+                              <li key={`${action.action}-${action.timestamp}`}>
+                                {actionLabels[action.action]} at{" "}
+                                {moment(new Date(action.timestamp)).format(
+                                  "HH:mm:ss"
+                                )}
+                              </li>
+                            ))}
+                            {actions.length === 0 && (
+                              <li>Leave Seeds to Accumulate</li>
+                            )}
+                          </ul>
+                        </div>
+                      </p>
+                    );
+                  }
+                )}
+              </div>
               <Button
                 className="block"
                 intent="primary"
@@ -329,6 +389,51 @@ function getDayEarnings(
   );
 }
 
+function getGardenDayEarnings(
+  currentYear: number,
+  currentMonth: number,
+  currentDayOfMonth: number,
+  calculatedEarnings?: EarningsAndInfo
+): {
+  gardenDayEarnings: number;
+  gardenDayEarningsInCurrency: number;
+  dripBUSDLPValue: number;
+  walletActionsForDay: [string, GardenDayAction[]][];
+} {
+  return Object.entries(
+    calculatedEarnings?.gardenEarnings?.walletEarnings ?? {}
+  ).reduce(
+    (accum, [walletId, walletEarnings]) => {
+      const currentDayEarnings =
+        walletEarnings.yearEarnings?.[currentYear]?.monthEarnings?.[
+          currentMonth
+        ]?.dayEarnings?.[currentDayOfMonth];
+
+      if (currentDayEarnings) {
+        return {
+          gardenDayEarnings:
+            accum.gardenDayEarnings + currentDayEarnings.earningsInDripBUSDLP,
+          gardenDayEarningsInCurrency:
+            accum.gardenDayEarningsInCurrency +
+            currentDayEarnings.earningsInCurrency,
+          dripBUSDLPValue: currentDayEarnings.dripBUSDLPValueOnDay,
+          walletActionsForDay: [
+            ...accum.walletActionsForDay,
+            [walletId, currentDayEarnings?.sowHarvestSchedule ?? []],
+          ],
+        };
+      }
+      return accum;
+    },
+    {
+      gardenDayEarnings: 0,
+      gardenDayEarningsInCurrency: 0,
+      dripBUSDLPValue: 0,
+      walletActionsForDay: [] as [string, GardenDayAction[]][],
+    }
+  );
+}
+
 function selectActionForDay(dayEarnings?: DayEarnings): string {
   if (!dayEarnings) {
     return "Unknown";
@@ -344,5 +449,10 @@ function selectActionForDay(dayEarnings?: DayEarnings): string {
 
   return "Leave to Accumulate in Available Rewards";
 }
+
+const actionLabels = {
+  sow: "Sow",
+  harvest: "Harvest",
+};
 
 export default Dashboard;
