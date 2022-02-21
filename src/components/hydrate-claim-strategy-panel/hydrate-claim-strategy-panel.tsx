@@ -113,8 +113,10 @@ function HydrateClaimStrategyPanel({
   const prevCurrentYear = usePrevious(currentYear);
 
   useEffect(() => {
-    setCurrentYear(earningYears[0]);
-  }, [calculatedEarnings, earningYears]);
+    if (!currentYear) {
+      setCurrentYear(earningYears[0]);
+    }
+  }, [calculatedEarnings, earningYears, currentYear]);
 
   useEffect(() => {
     if (currentYear !== prevCurrentYear) {
