@@ -123,7 +123,7 @@ function HydrateClaimStrategyPanel({
         monthLabels[month],
       ]);
       setMonthOptions(newMonthOptions);
-      setCurrentMonth(newMonthOptions[0][0]);
+      setCurrentMonth(newMonthOptions?.[0]?.[0] ?? 0);
     }
   }, [currentYear, prevCurrentYear, setCurrentMonth, earningMonths]);
 
