@@ -243,7 +243,7 @@ function Dashboard() {
               interactive={false}
               elevation={Elevation.TWO}
             >
-              <h3>DRIP LP Garden</h3>
+              <h2>DRIP LP Garden</h2>
               <h3>Estimated earnings for today</h3>
               <p>
                 <strong>DRIP/BUSD LP: </strong>
