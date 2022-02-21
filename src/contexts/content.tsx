@@ -229,6 +229,7 @@ export type GardenOverviewContent = {
   totalRewardsHarvestedHelpText: (currency: string) => string;
   totalPlantsPrefixText: string;
   totalPlantsHelpText: string;
+  totalRewardsHarvestedInCurrencyHelpText: (currency: string) => string;
 };
 
 export type DashboardContent = {
@@ -796,6 +797,8 @@ export function content(): Content {
       totalPlantsPrefixText: "Total Plants by ",
       totalPlantsHelpText:
         "The total amount of plants you will have yielding rewards in your garden by the final year configured in the current plan's garden settings.",
+      totalRewardsHarvestedInCurrencyHelpText: (currency: string) =>
+        `The total estimated in ${currency} harvested across all wallets. This is based on the value of DRIP/BUSD LP in ${currency} each day.`,
     },
     dashboard: {
       faucetDayEarningsInCurrencyHelpText: (

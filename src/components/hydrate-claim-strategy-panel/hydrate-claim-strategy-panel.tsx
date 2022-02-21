@@ -92,10 +92,9 @@ function HydrateClaimStrategyPanel({
     walletEarnings?.yearEarnings[currentYear]?.monthEarnings ?? {}
   ).map((str) => Number.parseInt(str));
 
-  const monthOptions = earningMonths.map((month): [number, string] => [
-    month,
-    monthLabels[month],
-  ]);
+  const [monthOptions, setMonthOptions] = useState(
+    earningMonths.map((month): [number, string] => [month, monthLabels[month]])
+  );
 
   const [currentMonth, setCurrentMonth] = useState(monthOptions?.[0]?.[0] ?? 0);
 
@@ -114,10 +113,19 @@ function HydrateClaimStrategyPanel({
   const prevCurrentYear = usePrevious(currentYear);
 
   useEffect(() => {
+    setCurrentYear(earningYears[0]);
+  }, [calculatedEarnings, earningYears]);
+
+  useEffect(() => {
     if (currentYear !== prevCurrentYear) {
-      setCurrentMonth(monthOptions[0][0]);
+      const newMonthOptions = earningMonths.map((month): [number, string] => [
+        month,
+        monthLabels[month],
+      ]);
+      setMonthOptions(newMonthOptions);
+      setCurrentMonth(newMonthOptions[0][0]);
     }
-  }, [currentYear, prevCurrentYear, setCurrentMonth, monthOptions]);
+  }, [currentYear, prevCurrentYear, setCurrentMonth, earningMonths]);
 
   const handleEditActionOnDayClick: (date: Moment) => React.MouseEventHandler =
     (date) => (evt) => {

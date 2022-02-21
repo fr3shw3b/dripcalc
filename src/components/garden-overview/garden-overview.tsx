@@ -6,7 +6,6 @@ import { useSelector } from "react-redux";
 import ContentContext from "../../contexts/content";
 import { AppState } from "../../store/types";
 import formatCurrency from "../../utils/currency";
-import { findLastYearForWallet } from "../../utils/wallets";
 import Help from "../help";
 
 import "./garden-overview.css";
@@ -14,7 +13,7 @@ import "./garden-overview.css";
 function GardenOverview() {
   const { gardenOverview: overviewContent } = useContext(ContentContext);
 
-  const { calculatedEarnings, wallets, currency } = useSelector(
+  const { calculatedEarnings, currency, lastYearInGarden } = useSelector(
     (state: AppState) => {
       const currentPlanId = state.plans.current;
       const currentPlan = state.plans.plans.find(
@@ -25,15 +24,14 @@ function GardenOverview() {
         calculatedEarnings: state.general.calculatedEarnings[currentPlanId],
         currency: state.settings[currentPlanId].currency,
         wallets: currentPlan?.wallets ?? [],
+        lastYearInGarden: state.settings[currentPlanId].gardenLastYear,
       };
     }
   );
-  const lastWalletYears = wallets.map(
-    (wallet) => findLastYearForWallet(wallet.id, calculatedEarnings) ?? 0
-  );
-  lastWalletYears.sort((a, b) => a - b);
-  const finalYear = lastWalletYears[lastWalletYears.length - 1];
-  const finalYearFormatted = moment(new Date(finalYear)).format("MMMM YYYY");
+  const finalYearFormatted = moment(
+    `31/12/${lastYearInGarden}`,
+    "DD/MM/YYYYY"
+  ).format("MMMM YYYY");
 
   return (
     <div className="garden-overview-container">
@@ -56,13 +54,29 @@ function GardenOverview() {
         </Help>
         <p>
           <strong>DRIP/BUSD LP: </strong>
-          {calculatedEarnings?.info.totalClaimed.toFixed(4)}
+          {Intl.NumberFormat("en-US", {
+            notation: "compact",
+            maximumFractionDigits: 4,
+          }).format(
+            calculatedEarnings?.gardenEarnings?.info
+              .totalHarvestedRewardsInDripBUSDLP ?? 0
+          )}
         </p>
-        <Help helpContent={<div className="garden-overview-info"></div>}>
+        <Help
+          helpContent={
+            <div className="garden-overview-info">
+              {" "}
+              {overviewContent.totalRewardsHarvestedInCurrencyHelpText(
+                currency
+              )}
+            </div>
+          }
+        >
           <span>
             {formatCurrency(
               currency,
-              calculatedEarnings?.info.totalClaimedInCurrency
+              calculatedEarnings?.gardenEarnings?.info
+                .totalHarvestedRewardsInCurrency
             )}
           </span>
         </Help>
@@ -86,7 +100,13 @@ function GardenOverview() {
         </Help>
         <p>
           <strong>Plants: </strong>
-          {calculatedEarnings?.info.totalClaimed.toFixed(4)}
+          {Intl.NumberFormat("en-US", {
+            notation: "compact",
+            maximumFractionDigits: 1,
+          }).format(
+            calculatedEarnings?.gardenEarnings?.info.totalPlantsBalanceByEnd ??
+              0
+          )}
         </p>
       </Card>
     </div>

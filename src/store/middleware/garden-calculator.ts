@@ -10,6 +10,7 @@ import {
   GardenDayEarnings,
   GardenEarnings,
   GardenMonthEarningsAndInfo,
+  GardenOverviewInfo,
   GardenYearEarnings,
   WalletGardenEarnings,
 } from "./shared-calculator-types";
@@ -30,12 +31,50 @@ export function calculateGardenEarnings(
   return {
     gardenEarnings: {
       walletEarnings: gardenWalletEarningsMap,
-      info: {
-        totalHarvestedRewardsInCurrency: 0,
-        totalHarvestedRewardsInDripBUSDLP: 0,
-        totalPlantsBalanceByEnd: 0,
-      },
+      info: computeGardenOverviewInfo(gardenWalletEarningsMap),
     },
+  };
+}
+
+function computeGardenOverviewInfo(
+  walletEarningsMap: Record<string, WalletGardenEarnings>
+): GardenOverviewInfo {
+  const seed: GardenOverviewInfo = {
+    totalHarvestedRewardsInCurrency: 0,
+    totalHarvestedRewardsInDripBUSDLP: 0,
+    totalPlantsBalanceByEnd: 0,
+  };
+  return Object.values(walletEarningsMap).reduce((accum, walletEarnings) => {
+    const yearsEarning = Object.keys(walletEarnings.yearEarnings).map((year) =>
+      Number.parseInt(year)
+    );
+    yearsEarning.sort((a, b) => a - b);
+
+    return Object.entries(walletEarnings.yearEarnings)
+      .map(([year, earnings]) => ({ ...earnings, year: Number.parseInt(year) }))
+      .reduce(accumGardenOverviewInfoFromYear(yearsEarning), accum);
+  }, seed);
+}
+
+function accumGardenOverviewInfoFromYear(yearsEarningOrdered: number[]) {
+  return (
+    accum: GardenOverviewInfo,
+    yearEarnings: GardenYearEarnings & { year: number }
+  ): GardenOverviewInfo => {
+    const lastYearInWallet =
+      yearsEarningOrdered[yearsEarningOrdered.length - 1];
+    return {
+      totalHarvestedRewardsInDripBUSDLP:
+        accum.totalHarvestedRewardsInDripBUSDLP +
+        yearEarnings.totalYearHarvestedInDripBUSDLP,
+      totalHarvestedRewardsInCurrency:
+        accum.totalHarvestedRewardsInCurrency +
+        yearEarnings.totalYearHarvestedInCurrency,
+      totalPlantsBalanceByEnd:
+        yearEarnings.year === lastYearInWallet
+          ? accum.totalPlantsBalanceByEnd + yearEarnings.plantBalanceEndOfYear
+          : accum.totalPlantsBalanceByEnd,
+    };
   };
 }
 

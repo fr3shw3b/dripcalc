@@ -95,10 +95,9 @@ function GardenStrategyPanel({ walletId }: Props) {
     walletEarnings?.yearEarnings[currentYear]?.monthEarnings ?? {}
   ).map((str) => Number.parseInt(str));
 
-  const monthOptions = earningMonths.map((month): [number, string] => [
-    month,
-    monthLabels[month],
-  ]);
+  const [monthOptions, setMonthOptions] = useState(
+    earningMonths.map((month): [number, string] => [month, monthLabels[month]])
+  );
 
   const [currentMonth, setCurrentMonth] = useState(monthOptions?.[0]?.[0] ?? 0);
 
@@ -163,10 +162,19 @@ function GardenStrategyPanel({ walletId }: Props) {
   };
 
   useEffect(() => {
+    setCurrentYear(earningYears[0]);
+  }, [calculatedEarnings, earningYears]);
+
+  useEffect(() => {
     if (currentYear !== prevCurrentYear) {
-      setCurrentMonth(monthOptions[0][0]);
+      const newMonthOptions = earningMonths.map((month): [number, string] => [
+        month,
+        monthLabels[month],
+      ]);
+      setMonthOptions(newMonthOptions);
+      setCurrentMonth(newMonthOptions[0][0]);
     }
-  }, [currentYear, prevCurrentYear, setCurrentMonth, monthOptions]);
+  }, [currentYear, prevCurrentYear, setCurrentMonth, earningMonths]);
 
   return (
     <div>
