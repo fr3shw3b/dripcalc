@@ -277,10 +277,12 @@ function Toolbar() {
             </Tooltip2>
           </form>
         </div>
-        <QuickCalc
-          forCalculator={currentArea as "garden" | "faucet"}
-          currency={currency}
-        />
+        {currentArea !== "dashboard" && (
+          <QuickCalc
+            forCalculator={currentArea as "garden" | "faucet"}
+            currency={currency}
+          />
+        )}
         <Tooltip2
           content={`${isToolbarExpanded ? "Collapse" : "Expand"} toolbar`}
           position={Position.BOTTOM}
@@ -368,9 +370,16 @@ function getCurrentArea(path: string): {
     };
   }
 
+  if (path.startsWith("/animal-farm")) {
+    return {
+      currentArea: "farm",
+      currentAreaPathPrefix: "/animal-farm",
+    };
+  }
+
   return {
-    currentArea: "farm",
-    currentAreaPathPrefix: "/animal-farm",
+    currentArea: "dashboard",
+    currentAreaPathPrefix: "/",
   };
 }
 
