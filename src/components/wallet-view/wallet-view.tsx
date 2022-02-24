@@ -157,7 +157,7 @@ function WalletView({
           content={
             <div className="wallet-help-popover-content">{helpText}</div>
           }
-          placement="auto"
+          placement={isMobile ? "bottom" : "auto"}
           usePortal={false}
           modifiers={{
             arrow: { enabled: true },

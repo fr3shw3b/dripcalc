@@ -41,7 +41,7 @@
 .price-drip-busd-lp-price-section {
   position: absolute;
   right: 20px;
-  top: 0;
+  top: 35px;
   height: 100%;
   display: flex;
   align-items: center;
@@ -50,4 +50,10 @@
 .small-label {
   font-size: 11px;
   margin-right: 7px;
+}
+
+@media screen and (min-width: 500px) {
+  .price-drip-busd-lp-price-section {
+    top: 0;
+  }
 }
