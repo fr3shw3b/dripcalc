@@ -1,18 +1,7 @@
-import { useEffect, useState } from "react";
+import useScreenSizeCheck from "./use-screen-size-check";
 
 function useMobileCheck(): boolean {
-  const [mQuery, setMQuery] = useState({
-    matches: window.innerWidth <= 768,
-  });
-  useEffect(() => {
-    let mediaQueryList = window.matchMedia("(max-width: 768px)");
-    const listener = (e: MediaQueryListEvent) => {
-      setMQuery(e);
-    };
-    mediaQueryList.addEventListener("change", listener);
-    return () => mediaQueryList.removeEventListener("change", listener);
-  }, []);
-  return mQuery.matches;
+  return useScreenSizeCheck(768);
 }
 
 export default useMobileCheck;

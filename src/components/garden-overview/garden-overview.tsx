@@ -4,6 +4,7 @@ import { useContext } from "react";
 import { useSelector } from "react-redux";
 
 import ContentContext from "../../contexts/content";
+import FeatureTogglesContext from "../../contexts/feature-toggles";
 import { AppState } from "../../store/types";
 import formatCurrency from "../../utils/currency";
 import Help from "../help";
@@ -12,22 +13,31 @@ import "./garden-overview.css";
 
 function GardenOverview() {
   const { gardenOverview: overviewContent } = useContext(ContentContext);
+  const featureToggles = useContext(FeatureTogglesContext);
 
-  const { calculatedEarnings, currency, lastYearInGarden } = useSelector(
-    (state: AppState) => {
-      const currentPlanId = state.plans.current;
-      const currentPlan = state.plans.plans.find(
-        (plan) => plan.id === currentPlanId
-      );
-      return {
-        ...state.general,
-        calculatedEarnings: state.general.calculatedEarnings[currentPlanId],
-        currency: state.settings[currentPlanId].currency,
-        wallets: currentPlan?.wallets ?? [],
-        lastYearInGarden: state.settings[currentPlanId].gardenLastYear,
-      };
-    }
-  );
+  const {
+    calculatedEarnings,
+    currency,
+    lastYearInGarden,
+    fiatMode: fiatModeInState,
+  } = useSelector((state: AppState) => {
+    const currentPlanId = state.plans.current;
+    const currentPlan = state.plans.plans.find(
+      (plan) => plan.id === currentPlanId
+    );
+    return {
+      ...state.general,
+      calculatedEarnings: state.general.calculatedEarnings[currentPlanId],
+      currency: state.settings[currentPlanId].currency,
+      wallets: currentPlan?.wallets ?? [],
+      lastYearInGarden: state.settings[currentPlanId].gardenLastYear,
+    };
+  });
+
+  const fiatMode =
+    (featureToggles.dripFiatModeToggle && fiatModeInState) ||
+    !featureToggles.dripFiatModeToggle;
+
   const finalYearFormatted = moment(
     `31/12/${lastYearInGarden}`,
     "DD/MM/YYYYY"
@@ -62,24 +72,27 @@ function GardenOverview() {
               .totalHarvestedRewardsInDripBUSDLP ?? 0
           )}
         </p>
-        <Help
-          helpContent={
-            <div className="garden-overview-info">
-              {" "}
-              {overviewContent.totalRewardsHarvestedInCurrencyHelpText(
-                currency
+
+        {fiatMode && (
+          <Help
+            helpContent={
+              <div className="garden-overview-info">
+                {" "}
+                {overviewContent.totalRewardsHarvestedInCurrencyHelpText(
+                  currency
+                )}
+              </div>
+            }
+          >
+            <span>
+              {formatCurrency(
+                currency,
+                calculatedEarnings?.gardenEarnings?.info
+                  .totalHarvestedRewardsInCurrency
               )}
-            </div>
-          }
-        >
-          <span>
-            {formatCurrency(
-              currency,
-              calculatedEarnings?.gardenEarnings?.info
-                .totalHarvestedRewardsInCurrency
-            )}
-          </span>
-        </Help>
+            </span>
+          </Help>
+        )}
       </Card>
       <Card
         className="garden-overview-card"

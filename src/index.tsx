@@ -4,12 +4,12 @@ import { Provider } from "react-redux";
 import { BrowserRouter } from "react-router-dom";
 import { FocusStyleManager } from "@blueprintjs/core";
 
-import "./index.css";
 import "@blueprintjs/core/lib/css/blueprint.css";
 import "@blueprintjs/popover2/lib/css/blueprint-popover2.css";
 import "@blueprintjs/datetime/lib/css/blueprint-datetime.css";
 import "@blueprintjs/table/lib/css/table-modern.css";
 import "@blueprintjs/select/lib/css/blueprint-select.css";
+import "./index.css";
 
 import App from "./components/app";
 import reportWebVitals from "./reportWebVitals";

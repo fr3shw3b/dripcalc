@@ -2,6 +2,7 @@ import { FormGroup, HTMLSelect, InputGroup } from "@blueprintjs/core";
 import React, { useContext } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import ContentContext from "../../contexts/content";
+import FeatureTogglesContext from "../../contexts/feature-toggles";
 import type { TrendPeriod } from "../../services/token-value-provider";
 import {
   updateDripValueTrend,
@@ -22,6 +23,8 @@ import "./settings.css";
 function Settings() {
   const dispatch = useDispatch();
   const { settings } = useContext(ContentContext);
+  const featureToggles = useContext(FeatureTogglesContext);
+
   const {
     dripValueTrend,
     currency,
@@ -33,10 +36,19 @@ function Settings() {
     trendPeriod,
     currentPlanId,
     defaultHydrateFrequency,
+    fiatModeInState,
   } = useSelector((state: AppState) => {
     const currentPlanId = state.plans.current;
-    return { ...state.settings[currentPlanId], currentPlanId };
+    return {
+      ...state.settings[currentPlanId],
+      currentPlanId,
+      fiatModeInState: state.general.fiatMode,
+    };
   });
+
+  const fiatMode =
+    (featureToggles.dripFiatModeToggle && fiatModeInState) ||
+    !featureToggles.dripFiatModeToggle;
 
   const handleSelectTrend: React.ReactEventHandler<HTMLSelectElement> = (
     evt
@@ -141,26 +153,28 @@ function Settings() {
             ))}
           </HTMLSelect>
         </FormGroup>
-        <FormGroup
-          helperText={settings.dripValueTrendHelpText}
-          label={settings.dripValueTrendLabel}
-          labelFor="trend-select"
-        >
-          <HTMLSelect
-            id="trend-select"
-            value={dripValueTrend}
-            onChange={handleSelectTrend}
+        {fiatMode && (
+          <FormGroup
+            helperText={settings.dripValueTrendHelpText}
+            label={settings.dripValueTrendLabel}
+            labelFor="trend-select"
           >
-            {Object.entries(settings.dripValueTrendOptions).map(
-              ([value, label]) => (
-                <option key={value} value={value}>
-                  {label}
-                </option>
-              )
-            )}
-          </HTMLSelect>
-        </FormGroup>
-        {dripValueTrend === "uptrend" && (
+            <HTMLSelect
+              id="trend-select"
+              value={dripValueTrend}
+              onChange={handleSelectTrend}
+            >
+              {Object.entries(settings.dripValueTrendOptions).map(
+                ([value, label]) => (
+                  <option key={value} value={value}>
+                    {label}
+                  </option>
+                )
+              )}
+            </HTMLSelect>
+          </FormGroup>
+        )}
+        {fiatMode && dripValueTrend === "uptrend" && (
           <FormGroup
             helperText={settings.uptrendMaxValueHelpText(
               settings.currencies[currency]
@@ -179,7 +193,7 @@ function Settings() {
             />
           </FormGroup>
         )}
-        {dripValueTrend === "downtrend" && (
+        {fiatMode && dripValueTrend === "downtrend" && (
           <FormGroup
             helperText={settings.downTrendMinValueHelpText(
               settings.currencies[currency]
@@ -198,7 +212,7 @@ function Settings() {
             />
           </FormGroup>
         )}
-        {dripValueTrend === "stable" && (
+        {fiatMode && dripValueTrend === "stable" && (
           <FormGroup
             helperText={settings.stabilisesAtHelpText(
               settings.currencies[currency]
@@ -217,23 +231,25 @@ function Settings() {
             />
           </FormGroup>
         )}
-        <FormGroup
-          helperText={settings.trendPeriodHelpText}
-          label={settings.trendPeriodLabel}
-          labelFor="trend-period-select"
-        >
-          <HTMLSelect
-            id="trend-period-select"
-            value={trendPeriod}
-            onChange={handleSelectTrendPeriod}
+        {fiatMode && (
+          <FormGroup
+            helperText={settings.trendPeriodHelpText}
+            label={settings.trendPeriodLabel}
+            labelFor="trend-period-select"
           >
-            {Object.entries(settings.trendPeriods).map(([value, label]) => (
-              <option key={value} value={value}>
-                {label}
-              </option>
-            ))}
-          </HTMLSelect>
-        </FormGroup>
+            <HTMLSelect
+              id="trend-period-select"
+              value={trendPeriod}
+              onChange={handleSelectTrendPeriod}
+            >
+              {Object.entries(settings.trendPeriods).map(([value, label]) => (
+                <option key={value} value={value}>
+                  {label}
+                </option>
+              ))}
+            </HTMLSelect>
+          </FormGroup>
+        )}
         <FormGroup
           helperText={settings.averageGasFeeHelpText(currency)}
           label={settings.averageGasFeeLabel}

@@ -4,6 +4,8 @@ import { useDispatch, useSelector } from "react-redux";
 import moment from "moment";
 
 import ConfigContext, { Config } from "../../contexts/config";
+import FeatureTogglesContext from "../../contexts/feature-toggles";
+
 import {
   updateCurrentWallet,
   updateWalletMonthInputs,
@@ -50,17 +52,25 @@ function GardenWalletsPanel() {
     gardenValues: [],
   });
   const dispatch = useDispatch();
-  const { wallets, current, currentPlanId } = useSelector((state: AppState) => {
-    const currentPlanIndex = state.plans.plans.findIndex(
-      (plan) => plan.id === state.plans.current
-    );
-    return {
-      wallets: state.plans.plans[currentPlanIndex].wallets,
-      current: state.plans.plans[currentPlanIndex].current,
-      currentPlanId: state.plans.current,
-    };
-  });
+  const { wallets, current, currentPlanId, fiatModeInState } = useSelector(
+    (state: AppState) => {
+      const currentPlanIndex = state.plans.plans.findIndex(
+        (plan) => plan.id === state.plans.current
+      );
+      return {
+        wallets: state.plans.plans[currentPlanIndex].wallets,
+        current: state.plans.plans[currentPlanIndex].current,
+        currentPlanId: state.plans.current,
+        fiatModeInState: state.general.fiatMode,
+      };
+    }
+  );
   const config = useContext(ConfigContext);
+  const featureToggles = useContext(FeatureTogglesContext);
+
+  const fiatMode =
+    (featureToggles.dripFiatModeToggle && fiatModeInState) ||
+    !featureToggles.dripFiatModeToggle;
 
   const handleWalletChange = (newTabId: string) => {
     dispatch(updateCurrentWallet(newTabId, currentPlanId));
@@ -154,22 +164,26 @@ function GardenWalletsPanel() {
     });
   };
 
-  const handleDepositAmountInCurrencyChange = (
+  const handleDepositAmountChange = (
     depositId: string,
-    amountInCurrency: number
+    amount: number,
+    eventFiatMode: boolean
   ) => {
     setMonthInputsState((prevState) => {
       const depositIndex = prevState.deposits.findIndex(
         ({ id }) => id === depositId
       );
       const deposit = prevState.deposits[depositIndex];
+      const updatedFields = eventFiatMode
+        ? { amountInCurrency: amount }
+        : { amountInToken: amount };
       return {
         ...prevState,
         deposits: [
           ...prevState.deposits.slice(0, depositIndex),
           {
             ...deposit,
-            amountInCurrency: amountInCurrency,
+            ...updatedFields,
           },
           ...prevState.deposits.slice(depositIndex + 1),
         ],
@@ -473,6 +487,7 @@ function GardenWalletsPanel() {
                 startDate={startDate}
                 monthInputs={monthInputs}
                 editMode={false}
+                fiatMode={fiatMode}
                 onDepositsClick={handleDepositsClick}
                 onReinvestmentPlanClick={handleReinvestmentPlanClick}
                 onCustomValuesClick={handleGardenCustomValuesClick}
@@ -492,9 +507,10 @@ function GardenWalletsPanel() {
           onDepositTypeChange={handleDepositTypeChange}
           onDepositDateChange={handleDepositDateChange}
           onDepositEndDateChange={handleDepositEndDateChange}
-          onDepositAmountInCurrencyChange={handleDepositAmountInCurrencyChange}
+          onDepositAmountChange={handleDepositAmountChange}
           onRemoveDeposit={handleRemoveDeposit}
           forCalculator="garden"
+          fiatMode={fiatMode}
         />
         <WalletReinvestmentPlan
           walletId={monthInputsState.walletId}
@@ -585,6 +601,7 @@ function depositsFromMonthInputs(wallet?: WalletState): DepositInEditor[] {
               timestamp: deposit.timestamp,
               amountInCurrency: deposit.amountInCurrency,
               type: "oneOff",
+              amountInToken: deposit.amountInTokens,
             },
           ];
         },
@@ -685,6 +702,7 @@ function monthInputsFromDeposits(
             timestamp: deposit.timestamp,
             depositId: deposit.id,
             amountInCurrency: deposit.amountInCurrency,
+            amountInTokens: deposit.amountInToken,
           })),
         },
       };

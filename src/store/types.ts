@@ -4,6 +4,7 @@ import { GeneralState } from "./reducers/general";
 import { SettingsState } from "./reducers/settings";
 import { ViewsState } from "./reducers/views";
 import { PlansState } from "./reducers/plans";
+import { PriceState } from "./reducers/price";
 
 export type FSA<ActionType, Meta, Payload> = Action<ActionType> & {
   meta: Meta;
@@ -19,6 +20,7 @@ export type AppState = {
   settings: SettingsState;
   plans: PlansState;
   general: GeneralState;
+  price: PriceState;
 };
 
 export type DispatchFunction = (action: AnyAction) => void;

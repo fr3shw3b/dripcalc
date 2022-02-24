@@ -18,6 +18,8 @@ import { AppState } from "../../store/types";
 
 export type DepositInEditor = {
   amountInCurrency: number;
+  // Used when fiat mode is turned off!
+  amountInToken?: number;
   timestamp: number;
   id: string;
   type: string;
@@ -34,6 +36,7 @@ type Props = {
   onClose: (evt: React.SyntheticEvent<HTMLElement, Event>) => void | undefined;
   onSaveClick: (walletId: string) => void;
   deposits: DepositInEditor[];
+  fiatMode: boolean;
   onAddNewDeposit: (deposit: DepositInEditor) => void;
   onDepositTypeChange: (
     walletId: string,
@@ -42,9 +45,10 @@ type Props = {
   ) => void;
   onDepositDateChange: (depositId: string, timestamp: number) => void;
   onDepositEndDateChange: (depositId: string, upToTimestamp: number) => void;
-  onDepositAmountInCurrencyChange: (
+  onDepositAmountChange: (
     depositId: string,
-    amountInCurrency: number
+    amount: number,
+    fiatMode: boolean
   ) => void;
   onRemoveDeposit: (depositId: string) => void;
 };
@@ -58,12 +62,13 @@ function WalletDeposits({
   walletId,
   walletStartDate,
   deposits,
+  fiatMode,
   onAddNewDeposit,
   onDepositTypeChange,
   onRemoveDeposit,
   onDepositDateChange,
   onDepositEndDateChange,
-  onDepositAmountInCurrencyChange,
+  onDepositAmountChange,
 }: Props) {
   const [showChangeDate, setShowChangeDate] = useState<Record<string, boolean>>(
     {}
@@ -137,16 +142,22 @@ function WalletDeposits({
     onDepositEndDateChange(depositId, date.getTime());
   };
 
-  const handleDepositAmountInCurrencyChange: (
+  const handleDepositAmountChange: (
     depositId: string
   ) => React.ChangeEventHandler<HTMLInputElement> = (depositId) => (evt) => {
     if (evt.currentTarget.value !== "") {
-      onDepositAmountInCurrencyChange(
+      onDepositAmountChange(
         depositId,
-        Number.parseInt(evt.currentTarget.value)
+        Number.parseInt(evt.currentTarget.value),
+        fiatMode
       );
     }
   };
+
+  const fiatForCalculatorHelpText =
+    forCalculator === "faucet"
+      ? walletsContent.depositAmountInCurrencyHelpText(currency)
+      : walletsContent.gardenDepositAmountInCurrencyHelpText(currency);
 
   return (
     <>
@@ -262,17 +273,21 @@ function WalletDeposits({
                     <FormGroup
                       className="block"
                       key={deposit.id}
-                      label={walletsContent.depositsAmountInCurrencyLabel(
-                        currency
-                      )}
-                      labelFor={`deposit-${deposit.id}`}
-                      helperText={
-                        forCalculator === "faucet"
-                          ? walletsContent.depositAmountInCurrencyHelpText(
+                      label={
+                        fiatMode
+                          ? walletsContent.depositsAmountInCurrencyLabel(
                               currency
                             )
-                          : walletsContent.gardenDepositAmountInCurrencyHelpText(
-                              currency
+                          : walletsContent.depositsAmountInTokenLabel(
+                              forCalculator
+                            )
+                      }
+                      labelFor={`deposit-${deposit.id}`}
+                      helperText={
+                        fiatMode
+                          ? fiatForCalculatorHelpText
+                          : walletsContent.depositsAmountInTokenHelpText(
+                              forCalculator
                             )
                       }
                     >
@@ -281,13 +296,21 @@ function WalletDeposits({
                         type="number"
                         asyncControl={true}
                         leftElement={
-                          <div className="currency-inline">{currency}</div>
+                          <div className="currency-inline">
+                            {fiatMode
+                              ? currency
+                              : calculatorToken[forCalculator]}
+                          </div>
                         }
-                        placeholder={`Amount in ${currency}`}
-                        value={`${deposit.amountInCurrency}` ?? 0}
-                        onChange={handleDepositAmountInCurrencyChange(
-                          deposit.id
-                        )}
+                        placeholder={`Amount in ${
+                          fiatMode ? currency : calculatorToken[forCalculator]
+                        }`}
+                        value={`${
+                          fiatMode
+                            ? deposit.amountInCurrency ?? 0
+                            : deposit.amountInToken ?? 0
+                        }`}
+                        onChange={handleDepositAmountChange(deposit.id)}
                       />
                     </FormGroup>
                     <Button
@@ -315,6 +338,11 @@ function WalletDeposits({
     </>
   );
 }
+
+const calculatorToken = {
+  garden: "DRIP/BUSD LP",
+  faucet: "DRIP",
+};
 
 function DialogFooter(props: {
   onClose: (e: React.SyntheticEvent<HTMLElement, Event>) => void | undefined;

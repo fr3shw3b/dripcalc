@@ -4,6 +4,7 @@ import { useSelector } from "react-redux";
 import { AppState } from "../../store/types";
 
 import ContentContext from "../../contexts/content";
+import FeatureTogglesContext from "../../contexts/feature-toggles";
 import { Tooltip2 } from "@blueprintjs/popover2";
 import formatCurrency from "../../utils/currency";
 
@@ -12,7 +13,11 @@ type Props = {
 };
 
 function GardenYearlyWalletPanel({ walletId }: Props) {
-  const { calculatedEarnings, currency } = useSelector((state: AppState) => {
+  const {
+    calculatedEarnings,
+    currency,
+    fiatMode: fiatModeInState,
+  } = useSelector((state: AppState) => {
     const currentPlanId = state.plans.current;
     return {
       ...state.general,
@@ -21,6 +26,10 @@ function GardenYearlyWalletPanel({ walletId }: Props) {
     };
   });
   const { results: resultsContent } = useContext(ContentContext);
+  const featureToggles = useContext(FeatureTogglesContext);
+  const fiatMode =
+    (featureToggles.dripFiatModeToggle && fiatModeInState) ||
+    !featureToggles.dripFiatModeToggle;
 
   const earningsTuple = Object.entries(
     calculatedEarnings?.gardenEarnings?.walletEarnings ?? {}
@@ -67,17 +76,19 @@ function GardenYearlyWalletPanel({ walletId }: Props) {
                   {resultsContent.gardenYearEarningsLabel}
                 </Tooltip2>
               </th>
-              <th>
-                <Tooltip2
-                  content={resultsContent.gardenYearEarningsInCurrencyHelpText(
-                    currency
-                  )}
-                  position={Position.BOTTOM}
-                  openOnTargetFocus={false}
-                >
-                  {resultsContent.gardenYearEarningsInCurrencyLabel(currency)}
-                </Tooltip2>
-              </th>
+              {fiatMode && (
+                <th>
+                  <Tooltip2
+                    content={resultsContent.gardenYearEarningsInCurrencyHelpText(
+                      currency
+                    )}
+                    position={Position.BOTTOM}
+                    openOnTargetFocus={false}
+                  >
+                    {resultsContent.gardenYearEarningsInCurrencyLabel(currency)}
+                  </Tooltip2>
+                </th>
+              )}
               <th>
                 <Tooltip2
                   content={resultsContent.gardenYearClaimedHelpText}
@@ -87,17 +98,19 @@ function GardenYearlyWalletPanel({ walletId }: Props) {
                   {resultsContent.gardenYearClaimedLabel}
                 </Tooltip2>
               </th>
-              <th>
-                <Tooltip2
-                  content={resultsContent.gardenYearClaimedInCurrencyHelpText(
-                    currency
-                  )}
-                  position={Position.BOTTOM}
-                  openOnTargetFocus={false}
-                >
-                  {resultsContent.gardenYearClaimedInCurrencyLabel(currency)}
-                </Tooltip2>
-              </th>
+              {fiatMode && (
+                <th>
+                  <Tooltip2
+                    content={resultsContent.gardenYearClaimedInCurrencyHelpText(
+                      currency
+                    )}
+                    position={Position.BOTTOM}
+                    openOnTargetFocus={false}
+                  >
+                    {resultsContent.gardenYearClaimedInCurrencyLabel(currency)}
+                  </Tooltip2>
+                </th>
+              )}
               <th>
                 <Tooltip2
                   content={resultsContent.gardenYearAccumClaimedHelpText}
@@ -107,19 +120,21 @@ function GardenYearlyWalletPanel({ walletId }: Props) {
                   {resultsContent.gardenYearAccumClaimedLabel}
                 </Tooltip2>
               </th>
-              <th>
-                <Tooltip2
-                  content={resultsContent.gardenYearAccumClaimedInCurrencyHelpText(
-                    currency
-                  )}
-                  position={Position.BOTTOM}
-                  openOnTargetFocus={false}
-                >
-                  {resultsContent.gardenYearAccumClaimedInCurrencyLabel(
-                    currency
-                  )}
-                </Tooltip2>
-              </th>
+              {fiatMode && (
+                <th>
+                  <Tooltip2
+                    content={resultsContent.gardenYearAccumClaimedInCurrencyHelpText(
+                      currency
+                    )}
+                    position={Position.BOTTOM}
+                    openOnTargetFocus={false}
+                  >
+                    {resultsContent.gardenYearAccumClaimedInCurrencyLabel(
+                      currency
+                    )}
+                  </Tooltip2>
+                </th>
+              )}
             </thead>
             <tbody>
               {earningYears.map((year) => {
@@ -153,12 +168,14 @@ function GardenYearlyWalletPanel({ walletId }: Props) {
                           yearEarnings?.totalYearEarningsInDripBUSDLP ?? 0
                         )}
                       </td>
-                      <td>
-                        {formatCurrency(
-                          currency,
-                          yearEarnings?.totalYearEarningsInCurrency
-                        )}
-                      </td>
+                      {fiatMode && (
+                        <td>
+                          {formatCurrency(
+                            currency,
+                            yearEarnings?.totalYearEarningsInCurrency
+                          )}
+                        </td>
+                      )}
                       <td>
                         {Intl.NumberFormat("en-US", {
                           notation: "compact",
@@ -167,12 +184,14 @@ function GardenYearlyWalletPanel({ walletId }: Props) {
                           yearEarnings?.totalYearHarvestedInDripBUSDLP ?? 0
                         )}
                       </td>
-                      <td>
-                        {formatCurrency(
-                          currency,
-                          yearEarnings?.totalYearHarvestedInCurrency
-                        )}
-                      </td>
+                      {fiatMode && (
+                        <td>
+                          {formatCurrency(
+                            currency,
+                            yearEarnings?.totalYearHarvestedInCurrency
+                          )}
+                        </td>
+                      )}
                       <td>
                         {Intl.NumberFormat("en-US", {
                           notation: "compact",
@@ -181,12 +200,14 @@ function GardenYearlyWalletPanel({ walletId }: Props) {
                           yearEarnings?.accumYearHarvestedInDripBUSDLP ?? 0
                         )}
                       </td>
-                      <td>
-                        {formatCurrency(
-                          currency,
-                          yearEarnings?.accumYearHarvestedInCurrency
-                        )}
-                      </td>
+                      {fiatMode && (
+                        <td>
+                          {formatCurrency(
+                            currency,
+                            yearEarnings?.accumYearHarvestedInCurrency
+                          )}
+                        </td>
+                      )}
                     </>
                   );
                 };

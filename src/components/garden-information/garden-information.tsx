@@ -63,13 +63,14 @@ function GardenInformation() {
         measure for your daily rewards.
       </p>
       <p className="info-content-block">
-        <h3>Calculator DRIP/BUSD LP values for each day</h3>
+        <h3>Calculator DRIP/BUSD LP values for each day (FIAT mode)</h3>
         <p>
-          The garden calculator uses weighted randomisation to select the value
-          of DRIP/BUSD LP for each day that is ultimately heading in the
-          direction of the trend that you configure in settings. A range of 15%
-          variance is applied, 7.5% in each direction. For this reason every
-          time you refresh the calculations, the values of earnings will differ.
+          When in FIAT mode, the garden calculator uses weighted randomisation
+          to select the value of DRIP/BUSD LP for each day that is ultimately
+          heading in the direction of the trend that you configure in settings.
+          A range of 15% variance is applied, 7.5% in each direction. For this
+          reason every time you refresh the calculations, the values of earnings
+          will differ.
         </p>
       </p>
       <p className="info-content-block">

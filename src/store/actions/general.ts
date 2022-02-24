@@ -67,3 +67,55 @@ export function cleanAllData(): CleanAllDataAction {
     },
   };
 }
+
+export const INITIALISE_APP = "INITIALISE_APP";
+export type InitialiseAppAction = FSA<
+  typeof INITIALISE_APP,
+  {
+    price: {
+      refreshDripNativeDexPrice: boolean;
+      refreshOnInterval?: number;
+      refreshDripBUSDLPPrice: boolean;
+    };
+  },
+  {}
+>;
+
+export function initialiseApp(refreshOnInterval?: number): InitialiseAppAction {
+  return {
+    type: INITIALISE_APP,
+    payload: {},
+    meta: {
+      price: {
+        refreshDripNativeDexPrice: true,
+        refreshOnInterval,
+        refreshDripBUSDLPPrice: true,
+      },
+    },
+  };
+}
+
+export const TOGGLE_FIAT_MODE = "TOGGLE_FIAT_MODE";
+export type ToggleFiatModeAction = FSA<
+  typeof TOGGLE_FIAT_MODE,
+  {
+    calculator: {
+      recalculate: boolean;
+      set: CalculationSet;
+    };
+  },
+  {}
+>;
+
+export function toggleFiatMode(): ToggleFiatModeAction {
+  return {
+    type: TOGGLE_FIAT_MODE,
+    payload: {},
+    meta: {
+      calculator: {
+        recalculate: true,
+        set: "all",
+      },
+    },
+  };
+}

@@ -537,18 +537,24 @@ function calculateGardenDayEarnings(
     );
     depositsToday.sort((a, b) => a.timestamp - b.timestamp);
     const depositsTodayInSeeds = depositsToday.map((deposit) => ({
-      amountInSeeds: calculateCurrencyDepositInSeeds(
-        deposit.amountInCurrency,
-        dripBUSDLPValueForDay,
-        plantDripBUSDLPFractionForDay,
-        config.seedsPerPlant,
-        // We're making an assumption here that every deposit
-        // ultimately comes from buying crypto with fiat
-        // in a centralised exchange.
-        config.cexFeePercentage,
-        // Extra buffer fees for trades along the way to getting DRIP/BUSD LP.
-        config.depositBufferFees
-      ),
+      amountInSeeds: state.fiatMode
+        ? calculateCurrencyDepositInSeeds(
+            deposit.amountInCurrency,
+            dripBUSDLPValueForDay,
+            plantDripBUSDLPFractionForDay,
+            config.seedsPerPlant,
+            // We're making an assumption here that every deposit
+            // ultimately comes from buying crypto with fiat
+            // in a centralised exchange.
+            config.cexFeePercentage,
+            // Extra buffer fees for trades along the way to getting DRIP/BUSD LP.
+            config.depositBufferFees
+          )
+        : seedsFromDripBUSDLP(
+            deposit.amountInTokens ?? 0,
+            config.seedsPerPlant,
+            plantDripBUSDLPFractionForDay
+          ),
       timestamp: deposit.timestamp,
     }));
 
@@ -630,7 +636,8 @@ function calculateGardenDayEarnings(
       // as the value in DRIP/BUSD LP isn't realised until an action is taken.
       prevDayEarningsData.accumSeedsToHarvestOrSow,
       config.cexFeePercentage,
-      config.depositBufferFees
+      config.depositBufferFees,
+      state.fiatMode
     );
 
     const sowGasFee =
@@ -774,7 +781,8 @@ function calculateScheduleEarningsAndLosses(
   seedsPerPlant: number,
   accumSeedsToHarvestOrSow: number,
   cexFeePercentage: number,
-  depositBufferFees: number
+  depositBufferFees: number,
+  fiatMode: boolean
 ): DayScheduleEarningsAndLosses {
   const combinedSchedule: (GardenDayAction | Deposit)[] = [
     ...schedule,
@@ -814,13 +822,18 @@ function calculateScheduleEarningsAndLosses(
       if (isDeposit(action)) {
         const newPlantsBalance =
           accum.plantsBalance +
-          calculateCurrencyDepositInPlants(
-            action.amountInCurrency,
-            dripBUSDLPValueForDay,
-            plantDripBUSDLPFractionForDay,
-            cexFeePercentage,
-            depositBufferFees
-          );
+          (fiatMode
+            ? calculateCurrencyDepositInPlants(
+                action.amountInCurrency,
+                dripBUSDLPValueForDay,
+                plantDripBUSDLPFractionForDay,
+                cexFeePercentage,
+                depositBufferFees
+              )
+            : plantsFromDripBUSDLP(
+                action.amountInTokens ?? 0,
+                plantDripBUSDLPFractionForDay
+              ));
         const newSeedsPerDay =
           gardenYieldPercentageForDay * newPlantsBalance * seedsPerPlant;
 
@@ -939,7 +952,8 @@ function isDeposit(input: Record<string, unknown>): input is Deposit {
   return !!(
     input.depositId &&
     input.dayOfMonth &&
-    typeof input.amountInCurrency === "number" &&
+    (typeof input.amountInCurrency === "number" ||
+      typeof input.amountInTokens === "number") &&
     input.timestamp
   );
 }
@@ -1083,11 +1097,31 @@ function calculateCurrencyDepositInPlants(
   const depositAfterFeeDeduction =
     amountInCurrency - amountInCurrency * cexFeePercentage - depositBufferFees;
   const depositInDripBUSDLP = depositAfterFeeDeduction / dripBUSDLPValueForDay;
-  // Whole plants only, the remainder will remain in LP token balance!
-  const depositInPlants = Math.floor(
-    depositInDripBUSDLP / plantDripBUSDLPFractionForDay
+  return plantsFromDripBUSDLP(
+    depositInDripBUSDLP,
+    plantDripBUSDLPFractionForDay
   );
-  return depositInPlants;
+}
+
+function seedsFromDripBUSDLP(
+  amount: number,
+  seedsPerPlant: number,
+  plantDripBUSDLPFractionForDay: number
+): number {
+  return (
+    plantsFromDripBUSDLP(amount, plantDripBUSDLPFractionForDay) * seedsPerPlant
+  );
+}
+
+function plantsFromDripBUSDLP(
+  amount: number,
+  plantDripBUSDLPFractionForDay: number
+): number {
+  if (amount === 0) {
+    return 0;
+  }
+  // Whole plants only, the remainder will remain in LP token balance!
+  return Math.floor(amount / plantDripBUSDLPFractionForDay);
 }
 
 function seedsToDripBUSDLP(

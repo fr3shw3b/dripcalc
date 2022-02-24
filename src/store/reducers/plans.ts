@@ -82,6 +82,7 @@ export type GardenValues = {
 export type Deposit = {
   dayOfMonth: number;
   amountInCurrency: number;
+  amountInTokens?: number;
   // Multiple deposits will have the same ID when a part of a monthly
   // deposit range!
   depositId: string;
@@ -130,6 +131,7 @@ function createDefaultWalletInfo() {
                 {
                   dayOfMonth: Number.parseInt(monthMomentDate.format("D")),
                   amountInCurrency: 100,
+                  amountInTokens: 1,
                   // Use same ID so the UI picks it up as a monthly deposit.
                   depositId: depositsId,
                   timestamp: Number.parseInt(monthMomentDate.format("x")),
@@ -139,6 +141,7 @@ function createDefaultWalletInfo() {
                 {
                   dayOfMonth: Number.parseInt(monthMomentDate.format("D")),
                   amountInCurrency: 100,
+                  amountInTokens: 1,
                   // Use same ID so the UI picks it up as a monthly deposit.
                   depositId: gardenDepositsId,
                   timestamp: Number.parseInt(monthMomentDate.format("x")),

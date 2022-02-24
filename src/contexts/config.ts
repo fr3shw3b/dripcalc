@@ -23,6 +23,12 @@ export type Config = {
   defaultAverageGardenYieldPercentage: number;
   maxGardenDailyYieldPercentage: number;
   seedsPerPlant: number;
+  nativeDexPriceApiBaseUrl: string;
+  priceRefreshInterval: number;
+  dripcalcApiBaseUrl: string;
+  refreshExchangeRatesInterval: number;
+  pancakeSwapApiBaseUrl: string;
+  bscDataSeedUrl: string;
 };
 
 const MAX_PAYOUT_CAP = 100000;
@@ -80,6 +86,21 @@ export function config(): Config {
     maxGardenDailyYieldPercentage: 0.03333,
     // As per the smart contract!
     seedsPerPlant: 2592000,
+    ////////////////////////////////////////////////////////////////////////////////////////
+    // API configuration and other values worth configuring outside of source code.
+    ///////////////////////////////////////////////////////////////////////////////////////
+    nativeDexPriceApiBaseUrl:
+      process.env.REACT_APP_NATIVE_DEX_PRICE_API_BASE_URL ?? "",
+    priceRefreshInterval: Number.parseInt(
+      process.env.REACT_APP_PRICE_REFRESH_INTERVAL_MILLISECONDS ?? "0"
+    ),
+    dripcalcApiBaseUrl: process.env.REACT_APP_DRIPCALC_API_BASE_URL ?? "",
+    refreshExchangeRatesInterval: Number.parseInt(
+      process.env.REACT_APP_EXCHANGE_RATES_REFRESH_INTERVAL_MILLISECONDS ?? "0"
+    ),
+    pancakeSwapApiBaseUrl:
+      process.env.REACT_APP_PANCAKE_SWAP_API_BASE_URL ?? "",
+    bscDataSeedUrl: process.env.REACT_APP_BSC_DATA_SEED_URL ?? "",
   };
 }
 

@@ -771,14 +771,20 @@ function calculateDayEarnings(
     const depositOnCurrentDay = deposits.find(
       (deposit) => deposit.dayOfMonth === dayInMonth
     );
-    const depositAfterFees = depositOnCurrentDay
+    const depositAfterFeesFromCurrencyValue = depositOnCurrentDay
       ? depositOnCurrentDay.amountInCurrency -
         depositOnCurrentDay.amountInCurrency * config.cexFeePercentage -
         config.depositBufferFees
       : 0;
 
-    const depositInDripBeforeTax =
-      depositAfterFees > 0 ? depositAfterFees / dripValueForDay : 0;
+    const depositInDripBeforeTaxFromCurrencyValue =
+      depositAfterFeesFromCurrencyValue > 0
+        ? depositAfterFeesFromCurrencyValue / dripValueForDay
+        : 0;
+
+    const depositInDripBeforeTax = state.fiatMode
+      ? depositInDripBeforeTaxFromCurrencyValue
+      : depositOnCurrentDay?.amountInTokens ?? 0;
 
     const depositInDrip =
       depositInDripBeforeTax - depositInDripBeforeTax * config.depositTax;

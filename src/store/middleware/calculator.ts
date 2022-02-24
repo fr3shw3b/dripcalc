@@ -15,6 +15,7 @@ import {
 } from "./calculator-actions";
 
 import Worker, { CalculatorWorkerApi } from "./calculator.worker";
+import { FeatureToggles } from "../../contexts/feature-toggles";
 
 export type CalculationSet = "all" | "faucet" | "garden" | "farm";
 
@@ -33,7 +34,8 @@ const calculatorWorkerInstance = new Worker();
 const calculatorWorkerApi = wrap<CalculatorWorkerApi>(calculatorWorkerInstance);
 
 function calculator<State extends AppState = AppState>(
-  config: Config
+  config: Config,
+  featureToggles: FeatureToggles
 ): MiddlewareFunction {
   return (store: MiddlewareAPI<Dispatch<AnyAction>, State>) =>
     (next: Dispatch<AnyAction>) =>
@@ -56,7 +58,7 @@ function calculator<State extends AppState = AppState>(
               JSON.stringify({
                 config,
                 set,
-                state: adaptState(appliedState),
+                state: adaptState(appliedState, featureToggles),
               })
             )
             .then((earningsSerialised) => {
@@ -76,7 +78,8 @@ function calculator<State extends AppState = AppState>(
 }
 
 function adaptState<SourceState extends AppState>(
-  state: SourceState
+  state: SourceState,
+  featureToggles: FeatureToggles
 ): AppStateForCalculator {
   const currentPlanId = state.plans.current;
   const planIndex = state.plans.plans.findIndex(
@@ -88,6 +91,9 @@ function adaptState<SourceState extends AppState>(
       wallets: state.plans.plans[planIndex].wallets,
     },
     prevCalculatedEarnings: state.general.calculatedEarnings[currentPlanId],
+    fiatMode:
+      (featureToggles.dripFiatModeToggle && state.general.fiatMode) ||
+      !featureToggles.dripFiatModeToggle,
   };
 }
 

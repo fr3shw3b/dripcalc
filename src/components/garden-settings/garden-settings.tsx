@@ -2,6 +2,7 @@ import { FormGroup, HTMLSelect, InputGroup } from "@blueprintjs/core";
 import React, { useContext } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import ContentContext from "../../contexts/content";
+import FeatureTogglesContext from "../../contexts/feature-toggles";
 import type { TrendPeriod } from "../../services/token-value-provider";
 import {
   updateDripBUSDLPValueTrend,
@@ -24,6 +25,8 @@ import "./garden-settings.css";
 function GardenSettings() {
   const dispatch = useDispatch();
   const { settings } = useContext(ContentContext);
+
+  const featureToggles = useContext(FeatureTogglesContext);
   const {
     dripBUSDLPValueTrend,
     currency,
@@ -37,10 +40,19 @@ function GardenSettings() {
     currentPlanId,
     defaultGardenSowFrequency,
     gardenAverageDepositHarvestGasFee,
+    fiatModeInState,
   } = useSelector((state: AppState) => {
     const currentPlanId = state.plans.current;
-    return { ...state.settings[currentPlanId], currentPlanId };
+    return {
+      ...state.settings[currentPlanId],
+      currentPlanId,
+      fiatModeInState: state.general.fiatMode,
+    };
   });
+
+  const fiatMode =
+    (featureToggles.dripFiatModeToggle && fiatModeInState) ||
+    !featureToggles.dripFiatModeToggle;
 
   const handleSelectTrend: React.ReactEventHandler<HTMLSelectElement> = (
     evt
@@ -175,26 +187,29 @@ function GardenSettings() {
             ))}
           </HTMLSelect>
         </FormGroup>
-        <FormGroup
-          helperText={settings.gardenValueTrendHelpText}
-          label={settings.gardenValueTrendLabel}
-          labelFor="trend-select"
-        >
-          <HTMLSelect
-            id="trend-select"
-            value={dripBUSDLPValueTrend}
-            onChange={handleSelectTrend}
+        {fiatMode && (
+          <FormGroup
+            helperText={settings.gardenValueTrendHelpText}
+            label={settings.gardenValueTrendLabel}
+            labelFor="trend-select"
           >
-            {Object.entries(settings.gardenValueTrendOptions).map(
-              ([value, label]) => (
-                <option key={value} value={value}>
-                  {label}
-                </option>
-              )
-            )}
-          </HTMLSelect>
-        </FormGroup>
-        {dripBUSDLPValueTrend === "uptrend" && (
+            <HTMLSelect
+              id="trend-select"
+              value={dripBUSDLPValueTrend}
+              onChange={handleSelectTrend}
+            >
+              {Object.entries(settings.gardenValueTrendOptions).map(
+                ([value, label]) => (
+                  <option key={value} value={value}>
+                    {label}
+                  </option>
+                )
+              )}
+            </HTMLSelect>
+          </FormGroup>
+        )}
+
+        {fiatMode && dripBUSDLPValueTrend === "uptrend" && (
           <FormGroup
             helperText={settings.gardenUptrendMaxValueHelpText(
               settings.currencies[currency]
@@ -213,7 +228,7 @@ function GardenSettings() {
             />
           </FormGroup>
         )}
-        {dripBUSDLPValueTrend === "downtrend" && (
+        {fiatMode && dripBUSDLPValueTrend === "downtrend" && (
           <FormGroup
             helperText={settings.gardenDownTrendMinValueHelpText(
               settings.currencies[currency]
@@ -232,7 +247,7 @@ function GardenSettings() {
             />
           </FormGroup>
         )}
-        {dripBUSDLPValueTrend === "stable" && (
+        {fiatMode && dripBUSDLPValueTrend === "stable" && (
           <FormGroup
             helperText={settings.gardenStabilisesAtHelpText(
               settings.currencies[currency]
@@ -251,25 +266,27 @@ function GardenSettings() {
             />
           </FormGroup>
         )}
-        <FormGroup
-          helperText={settings.gardenTrendPeriodHelpText}
-          label={settings.gardenTrendPeriodLabel}
-          labelFor="trend-period-select"
-        >
-          <HTMLSelect
-            id="trend-period-select"
-            value={gardenTrendPeriod}
-            onChange={handleSelectTrendPeriod}
+        {fiatMode && (
+          <FormGroup
+            helperText={settings.gardenTrendPeriodHelpText}
+            label={settings.gardenTrendPeriodLabel}
+            labelFor="trend-period-select"
           >
-            {Object.entries(settings.gardenTrendPeriods).map(
-              ([value, label]) => (
-                <option key={value} value={value}>
-                  {label}
-                </option>
-              )
-            )}
-          </HTMLSelect>
-        </FormGroup>
+            <HTMLSelect
+              id="trend-period-select"
+              value={gardenTrendPeriod}
+              onChange={handleSelectTrendPeriod}
+            >
+              {Object.entries(settings.gardenTrendPeriods).map(
+                ([value, label]) => (
+                  <option key={value} value={value}>
+                    {label}
+                  </option>
+                )
+              )}
+            </HTMLSelect>
+          </FormGroup>
+        )}
         <FormGroup
           helperText={settings.gardenAverageGasFeeHelpText(currency)}
           label={settings.gardenAverageGasFeeLabel}

@@ -11,6 +11,7 @@ import { nanoid } from "nanoid";
 import {
   ChangeEventHandler,
   MouseEventHandler,
+  useContext,
   useEffect,
   useRef,
   useState,
@@ -24,9 +25,12 @@ import {
   selectPlan,
   updatePlanLabel,
 } from "../../store/actions/plans";
+import FeatureTogglesContext from "../../contexts/feature-toggles";
 
 import { PlanState } from "../../store/reducers/plans";
 import { AppState } from "../../store/types";
+import formatCurrency from "../../utils/currency";
+import QuickCalc from "../quickcalc";
 
 import "./toolbar.css";
 
@@ -34,24 +38,33 @@ type PlanLite = Pick<PlanState, "id" | "label">;
 const PlanSelect = Select.ofType<PlanLite>();
 
 function Toolbar() {
+  const featureToggles = useContext(FeatureTogglesContext);
   const isMobile = useMobileCheck();
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const location = useLocation();
-  const { plans, currentPlanLabel, currentPlanIndex, currentPlanId } =
-    useSelector((state: AppState) => {
-      const currentPlan = state.plans.current;
-      const planIndex = state.plans.plans.findIndex(
-        (plan) => plan.id === state.plans.current
-      );
-      return {
-        ...state.views[currentPlan],
-        currentPlanId: currentPlan,
-        plans: state.plans.plans.map(({ id, label }) => ({ id, label })),
-        currentPlanLabel: state.plans.plans[planIndex]?.label,
-        currentPlanIndex: planIndex,
-      };
-    });
+  const {
+    plans,
+    currentPlanLabel,
+    currentPlanIndex,
+    currentPlanId,
+    currency,
+    dripBUSDLPPriceInCurrency,
+  } = useSelector((state: AppState) => {
+    const currentPlan = state.plans.current;
+    const planIndex = state.plans.plans.findIndex(
+      (plan) => plan.id === state.plans.current
+    );
+    return {
+      ...state.views[currentPlan],
+      currentPlanId: currentPlan,
+      plans: state.plans.plans.map(({ id, label }) => ({ id, label })),
+      currentPlanLabel: state.plans.plans[planIndex]?.label,
+      currentPlanIndex: planIndex,
+      currency: state.settings[currentPlan].currency,
+      dripBUSDLPPriceInCurrency: state.price.dripBUSDLPPriceInCurrency,
+    };
+  });
 
   const [showEditPlanLabel, setShowEditPlanLabel] = useState(false);
   const [isToolbarExpanded, setToolbarExpanded] = useState(true);
@@ -119,156 +132,185 @@ function Toolbar() {
     location.pathname
   );
   return (
-    <div className={`toolbar ${isToolbarExpanded ? "expanded" : "collapsed"}`}>
-      <div className="contents">
-        {!isMobile && location.pathname !== "/" && (
-          <>
-            {" "}
-            <Button
-              className="bp3-minimal menu-item"
-              icon="home"
-              text={`${currentArea} dashboard`}
-              active={
-                location.pathname === `${currentAreaPathPrefix}/dashboard`
-              }
-              onClick={handleNavButtonClick(
-                `${currentAreaPathPrefix}/dashboard`
-              )}
-            />
-            <Button
-              className="bp3-minimal menu-item"
-              icon="info-sign"
-              text="information"
-              active={
-                location.pathname === `${currentAreaPathPrefix}/information`
-              }
-              onClick={handleNavButtonClick(
-                `${currentAreaPathPrefix}/information`
-              )}
-            />
-            <Navbar.Divider className="menu-item-divider" />
-          </>
-        )}
-
-        <PlanSelect
-          items={plans}
-          itemRenderer={(item: PlanLite, { handleClick, modifiers, query }) => {
-            if (!modifiers.matchesPredicate) {
-              return null;
-            }
-
-            return (
-              <MenuItem
-                active={modifiers.active}
-                disabled={modifiers.disabled}
-                key={item.id}
-                onClick={handleClick}
-                text={highlightText(item.label, query)}
+    <div className="toolbar-wrapper">
+      <div
+        className={`toolbar ${isToolbarExpanded ? "expanded" : "collapsed"}`}
+      >
+        <div className="contents">
+          {!isMobile && location.pathname !== "/" && (
+            <>
+              {" "}
+              <Button
+                className="bp3-minimal menu-item"
+                icon="home"
+                text={`${currentArea} dashboard`}
+                active={
+                  location.pathname === `${currentAreaPathPrefix}/dashboard`
+                }
+                onClick={handleNavButtonClick(
+                  `${currentAreaPathPrefix}/dashboard`
+                )}
               />
-            );
-          }}
-          activeItem={plans[currentPlanIndex]}
-          onItemSelect={handlePlanSelect}
-          noResults={<MenuItem disabled={true} text="No plans." />}
-          filterable
-          createNewItemFromQuery={(title: string): PlanLite => {
-            return {
-              label: title,
-              id: nanoid(),
-            };
-          }}
-          itemPredicate={(query, plan, _index, exactMatch) => {
-            const normalizedTitle = plan.label.toLowerCase();
-            const normalizedQuery = query.toLowerCase();
-
-            if (exactMatch) {
-              return normalizedTitle === normalizedQuery;
-            } else {
-              return normalizedTitle.indexOf(normalizedQuery) >= 0;
-            }
-          }}
-          createNewItemRenderer={(
-            query: string,
-            active: boolean,
-            handleClick: React.MouseEventHandler<HTMLElement>
-          ) => {
-            return (
-              <MenuItem
-                icon="add"
-                text={`Create "${query}"`}
-                active={active}
-                onClick={handleClick}
-                shouldDismissPopover={false}
+              <Button
+                className="bp3-minimal menu-item"
+                icon="info-sign"
+                text="information"
+                active={
+                  location.pathname === `${currentAreaPathPrefix}/information`
+                }
+                onClick={handleNavButtonClick(
+                  `${currentAreaPathPrefix}/information`
+                )}
               />
-            );
-          }}
-        >
-          <Button text={currentPlanLabel} rightIcon="double-caret-vertical" />
-        </PlanSelect>
-        <form onSubmit={(evt) => evt.preventDefault()}>
-          <InputGroup
-            id="current-plan-label"
-            className={`inline-field edit-plan-label${
-              showEditPlanLabel ? " show" : ""
-            }`}
-            type="text"
-            asyncControl={true}
-            rightElement={
-              <Button icon="cross" onClick={handleCloseEditPlanLabelClick} />
-            }
-            placeholder="Enter minimum value"
-            value={currentPlanLabel}
-            onChange={handleCurrentPlanLabelChange}
-            inputRef={editPlanLabelInputRef}
-          />
-          {!showEditPlanLabel && (
+              <Navbar.Divider className="menu-item-divider" />
+            </>
+          )}
+
+          <PlanSelect
+            items={plans}
+            itemRenderer={(
+              item: PlanLite,
+              { handleClick, modifiers, query }
+            ) => {
+              if (!modifiers.matchesPredicate) {
+                return null;
+              }
+
+              return (
+                <MenuItem
+                  active={modifiers.active}
+                  disabled={modifiers.disabled}
+                  key={item.id}
+                  onClick={handleClick}
+                  text={highlightText(item.label, query)}
+                />
+              );
+            }}
+            activeItem={plans[currentPlanIndex]}
+            onItemSelect={handlePlanSelect}
+            noResults={<MenuItem disabled={true} text="No plans." />}
+            filterable
+            createNewItemFromQuery={(title: string): PlanLite => {
+              return {
+                label: title,
+                id: nanoid(),
+              };
+            }}
+            itemPredicate={(query, plan, _index, exactMatch) => {
+              const normalizedTitle = plan.label.toLowerCase();
+              const normalizedQuery = query.toLowerCase();
+
+              if (exactMatch) {
+                return normalizedTitle === normalizedQuery;
+              } else {
+                return normalizedTitle.indexOf(normalizedQuery) >= 0;
+              }
+            }}
+            createNewItemRenderer={(
+              query: string,
+              active: boolean,
+              handleClick: React.MouseEventHandler<HTMLElement>
+            ) => {
+              return (
+                <MenuItem
+                  icon="add"
+                  text={`Create "${query}"`}
+                  active={active}
+                  onClick={handleClick}
+                  shouldDismissPopover={false}
+                />
+              );
+            }}
+          >
+            <Button text={currentPlanLabel} rightIcon="double-caret-vertical" />
+          </PlanSelect>
+          <form onSubmit={(evt) => evt.preventDefault()}>
+            <InputGroup
+              id="current-plan-label"
+              className={`inline-field edit-plan-label${
+                showEditPlanLabel ? " show" : ""
+              }`}
+              type="text"
+              asyncControl={true}
+              rightElement={
+                <Button icon="cross" onClick={handleCloseEditPlanLabelClick} />
+              }
+              placeholder="Enter minimum value"
+              value={currentPlanLabel}
+              onChange={handleCurrentPlanLabelChange}
+              inputRef={editPlanLabelInputRef}
+            />
+            {!showEditPlanLabel && (
+              <Tooltip2
+                content={`Edit "${currentPlanLabel}" label`}
+                position={Position.BOTTOM}
+                openOnTargetFocus={false}
+              >
+                <Button
+                  icon="edit"
+                  className="navbar-edit"
+                  onClick={handleEditPlanLabelClick}
+                />
+              </Tooltip2>
+            )}
             <Tooltip2
-              content={`Edit "${currentPlanLabel}" label`}
+              content={`Refresh ALL "${currentPlanLabel}" calculations`}
               position={Position.BOTTOM}
               openOnTargetFocus={false}
             >
               <Button
-                icon="edit"
+                icon="refresh"
                 className="navbar-edit"
-                onClick={handleEditPlanLabelClick}
+                onClick={handleRefreshClick}
               />
             </Tooltip2>
-          )}
-          <Tooltip2
-            content={`Refresh ALL "${currentPlanLabel}" calculations`}
-            position={Position.BOTTOM}
-            openOnTargetFocus={false}
-          >
-            <Button
-              icon="refresh"
-              className="navbar-edit"
-              onClick={handleRefreshClick}
-            />
-          </Tooltip2>
-          <Tooltip2
-            content={`Clean all data! (This will clean out the browser storage that stores ALL your dripcalc data)`}
-            position={Position.BOTTOM}
-            openOnTargetFocus={false}
-          >
-            <Button
-              icon="clean"
-              className="navbar-clean-data"
-              onClick={handleCleanDataClick}
-            />
-          </Tooltip2>
-        </form>
-      </div>
-      <Tooltip2
-        content={`${isToolbarExpanded ? "Collapse" : "Expand"} toolbar`}
-        position={Position.BOTTOM}
-        openOnTargetFocus={false}
-      >
-        <Button
-          icon={isToolbarExpanded ? "chevron-left" : "chevron-right"}
-          className="navbar-collapse-button bp3-minimal"
-          onClick={handleCollapseExpandClick}
+            <Tooltip2
+              content={`Clean all data! (This will clean out the browser storage that stores ALL your dripcalc data)`}
+              position={Position.BOTTOM}
+              openOnTargetFocus={false}
+            >
+              <Button
+                icon="clean"
+                className="navbar-clean-data"
+                onClick={handleCleanDataClick}
+              />
+            </Tooltip2>
+          </form>
+        </div>
+        <QuickCalc
+          forCalculator={currentArea as "garden" | "faucet"}
+          currency={currency}
         />
-      </Tooltip2>
+        <Tooltip2
+          content={`${isToolbarExpanded ? "Collapse" : "Expand"} toolbar`}
+          position={Position.BOTTOM}
+          openOnTargetFocus={false}
+        >
+          <Button
+            icon={isToolbarExpanded ? "chevron-left" : "chevron-right"}
+            className="navbar-collapse-button bp3-minimal"
+            onClick={handleCollapseExpandClick}
+          />
+        </Tooltip2>
+      </div>
+      {featureToggles.dripFiatModeToggle && currentArea === "garden" && (
+        <div className="price-drip-busd-lp-price-section">
+          <strong className="small-label">DRIP/BUSD LP</strong>
+          <Tooltip2
+            content={`The current price of DRIP/BUSD LP in ${currency}`}
+            position={Position.BOTTOM}
+            openOnTargetFocus={false}
+          >
+            {dripBUSDLPPriceInCurrency === 0 ? (
+              <div className="bp3-skeleton">
+                {formatCurrency(currency, dripBUSDLPPriceInCurrency)}
+              </div>
+            ) : (
+              formatCurrency(currency, dripBUSDLPPriceInCurrency)
+            )}
+          </Tooltip2>
+        </div>
+      )}
     </div>
   );
 }

@@ -72,7 +72,12 @@ export function updateDripBUSDLPValueTrend(
 export const UPDATE_CURRENCY = "UPDATE_CURRENCY";
 export type UpdateCurrencyAction = FSA<
   typeof UPDATE_CURRENCY,
-  {},
+  {
+    price: {
+      refreshDripNativeDexPrice: boolean;
+      refreshDripBUSDLPPrice: boolean;
+    };
+  },
   {
     currency: "$" | "£" | "€";
     planId: string;
@@ -89,7 +94,12 @@ export function updateCurrency(
       currency,
       planId,
     },
-    meta: {},
+    meta: {
+      price: {
+        refreshDripNativeDexPrice: true,
+        refreshDripBUSDLPPrice: true,
+      },
+    },
   };
 }
 

@@ -63,7 +63,7 @@ export type SettingsContent = {
 
 export type WalletsContent = {
   createNewWalletTitle: string;
-  walletViewHelpText: React.ReactNode;
+  walletViewHelpText: (fiatMode: boolean) => React.ReactNode;
   createNewWalletButtonText: string;
   newWalletNameFieldLabel: string;
   newWalletDateFieldName: string;
@@ -73,6 +73,8 @@ export type WalletsContent = {
   depositsAddNewText: string;
   depositsAmountInCurrencyLabel: (currency: string) => string;
   depositAmountInCurrencyHelpText: (currency: string) => string;
+  depositsAmountInTokenLabel: (forCalculator: "garden" | "faucet") => string;
+  depositsAmountInTokenHelpText: (forCalculator: "garden" | "faucet") => string;
   depositsChangeDateText: string;
   depositsTypeLabel: string;
   depositsTypeHelpText: string;
@@ -96,13 +98,16 @@ export type WalletsContent = {
   gardenDepositsButtonText: string;
   gardenReinvestButtonText: string;
   customDripBUSDLPValuesButtonText: string;
-  walletViewGardenHelpText: React.ReactNode;
+  walletViewGardenHelpText: (fiatMode: boolean) => React.ReactNode;
   gardenDepositDateHelpText: string;
   gardenDepositAmountInCurrencyHelpText: (currency: string) => string;
   gardenReinvestmentPlanTableHelpText: React.ReactNode;
   gardenSowStrategyColumnLabel: string;
   gardenReinvestmentPlanSowStrategies: Record<"default" | SowFrequency, string>;
-  customGardenValuesTableHelpText: (currency: string) => React.ReactNode;
+  customGardenValuesTableHelpText: (
+    currency: string,
+    fiatMode: boolean
+  ) => React.ReactNode;
   dripBUSDLPValueColumnLabel: (currency: string) => string;
   plantLPFractionColumnLabel: string;
   averageGardenDailyYieldColumnLabel: string;
@@ -360,25 +365,29 @@ export function content(): Content {
     },
     wallets: {
       createNewWalletTitle: "Create New Wallet",
-      walletViewHelpText: (
+      walletViewHelpText: (fiatMode: boolean) => (
         <>
           <h3>Overview</h3>
           <p>
             This is a view where you can manage your DRIP faucet strategy across
             wallets over a period of time. You can configure one off or monthly
-            deposits, devise a reinvestment plan for a series of months and fill
-            in custom DRIP values for months.
+            deposits{fiatMode ? "," : " and"} devise a reinvestment plan for a
+            series of months
+            {fiatMode ? " and fill in custom DRIP values for months." : "."}
           </p>
-          <p>
-            As time goes on you will most likely want to fill in custom DRIP
-            values for each month that passes.
-          </p>
+          {fiatMode && (
+            <p>
+              As time goes on you will most likely want to fill in custom DRIP
+              values for each month that passes.
+            </p>
+          )}
           <p>
             Depending on your reinvestment (hydrate vs claim) strategy, amount
-            and frequencey of deposits and the DRIP trend you configured in
-            settings the end year of each wallet will change dynamically. The
-            end year is the first year in which you will no longer earn the 1%
-            daily rewards from the faucet.
+            and frequencey of deposits{" "}
+            {fiatMode ? "and the DRIP trend you configured in settings" : ""}{" "}
+            the end year of each wallet will change dynamically. The end year is
+            the first year in which you will no longer earn the 1% daily rewards
+            from the faucet.
           </p>
           <h3>Tables</h3>
           <p>
@@ -403,8 +412,18 @@ export function content(): Content {
       depositsAddNewText: "new deposit",
       depositsAmountInCurrencyLabel: (currency: string) =>
         `Deposit amount in ${currency}`,
+
       depositAmountInCurrencyHelpText: (currency: string) =>
         `The amount of the deposit in ${currency}, fees and the DRIP deposit tax will be subtracted before the deposit is added to the faucet deposit balance.`,
+      depositsAmountInTokenLabel: (forCalculator: "garden" | "faucet") =>
+        `Deposit amount in ${
+          forCalculator === "faucet" ? "DRIP" : "DRIP/BUSD LP"
+        }`,
+      depositsAmountInTokenHelpText: (forCalculator: "garden" | "faucet") => {
+        return forCalculator === "faucet"
+          ? `The amount of the deposit in DRIP tokens, DRIP deposit tax will be subtracted before the deposit is added to the faucet deposit balance.`
+          : `The amount of the deposit in DRIP/BUSD LP tokens. Any left over that does not make a whole plant will remain in your wallet.`;
+      },
       depositsChangeDateText: "change date",
       depositsChangeDateCollapseText: "hide date picker",
       depositsTypeLabel: "Choose deposit type",
@@ -437,30 +456,34 @@ export function content(): Content {
       gardenDepositsButtonText: "deposits (buy plants)",
       customDripBUSDLPValuesButtonText: "custom drip/busd lp values",
       gardenReinvestButtonText: "reinvest (sow seeds)",
-      walletViewGardenHelpText: (
+      walletViewGardenHelpText: (fiatMode: boolean) => (
         <>
           {" "}
           <h3>Overview</h3>
           <p>
             This is a view where you can manage your DRIP/BUSD LP garden
             strategy across over a significant period of time. You can configure
-            one off or monthly deposits (buying plants), devise a reinvestment
-            plan for a series of months and fill in custom DRIP/BUSD LP values
-            for months.
+            one off or monthly deposits (buying plants){fiatMode ? "," : " and"}{" "}
+            devise a reinvestment plan for a series of months
+            {fiatMode
+              ? " and fill in custom DRIP/BUSD LP values for months."
+              : "."}
           </p>
+          {fiatMode && (
+            <p>
+              For custom DRIP/BUSD LP values, you can provide a value
+              representing the current fiat currency value for the the LP token.
+              This is an estimate that should be based on the formula used in
+              the liquidity provider contract relative to the total in the DRIP
+              and BUSD reserves in the liquidity pool.
+            </p>
+          )}
           <p>
-            For custom DRIP/BUSD LP values, you can provide a value representing
-            the current fiat currency value for the the LP token. This is an
-            estimate that should be based on the formula used in the liquidity
-            provider contract relative to the total in the DRIP and BUSD
-            reserves in the liquidity pool.
-          </p>
-          <p>
-            You also need to specify the fraction of an LP token a plant
-            (2592000 seeds) is worth, this fluctuates based on the activity of
-            all the players in the DRIP garden. As time goes on you will most
-            likely want to fill in custom DRIP/BUSD LP and plant fraction values
-            for each month that passes.
+            You {fiatMode ? "also " : ""}need to specify the fraction of an LP
+            token a plant (2592000 seeds) is worth, this fluctuates based on the
+            activity of all the players in the DRIP garden. As time goes on you
+            will most likely want to fill in custom DRIP/BUSD LP and plant
+            fraction values for each month that passes.
           </p>
           <p>
             The last of the values you can provide via the "custom drip/busd lp
@@ -506,19 +529,27 @@ export function content(): Content {
       },
       gardenDepositDateHelpText:
         "The deposit date down to the second is really important for the garden in order to accurately calculate earnings based on seeds available from the moment the plants are bought!",
-      customGardenValuesTableHelpText: (currency: string) => (
+      customGardenValuesTableHelpText: (
+        currency: string,
+        fiatMode: boolean
+      ) => (
         <>
           <p>
-            Edit the "DRIP/BUSD LP Value {currency}", "Plant LP Token %" and
-            "Average Garden Daily Yield %" columns for each month and then save
-            your changes. You can add more months if you need to.
+            Edit the {fiatMode ? '"DRIP/BUSD LP Value {currency}",' : ""}"Plant
+            LP Token %" and "Average Garden Daily Yield %" columns for each
+            month and then save your changes. You can add more months if you
+            need to.
           </p>
-          <h3>DRIP/BUSD LP Value {currency}</h3>
-          <p>
-            "DRIP/BUSD LP Value {currency}" is the value of the DRIP/BUSD LP
-            Token for the month, the value of this would be derived from the
-            DRIP and BUSD reserves in the liquidity pool.
-          </p>
+          {fiatMode && (
+            <>
+              <h3>DRIP/BUSD LP Value {currency}</h3>
+              <p>
+                "DRIP/BUSD LP Value {currency}" is the value of the DRIP/BUSD LP
+                Token for the month, the value of this would be derived from the
+                DRIP and BUSD reserves in the liquidity pool.
+              </p>
+            </>
+          )}
           <h3>Plant LP Token %</h3>
           <p>
             "Plant LP Token %" is the percentage of the LP token that a plant is

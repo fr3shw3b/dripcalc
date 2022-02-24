@@ -1,7 +1,14 @@
-import { Navbar, Alignment, Button, Icon } from "@blueprintjs/core";
+import {
+  Navbar,
+  Alignment,
+  Button,
+  Icon,
+  Position,
+  Switch,
+} from "@blueprintjs/core";
 import { MouseEventHandler, useContext, useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 
 import FeatureTogglesContext from "../../contexts/feature-toggles";
 
@@ -12,16 +19,27 @@ import logo from "../../logo.svg";
 
 import "./header.css";
 import { AppState } from "../../store/types";
+import formatCurrency from "../../utils/currency";
+import { Tooltip2 } from "@blueprintjs/popover2";
+import { toggleFiatMode } from "../../store/actions/general";
 
 function Header() {
-  const isFirstTime = useSelector(
-    (state: AppState) => state.general.isFirstTime
-  );
+  const { isFirstTime, nativeDexDripPriceInCurrency, fiatMode, currency } =
+    useSelector((state: AppState) => {
+      const currentPlanId = state.plans.current;
+      return {
+        currency: state.settings[currentPlanId].currency,
+        isFirstTime: state.general.isFirstTime,
+        nativeDexDripPriceInCurrency: state.price.nativeDexDripPriceInCurrency,
+        fiatMode: state.general.fiatMode,
+      };
+    });
   const featureToggles = useContext(FeatureTogglesContext);
   const [isMobileMenuExpanded, setMobileMenuExpanded] = useState(false);
   const isMobile = useMobileCheck();
   const navigate = useNavigate();
   const location = useLocation();
+  const dispatch = useDispatch();
 
   useEffect(() => {
     if (!isMobile) {
@@ -217,6 +235,10 @@ function Header() {
     );
   };
 
+  const fiatModeSwitchOnContent =
+    "Turn this switch on to show estimated FIAT currency earnings in calculators and to enter deposits in FIAT";
+  const fiatModeSwitchOffContent =
+    "Turn this switch off to show only DRIP units (or DRIP/BUSD LP in the garden) and convert to current market price in the toolbar";
   return (
     <header className="header">
       <Navbar>
@@ -241,8 +263,40 @@ function Header() {
               {renderGitHubSection()}
             </>
           )}
+          {featureToggles.dripFiatModeToggle && (
+            <div className="price-drip-fiat-toggle-section">
+              <Tooltip2
+                content={
+                  fiatMode ? fiatModeSwitchOffContent : fiatModeSwitchOnContent
+                }
+                position={Position.BOTTOM}
+                openOnTargetFocus={false}
+              >
+                <Switch
+                  checked={fiatMode}
+                  label="fiat mode"
+                  alignIndicator="right"
+                  onChange={() => dispatch(toggleFiatMode())}
+                />
+              </Tooltip2>
+              <Tooltip2
+                content={`The current price of DRIP in ${currency} on the native DEX`}
+                position={Position.BOTTOM}
+                openOnTargetFocus={false}
+              >
+                {nativeDexDripPriceInCurrency === 0 ? (
+                  <div className="bp3-skeleton">
+                    ${formatCurrency(currency, nativeDexDripPriceInCurrency)}
+                  </div>
+                ) : (
+                  formatCurrency(currency, nativeDexDripPriceInCurrency)
+                )}
+              </Tooltip2>
+            </div>
+          )}
         </Navbar.Group>
       </Navbar>
+
       {isMobile && renderMobileMenu()}
       {!isFirstTime && <Toolbar />}
     </header>

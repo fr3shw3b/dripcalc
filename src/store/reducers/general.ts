@@ -12,14 +12,27 @@ import {
   RemoveNotificationAction,
   SET_NOT_FIRST_TIME,
   SetNotFirstTimeAction,
+  ToggleFiatModeAction,
+  TOGGLE_FIAT_MODE,
 } from "../actions/general";
 import { EarningsAndInfo } from "../middleware/shared-calculator-types";
+import {
+  FetchCurrentNativeDexPriceFailureAction,
+  FETCH_CURRENT_NATIVE_DEX_PRICE_FAILURE,
+  CalculateCurrentNativeDexPriceFailureAction,
+  CALCULATE_CURRENT_NATIVE_DEX_PRICE_IN_CURRENCY_FAILURE,
+  CalculateCurrentDripBUSDLPPriceInCurrencyFailureAction,
+  CALCULATE_CURRENT_DRIPBUSD_LP_PRICE_IN_CURRENCY_FAILURE,
+  FetchCurrentDripBUSDLPPriceFailureAction,
+  FETCH_CURRENT_DRIPBUSD_LP_PRICE_FAILURE,
+} from "../middleware/price-actions";
 
 export type GeneralState = {
   notifications: Notification[];
   isCalculating: boolean;
   isFirstTime: boolean;
   calculatedEarnings: Record<string, EarningsAndInfo | undefined>;
+  fiatMode: boolean;
 };
 
 export type Notification = {
@@ -37,6 +50,7 @@ export function initialState(): GeneralState {
     isCalculating: false,
     isFirstTime: true,
     calculatedEarnings: {},
+    fiatMode: false,
   };
 }
 
@@ -45,7 +59,12 @@ export type GeneralAction =
   | CalculatingEarningsAction
   | EarningsCalculatedAction
   | SetNotFirstTimeAction
-  | RemoveNotificationAction;
+  | RemoveNotificationAction
+  | FetchCurrentNativeDexPriceFailureAction
+  | CalculateCurrentNativeDexPriceFailureAction
+  | FetchCurrentDripBUSDLPPriceFailureAction
+  | CalculateCurrentDripBUSDLPPriceInCurrencyFailureAction
+  | ToggleFiatModeAction;
 
 function reducer(state = initialState(), action: GeneralAction): GeneralState {
   return reducers[action.type]?.(state, action) ?? state;
@@ -66,6 +85,81 @@ const reducers = {
           message: (action as FailedCalulatingEarningsAction).error.message,
           type: "error",
           error: (action as FailedCalulatingEarningsAction).error,
+        },
+      ],
+    };
+  },
+  [FETCH_CURRENT_NATIVE_DEX_PRICE_FAILURE]: (
+    state: GeneralState,
+    action: GeneralAction
+  ): GeneralState => {
+    return {
+      ...state,
+      notifications: [
+        ...state.notifications,
+        {
+          id: nanoid(),
+          message: (action as FetchCurrentNativeDexPriceFailureAction).error
+            .message,
+          type: "error",
+          error: (action as FetchCurrentNativeDexPriceFailureAction).error,
+        },
+      ],
+    };
+  },
+  [CALCULATE_CURRENT_NATIVE_DEX_PRICE_IN_CURRENCY_FAILURE]: (
+    state: GeneralState,
+    action: GeneralAction
+  ): GeneralState => {
+    return {
+      ...state,
+      notifications: [
+        ...state.notifications,
+        {
+          id: nanoid(),
+          message: (action as CalculateCurrentNativeDexPriceFailureAction).error
+            .message,
+          type: "error",
+          error: (action as CalculateCurrentNativeDexPriceFailureAction).error,
+        },
+      ],
+    };
+  },
+  [FETCH_CURRENT_DRIPBUSD_LP_PRICE_FAILURE]: (
+    state: GeneralState,
+    action: GeneralAction
+  ): GeneralState => {
+    return {
+      ...state,
+      notifications: [
+        ...state.notifications,
+        {
+          id: nanoid(),
+          message: (action as FetchCurrentDripBUSDLPPriceFailureAction).error
+            .message,
+          type: "error",
+          error: (action as FetchCurrentDripBUSDLPPriceFailureAction).error,
+        },
+      ],
+    };
+  },
+  [CALCULATE_CURRENT_DRIPBUSD_LP_PRICE_IN_CURRENCY_FAILURE]: (
+    state: GeneralState,
+    action: GeneralAction
+  ): GeneralState => {
+    return {
+      ...state,
+      notifications: [
+        ...state.notifications,
+        {
+          id: nanoid(),
+          message: (
+            action as CalculateCurrentDripBUSDLPPriceInCurrencyFailureAction
+          ).error.message,
+          type: "error",
+          error: (
+            action as CalculateCurrentDripBUSDLPPriceInCurrencyFailureAction
+          ).error,
         },
       ],
     };
@@ -111,6 +205,15 @@ const reducers = {
     return {
       ...state,
       isFirstTime: false,
+    };
+  },
+  [TOGGLE_FIAT_MODE]: (
+    state: GeneralState,
+    _action: GeneralAction
+  ): GeneralState => {
+    return {
+      ...state,
+      fiatMode: !state.fiatMode,
     };
   },
 };

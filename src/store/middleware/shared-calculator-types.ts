@@ -12,6 +12,7 @@ export type AppState = {
   };
   settings: PlanSettings;
   prevCalculatedEarnings?: EarningsAndInfo;
+  fiatMode: boolean;
 };
 
 export type EarningsAndInfo = {

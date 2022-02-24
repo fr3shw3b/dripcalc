@@ -28,6 +28,7 @@ import { ReinvestmentInEditor } from "../wallet-reinvestment-plan/wallet-reinves
 import type { DripValueInEditor } from "../wallet-custom-drip-values/wallet-custom-drip-values";
 import { HydrateFrequency } from "../../store/reducers/settings";
 import useMobileCheck from "../../hooks/use-mobile-check";
+import FeatureTogglesContext from "../../contexts/feature-toggles";
 
 type EditorState = {
   isOpen: boolean;
@@ -47,6 +48,7 @@ type MonthInputsState = {
 
 function FaucetWalletsPanel() {
   const isMobile = useMobileCheck();
+  const featureToggles = useContext(FeatureTogglesContext);
   const [editorState, setEditorState] = useState<EditorState>({
     isOpen: false,
     action: "create",
@@ -64,16 +66,22 @@ function FaucetWalletsPanel() {
   const [editorWalletName, setEditorWalletName] = useState("");
   const [editorWalletDate, setEditorWalletDate] = useState(new Date());
   const dispatch = useDispatch();
-  const { wallets, current, currentPlanId } = useSelector((state: AppState) => {
-    const currentPlanIndex = state.plans.plans.findIndex(
-      (plan) => plan.id === state.plans.current
-    );
-    return {
-      wallets: state.plans.plans[currentPlanIndex].wallets,
-      current: state.plans.plans[currentPlanIndex].current,
-      currentPlanId: state.plans.current,
-    };
-  });
+  const { wallets, current, currentPlanId, fiatModeInState } = useSelector(
+    (state: AppState) => {
+      const currentPlanIndex = state.plans.plans.findIndex(
+        (plan) => plan.id === state.plans.current
+      );
+      return {
+        wallets: state.plans.plans[currentPlanIndex].wallets,
+        current: state.plans.plans[currentPlanIndex].current,
+        currentPlanId: state.plans.current,
+        fiatModeInState: state.general.fiatMode,
+      };
+    }
+  );
+  const fiatMode =
+    (featureToggles.dripFiatModeToggle && fiatModeInState) ||
+    !featureToggles.dripFiatModeToggle;
   const { wallets: walletsContent } = useContext(ContentContext);
   const config = useContext(ConfigContext);
 
@@ -237,22 +245,26 @@ function FaucetWalletsPanel() {
     });
   };
 
-  const handleDepositAmountInCurrencyChange = (
+  const handleDepositAmountChange = (
     depositId: string,
-    amountInCurrency: number
+    amount: number,
+    eventFiatMode: boolean
   ) => {
     setMonthInputsState((prevState) => {
       const depositIndex = prevState.deposits.findIndex(
         ({ id }) => id === depositId
       );
       const deposit = prevState.deposits[depositIndex];
+      const updatedFields = eventFiatMode
+        ? { amountInCurrency: amount }
+        : { amountInToken: amount };
       return {
         ...prevState,
         deposits: [
           ...prevState.deposits.slice(0, depositIndex),
           {
             ...deposit,
-            amountInCurrency: amountInCurrency,
+            ...updatedFields,
           },
           ...prevState.deposits.slice(depositIndex + 1),
         ],
@@ -551,6 +563,10 @@ function FaucetWalletsPanel() {
                 onDepositsClick={handleDepositsClick}
                 onReinvestmentPlanClick={handleReinvestmentPlanClick}
                 onCustomValuesClick={handleDripCustomValuesClick}
+                fiatMode={
+                  (featureToggles.dripFiatModeToggle && fiatMode) ||
+                  !featureToggles.dripFiatModeToggle
+                }
               />
             }
           />
@@ -577,6 +593,7 @@ function FaucetWalletsPanel() {
               : undefined
           }
         />
+
         <WalletDeposits
           walletId={monthInputsState.walletId}
           isOpen={monthInputsState.isDepositsOpen}
@@ -590,9 +607,11 @@ function FaucetWalletsPanel() {
           onDepositTypeChange={handleDepositTypeChange}
           onDepositDateChange={handleDepositDateChange}
           onDepositEndDateChange={handleDepositEndDateChange}
-          onDepositAmountInCurrencyChange={handleDepositAmountInCurrencyChange}
+          onDepositAmountChange={handleDepositAmountChange}
           onRemoveDeposit={handleRemoveDeposit}
+          fiatMode={fiatMode}
         />
+
         <WalletReinvestmentPlan
           walletId={monthInputsState.walletId}
           isOpen={monthInputsState.isReinvestmentPlanOpen}
@@ -607,18 +626,20 @@ function FaucetWalletsPanel() {
           onAddAnotherMonth={handleAddAnotherReinvestMonth}
           onRemoveLastMonth={handleRemoveLastReinvestMonth}
         />
-        <WalletCustomDripValues
-          walletId={monthInputsState.walletId}
-          isOpen={monthInputsState.isCustomDripValuesOpen}
-          walletName={monthInputsCurrentWallet?.label ?? ""}
-          walletStartDate={monthInputsCurrentWallet?.startDate ?? 0}
-          onClose={handleCustomDripValuesClose}
-          dripValues={monthInputsState.dripValues}
-          onChangeMonthDripValue={handleChangeMonthDripValue}
-          onSaveClick={handleCustomDripValuesSaveClick}
-          onAddAnotherMonth={handleAddAnotherDripValueMonth}
-          onRemoveLastMonth={handleRemoveLastDripValueMonth}
-        />
+        {fiatMode && (
+          <WalletCustomDripValues
+            walletId={monthInputsState.walletId}
+            isOpen={monthInputsState.isCustomDripValuesOpen}
+            walletName={monthInputsCurrentWallet?.label ?? ""}
+            walletStartDate={monthInputsCurrentWallet?.startDate ?? 0}
+            onClose={handleCustomDripValuesClose}
+            dripValues={monthInputsState.dripValues}
+            onChangeMonthDripValue={handleChangeMonthDripValue}
+            onSaveClick={handleCustomDripValuesSaveClick}
+            onAddAnotherMonth={handleAddAnotherDripValueMonth}
+            onRemoveLastMonth={handleRemoveLastDripValueMonth}
+          />
+        )}
       </Tabs>
     </>
   );
@@ -681,6 +702,7 @@ function depositsFromMonthInputs(wallet?: WalletState): DepositInEditor[] {
               id: deposit.depositId,
               timestamp: deposit.timestamp,
               amountInCurrency: deposit.amountInCurrency,
+              amountInToken: deposit.amountInTokens,
               type: "oneOff",
             },
           ];
@@ -782,6 +804,7 @@ function monthInputsFromDeposits(
             timestamp: deposit.timestamp,
             depositId: deposit.id,
             amountInCurrency: deposit.amountInCurrency,
+            amountInTokens: deposit.amountInToken,
           })),
         },
       };

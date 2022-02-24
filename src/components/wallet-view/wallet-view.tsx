@@ -30,6 +30,7 @@ type Props = {
   monthInputs: Record<string, MonthInput>;
   editMode: boolean;
   forCalculator: "garden" | "faucet";
+  fiatMode: boolean;
   onEditClick?: (walletId: string) => void;
   onDepositsClick: (walletId: string) => void;
   onReinvestmentPlanClick: (walletId: string) => void;
@@ -43,6 +44,7 @@ function WalletView({
   monthInputs,
   editMode,
   forCalculator,
+  fiatMode,
   onEditClick,
   onDepositsClick,
   onReinvestmentPlanClick,
@@ -110,7 +112,7 @@ function WalletView({
     reinvestButtonText,
     customValueButtonText,
     helpText,
-  } = determineTextForCalculator(forCalculator, walletsContent);
+  } = determineTextForCalculator(forCalculator, walletsContent, fiatMode);
 
   const MonthlyWalletPanelComp =
     forCalculator === "garden" ? GardenMonthlyWalletPanel : MonthlyWalletPanel;
@@ -142,13 +144,15 @@ function WalletView({
           onClick={handleReinvestmentPlanClick}
           text={isMobile ? "" : reinvestButtonText}
         />
-        <Button
-          className="wallet-heading-cta"
-          icon="tint"
-          small
-          onClick={handleCustomValuesClick}
-          text={isMobile ? "" : customValueButtonText}
-        />
+        {(fiatMode || forCalculator === "garden") && (
+          <Button
+            className="wallet-heading-cta"
+            icon="tint"
+            small
+            onClick={handleCustomValuesClick}
+            text={isMobile ? "" : customValueButtonText}
+          />
+        )}
         <Popover2
           content={
             <div className="wallet-help-popover-content">{helpText}</div>
@@ -227,7 +231,8 @@ type ButtonTextContent = {
 
 function determineTextForCalculator(
   forCalculator: "garden" | "faucet",
-  walletsContent: WalletsContent
+  walletsContent: WalletsContent,
+  fiatMode: boolean
 ): ButtonTextContent {
   return {
     depositsButtonText:
@@ -244,8 +249,8 @@ function determineTextForCalculator(
         : walletsContent.customDripValuesButtonText,
     helpText:
       forCalculator === "garden"
-        ? walletsContent.walletViewGardenHelpText
-        : walletsContent.walletViewHelpText,
+        ? walletsContent.walletViewGardenHelpText(fiatMode)
+        : walletsContent.walletViewHelpText(fiatMode),
   };
 }
 

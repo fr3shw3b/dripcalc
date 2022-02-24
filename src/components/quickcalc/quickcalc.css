@@ -1,0 +1,60 @@
+.quickcalc-container {
+  margin-left: 10px;
+}
+
+.quickcalc-inner {
+  display: flex;
+  align-items: center;
+}
+
+.quickcalc-inline {
+  font-size: 10px;
+  margin-right: 10px;
+  margin-top: 6px;
+  margin-left: 5px;
+}
+
+.quickcalc-inner .quickcalc-input-group {
+  width: 120px;
+  display: none;
+}
+
+.quickcalc-inner .quickcalc-fiat-value {
+  font-size: 12px;
+  margin-left: 8px;
+  display: none;
+}
+
+.quickcalc-minimised-icon {
+  display: flex;
+}
+
+.quickcalc-popover-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 30px;
+}
+
+.quickcalc-fiat-value-popover {
+  margin-top: 20px;
+}
+
+.quickcalc-popover-description {
+  margin-bottom: 20px;
+}
+
+@media screen and (min-width: 950px) {
+  .quickcalc-minimised-icon {
+    display: none;
+  }
+
+  .quickcalc-inner .quickcalc-input-group,
+  .quickcalc-inner .quickcalc-fiat-value {
+    display: flex;
+  }
+
+  .quickcalc-container {
+    margin-left: 20px;
+  }
+}

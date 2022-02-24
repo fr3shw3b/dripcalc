@@ -9,6 +9,7 @@ import { AppState } from "../../store/types";
 import useMobileCheck from "../../hooks/use-mobile-check";
 import ContentContext from "../../contexts/content";
 import ConfigContext from "../../contexts/config";
+import FeatureTogglesContext from "../../contexts/feature-toggles";
 
 export type GardenValuesInEditor = {
   dripBUSDLPValue: number;
@@ -56,10 +57,19 @@ function WalletCustomGardenValues({
   const [showDetails, setShowDetails] = useState(false);
   const { wallets: walletsContent } = useContext(ContentContext);
   const config = useContext(ConfigContext);
-  const { currency } = useSelector((state: AppState) => {
+  const { currency, fiatModeInState } = useSelector((state: AppState) => {
     const currentPlanId = state.plans.current;
-    return state.settings[currentPlanId];
+    return {
+      ...state.settings[currentPlanId],
+      fiatModeInState: state.general.fiatMode,
+    };
   });
+
+  const featureToggles = useContext(FeatureTogglesContext);
+
+  const fiatMode =
+    (featureToggles.dripFiatModeToggle && fiatModeInState) ||
+    !featureToggles.dripFiatModeToggle;
 
   const handleSaveClick: React.MouseEventHandler = (evt) => {
     evt.preventDefault();
@@ -123,6 +133,138 @@ function WalletCustomGardenValues({
     };
   };
 
+  const renderFiatTable = () => {
+    return (
+      <Table2 numRows={gardenValues.length}>
+        <Column
+          name={walletsContent.monthTableColumnLabel}
+          cellRenderer={(rowIndex: number) => {
+            const { timestamp } = gardenValues[rowIndex];
+            return <Cell>{moment(new Date(timestamp)).format("MMMM")}</Cell>;
+          }}
+        />
+        <Column
+          name={walletsContent.yearTableColumnLabel}
+          cellRenderer={(rowIndex: number) => {
+            const { timestamp } = gardenValues[rowIndex];
+            return <Cell>{moment(new Date(timestamp)).format("YYYY")}</Cell>;
+          }}
+        />
+        <Column
+          name={walletsContent.dripBUSDLPValueColumnLabel(currency)}
+          cellRenderer={(rowIndex: number) => {
+            const { dripBUSDLPValue } = gardenValues[rowIndex];
+
+            return (
+              <EditableCell2
+                value={`${dripBUSDLPValue}`}
+                onConfirm={handleChangeMonthDripBUSDLPValue(rowIndex)}
+              />
+            );
+          }}
+        />
+        <Column
+          name={walletsContent.plantLPFractionColumnLabel}
+          cellRenderer={(rowIndex: number) => {
+            const { plantDripBUSDLPFraction } = gardenValues[rowIndex];
+
+            return (
+              <EditableCell2
+                value={`${plantDripBUSDLPFraction * 100}`}
+                onConfirm={handleChangeMonthPlantDripBUSDLPFraction(rowIndex)}
+              />
+            );
+          }}
+        />
+        <Column
+          name={walletsContent.averageGardenDailyYieldColumnLabel}
+          cellRenderer={(rowIndex: number, colIndex: number) => {
+            const { averageGardenYieldPercentage } = gardenValues[rowIndex];
+
+            return (
+              <EditableCell2
+                value={`${averageGardenYieldPercentage * 100}`}
+                intent={
+                  averageGardenYeildPercentageValidationState[
+                    `${rowIndex}-${colIndex}`
+                  ] ?? Intent.NONE
+                }
+                onConfirm={averageGardenYieldPercentageCellValidator(
+                  rowIndex,
+                  colIndex
+                )}
+                onCancel={averageGardenYieldPercentageCellValidator(
+                  rowIndex,
+                  colIndex
+                )}
+              />
+            );
+          }}
+        />
+      </Table2>
+    );
+  };
+
+  // The code duplication here is not ideal but the blueprintjs tables don't allow for conditional columns!
+  const renderNonFiatTable = () => {
+    return (
+      <Table2 numRows={gardenValues.length}>
+        <Column
+          name={walletsContent.monthTableColumnLabel}
+          cellRenderer={(rowIndex: number) => {
+            const { timestamp } = gardenValues[rowIndex];
+            return <Cell>{moment(new Date(timestamp)).format("MMMM")}</Cell>;
+          }}
+        />
+        <Column
+          name={walletsContent.yearTableColumnLabel}
+          cellRenderer={(rowIndex: number) => {
+            const { timestamp } = gardenValues[rowIndex];
+            return <Cell>{moment(new Date(timestamp)).format("YYYY")}</Cell>;
+          }}
+        />
+        <Column
+          name={walletsContent.plantLPFractionColumnLabel}
+          cellRenderer={(rowIndex: number) => {
+            const { plantDripBUSDLPFraction } = gardenValues[rowIndex];
+
+            return (
+              <EditableCell2
+                value={`${plantDripBUSDLPFraction * 100}`}
+                onConfirm={handleChangeMonthPlantDripBUSDLPFraction(rowIndex)}
+              />
+            );
+          }}
+        />
+        <Column
+          name={walletsContent.averageGardenDailyYieldColumnLabel}
+          cellRenderer={(rowIndex: number, colIndex: number) => {
+            const { averageGardenYieldPercentage } = gardenValues[rowIndex];
+
+            return (
+              <EditableCell2
+                value={`${averageGardenYieldPercentage * 100}`}
+                intent={
+                  averageGardenYeildPercentageValidationState[
+                    `${rowIndex}-${colIndex}`
+                  ] ?? Intent.NONE
+                }
+                onConfirm={averageGardenYieldPercentageCellValidator(
+                  rowIndex,
+                  colIndex
+                )}
+                onCancel={averageGardenYieldPercentageCellValidator(
+                  rowIndex,
+                  colIndex
+                )}
+              />
+            );
+          }}
+        />
+      </Table2>
+    );
+  };
+
   return (
     <>
       <Dialog
@@ -143,82 +285,12 @@ function WalletCustomGardenValues({
               />
               <p className="block block-bottom-lg">
                 {showDetails &&
-                  walletsContent.customGardenValuesTableHelpText(currency)}
+                  walletsContent.customGardenValuesTableHelpText(
+                    currency,
+                    fiatMode
+                  )}
               </p>
-              <Table2 numRows={gardenValues.length}>
-                <Column
-                  name={walletsContent.monthTableColumnLabel}
-                  cellRenderer={(rowIndex: number) => {
-                    const { timestamp } = gardenValues[rowIndex];
-                    return (
-                      <Cell>{moment(new Date(timestamp)).format("MMMM")}</Cell>
-                    );
-                  }}
-                />
-                <Column
-                  name={walletsContent.yearTableColumnLabel}
-                  cellRenderer={(rowIndex: number) => {
-                    const { timestamp } = gardenValues[rowIndex];
-                    return (
-                      <Cell>{moment(new Date(timestamp)).format("YYYY")}</Cell>
-                    );
-                  }}
-                />
-                <Column
-                  name={walletsContent.dripBUSDLPValueColumnLabel(currency)}
-                  cellRenderer={(rowIndex: number) => {
-                    const { dripBUSDLPValue } = gardenValues[rowIndex];
-
-                    return (
-                      <EditableCell2
-                        value={`${dripBUSDLPValue}`}
-                        onConfirm={handleChangeMonthDripBUSDLPValue(rowIndex)}
-                      />
-                    );
-                  }}
-                />
-                <Column
-                  name={walletsContent.plantLPFractionColumnLabel}
-                  cellRenderer={(rowIndex: number) => {
-                    const { plantDripBUSDLPFraction } = gardenValues[rowIndex];
-
-                    return (
-                      <EditableCell2
-                        value={`${plantDripBUSDLPFraction * 100}`}
-                        onConfirm={handleChangeMonthPlantDripBUSDLPFraction(
-                          rowIndex
-                        )}
-                      />
-                    );
-                  }}
-                />
-                <Column
-                  name={walletsContent.averageGardenDailyYieldColumnLabel}
-                  cellRenderer={(rowIndex: number, colIndex: number) => {
-                    const { averageGardenYieldPercentage } =
-                      gardenValues[rowIndex];
-
-                    return (
-                      <EditableCell2
-                        value={`${averageGardenYieldPercentage * 100}`}
-                        intent={
-                          averageGardenYeildPercentageValidationState[
-                            `${rowIndex}-${colIndex}`
-                          ] ?? Intent.NONE
-                        }
-                        onConfirm={averageGardenYieldPercentageCellValidator(
-                          rowIndex,
-                          colIndex
-                        )}
-                        onCancel={averageGardenYieldPercentageCellValidator(
-                          rowIndex,
-                          colIndex
-                        )}
-                      />
-                    );
-                  }}
-                />
-              </Table2>
+              {fiatMode ? renderFiatTable() : renderNonFiatTable()}
             </div>
             <Button
               icon="plus"

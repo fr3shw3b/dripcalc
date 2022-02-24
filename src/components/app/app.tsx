@@ -7,20 +7,28 @@ import FaucetInformation from "../faucet-information";
 import { Toast, Toaster } from "@blueprintjs/core";
 import { useDispatch, useSelector } from "react-redux";
 import { AppState } from "../../store/types";
-import { removeNotification } from "../../store/actions/general";
-import { useContext } from "react";
+import { removeNotification, initialiseApp } from "../../store/actions/general";
+import { useContext, useEffect } from "react";
 import GardenDashboard from "../garden-dashboard";
 import GardenInformation from "../garden-information";
 import FeatureTogglesContext from "../../contexts/feature-toggles";
+import ConfigContext from "../../contexts/config";
 
 function App() {
   const dispatch = useDispatch();
   const featureToggles = useContext(FeatureTogglesContext);
+  const appConfig = useContext(ConfigContext);
   const { notifications } = useSelector((state: AppState) => state.general);
 
   const handleDismiss = (notificationId: string) => () => {
     dispatch(removeNotification(notificationId));
   };
+
+  useEffect(() => {
+    if (featureToggles.dripFiatModeToggle) {
+      dispatch(initialiseApp(appConfig.priceRefreshInterval));
+    }
+  }, []);
 
   return (
     <div className="app bp3-dark">

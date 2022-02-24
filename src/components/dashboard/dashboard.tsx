@@ -31,6 +31,7 @@ function Dashboard() {
     currency,
     isFirstTime,
     gardenDayEarningsInfo,
+    fiatMode: fiatModeInState,
   } = useSelector((state: AppState) => {
     const currentPlanId = state.plans.current;
     const currentPlan = state.plans.plans.find(
@@ -65,6 +66,10 @@ function Dashboard() {
       gardenDayEarningsInfo,
     };
   });
+
+  const fiatMode =
+    (featureToggles.dripFiatModeToggle && fiatModeInState) ||
+    !featureToggles.dripFiatModeToggle;
 
   const handleGetStartedFaucetClick: MouseEventHandler = (evt) => {
     evt.preventDefault();
@@ -197,20 +202,22 @@ function Dashboard() {
               <strong>DRIP: </strong>
               {dayEarnings.toFixed(4)}
             </p>
-            <p className="block-bottom-lg">
-              <Help
-                helpContent={
-                  <div className="dashboard-info">
-                    {dashboardContent.faucetDayEarningsInCurrencyHelpText(
-                      currency,
-                      formatCurrency(currency, dayDripValue)
-                    )}
-                  </div>
-                }
-              >
-                <span>{formatCurrency(currency, dayEarningsInCurrency)}</span>
-              </Help>
-            </p>
+            {fiatMode && (
+              <p className="block-bottom-lg">
+                <Help
+                  helpContent={
+                    <div className="dashboard-info">
+                      {dashboardContent.faucetDayEarningsInCurrencyHelpText(
+                        currency,
+                        formatCurrency(currency, dayDripValue)
+                      )}
+                    </div>
+                  }
+                >
+                  <span>{formatCurrency(currency, dayEarningsInCurrency)}</span>
+                </Help>
+              </p>
+            )}
 
             <h3>Actions for today</h3>
 
@@ -249,28 +256,30 @@ function Dashboard() {
                 <strong>DRIP/BUSD LP: </strong>
                 {gardenDayEarningsInfo.gardenDayEarnings.toFixed(4)}
               </p>
-              <p className="block-bottom-lg">
-                <Help
-                  helpContent={
-                    <div className="dashboard-info">
-                      {dashboardContent.gardenDayEarningsInCurrencyHelpText(
-                        currency,
-                        formatCurrency(
+              {fiatMode && (
+                <p className="block-bottom-lg">
+                  <Help
+                    helpContent={
+                      <div className="dashboard-info">
+                        {dashboardContent.gardenDayEarningsInCurrencyHelpText(
                           currency,
-                          gardenDayEarningsInfo.dripBUSDLPValue
-                        )
+                          formatCurrency(
+                            currency,
+                            gardenDayEarningsInfo.dripBUSDLPValue
+                          )
+                        )}
+                      </div>
+                    }
+                  >
+                    <span>
+                      {formatCurrency(
+                        currency,
+                        gardenDayEarningsInfo.gardenDayEarningsInCurrency
                       )}
-                    </div>
-                  }
-                >
-                  <span>
-                    {formatCurrency(
-                      currency,
-                      gardenDayEarningsInfo.gardenDayEarningsInCurrency
-                    )}
-                  </span>
-                </Help>
-              </p>
+                    </span>
+                  </Help>
+                </p>
+              )}
 
               <h3>Actions for today</h3>
 

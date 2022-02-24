@@ -4,6 +4,7 @@ import { useSelector } from "react-redux";
 import { AppState } from "../../store/types";
 
 import ContentContext from "../../contexts/content";
+import FeatureTogglesContext from "../../contexts/feature-toggles";
 import moment from "moment";
 import { Tooltip2 } from "@blueprintjs/popover2";
 import formatCurrency from "../../utils/currency";
@@ -13,7 +14,11 @@ type Props = {
 };
 
 function GardenMonthlyWalletPanel({ walletId }: Props) {
-  const { calculatedEarnings, currency } = useSelector((state: AppState) => {
+  const {
+    calculatedEarnings,
+    currency,
+    fiatMode: fiatModeInState,
+  } = useSelector((state: AppState) => {
     const currentPlanId = state.plans.current;
     return {
       ...state.general,
@@ -22,6 +27,11 @@ function GardenMonthlyWalletPanel({ walletId }: Props) {
     };
   });
   const { results: resultsContent } = useContext(ContentContext);
+  const featureToggles = useContext(FeatureTogglesContext);
+
+  const fiatMode =
+    (featureToggles.dripFiatModeToggle && fiatModeInState) ||
+    !featureToggles.dripFiatModeToggle;
 
   const earningsTuple = Object.entries(
     calculatedEarnings?.gardenEarnings?.walletEarnings ?? {}
@@ -138,19 +148,21 @@ function GardenMonthlyWalletPanel({ walletId }: Props) {
                           {resultsContent.gardenEarningsMonthInDripBUSDLPLabel}
                         </Tooltip2>
                       </th>
-                      <th>
-                        <Tooltip2
-                          content={resultsContent.gardenEarningsMonthInCurrencyHelpText(
-                            currency
-                          )}
-                          position={Position.BOTTOM}
-                          openOnTargetFocus={false}
-                        >
-                          {resultsContent.gardenEarningsMonthInCurrencyLabel(
-                            currency
-                          )}
-                        </Tooltip2>
-                      </th>
+                      {fiatMode && (
+                        <th>
+                          <Tooltip2
+                            content={resultsContent.gardenEarningsMonthInCurrencyHelpText(
+                              currency
+                            )}
+                            position={Position.BOTTOM}
+                            openOnTargetFocus={false}
+                          >
+                            {resultsContent.gardenEarningsMonthInCurrencyLabel(
+                              currency
+                            )}
+                          </Tooltip2>
+                        </th>
+                      )}
                       <th>
                         <Tooltip2
                           content={
@@ -162,19 +174,21 @@ function GardenMonthlyWalletPanel({ walletId }: Props) {
                           {resultsContent.gardenReinvestMonthDripBUSDLPLabel}
                         </Tooltip2>
                       </th>
-                      <th>
-                        <Tooltip2
-                          content={resultsContent.gardenReinvestMonthInCurrencyHelpText(
-                            currency
-                          )}
-                          position={Position.BOTTOM}
-                          openOnTargetFocus={false}
-                        >
-                          {resultsContent.gardenReinvestMonthInCurrencyLabel(
-                            currency
-                          )}
-                        </Tooltip2>
-                      </th>
+                      {fiatMode && (
+                        <th>
+                          <Tooltip2
+                            content={resultsContent.gardenReinvestMonthInCurrencyHelpText(
+                              currency
+                            )}
+                            position={Position.BOTTOM}
+                            openOnTargetFocus={false}
+                          >
+                            {resultsContent.gardenReinvestMonthInCurrencyLabel(
+                              currency
+                            )}
+                          </Tooltip2>
+                        </th>
+                      )}
                       <th>
                         <Tooltip2
                           content={
@@ -186,19 +200,21 @@ function GardenMonthlyWalletPanel({ walletId }: Props) {
                           {resultsContent.gardenClaimMonthDripBUSDLPLabel}
                         </Tooltip2>
                       </th>
-                      <th>
-                        <Tooltip2
-                          content={resultsContent.gardenClaimMonthInCurrencyHelpText(
-                            currency
-                          )}
-                          position={Position.BOTTOM}
-                          openOnTargetFocus={false}
-                        >
-                          {resultsContent.gardenClaimMonthInCurrencyLabel(
-                            currency
-                          )}
-                        </Tooltip2>
-                      </th>
+                      {fiatMode && (
+                        <th>
+                          <Tooltip2
+                            content={resultsContent.gardenClaimMonthInCurrencyHelpText(
+                              currency
+                            )}
+                            position={Position.BOTTOM}
+                            openOnTargetFocus={false}
+                          >
+                            {resultsContent.gardenClaimMonthInCurrencyLabel(
+                              currency
+                            )}
+                          </Tooltip2>
+                        </th>
+                      )}
                       <th>
                         <Tooltip2
                           content={
@@ -210,19 +226,21 @@ function GardenMonthlyWalletPanel({ walletId }: Props) {
                           {resultsContent.gardenLostSeedsInMonthLabel}
                         </Tooltip2>
                       </th>
-                      <th>
-                        <Tooltip2
-                          content={resultsContent.gardenLostSeedsInMonthInCurrencyHelpText(
-                            currency
-                          )}
-                          position={Position.BOTTOM}
-                          openOnTargetFocus={false}
-                        >
-                          {resultsContent.gardenLostSeedsInMonthInCurrencyLabel(
-                            currency
-                          )}
-                        </Tooltip2>
-                      </th>
+                      {fiatMode && (
+                        <th>
+                          <Tooltip2
+                            content={resultsContent.gardenLostSeedsInMonthInCurrencyHelpText(
+                              currency
+                            )}
+                            position={Position.BOTTOM}
+                            openOnTargetFocus={false}
+                          >
+                            {resultsContent.gardenLostSeedsInMonthInCurrencyLabel(
+                              currency
+                            )}
+                          </Tooltip2>
+                        </th>
+                      )}
                       <th>
                         <Tooltip2
                           content={resultsContent.estimatedGasFeesMonthInCurrencyHelpText(
@@ -277,34 +295,40 @@ function GardenMonthlyWalletPanel({ walletId }: Props) {
                                   4
                                 )}
                               </td>
-                              <td>
-                                {formatCurrency(
-                                  currency,
-                                  monthEarnings?.monthEarningsInCurrency
-                                )}
-                              </td>
+                              {fiatMode && (
+                                <td>
+                                  {formatCurrency(
+                                    currency,
+                                    monthEarnings?.monthEarningsInCurrency
+                                  )}
+                                </td>
+                              )}
                               <td>
                                 {monthEarnings?.monthReinvestedInDripBUSDLP.toFixed(
                                   4
                                 )}
                               </td>
-                              <td>
-                                {formatCurrency(
-                                  currency,
-                                  monthEarnings?.monthReinvestedInCurrency
-                                )}
-                              </td>
+                              {fiatMode && (
+                                <td>
+                                  {formatCurrency(
+                                    currency,
+                                    monthEarnings?.monthReinvestedInCurrency
+                                  )}
+                                </td>
+                              )}
                               <td>
                                 {monthEarnings?.monthClaimedInDripBUSDLP.toFixed(
                                   4
                                 )}
                               </td>
-                              <td>
-                                {formatCurrency(
-                                  currency,
-                                  monthEarnings?.monthClaimedInCurrency
-                                )}
-                              </td>
+                              {fiatMode && (
+                                <td>
+                                  {formatCurrency(
+                                    currency,
+                                    monthEarnings?.monthClaimedInCurrency
+                                  )}
+                                </td>
+                              )}
                               <td>
                                 {Intl.NumberFormat("en-US", {
                                   notation: "compact",
@@ -313,12 +337,14 @@ function GardenMonthlyWalletPanel({ walletId }: Props) {
                                   monthEarnings?.seedsLostForMonth ?? 0
                                 )}
                               </td>
-                              <td>
-                                {formatCurrency(
-                                  currency,
-                                  monthEarnings?.seedsLostForMonthInCurrency
-                                )}
-                              </td>
+                              {fiatMode && (
+                                <td>
+                                  {formatCurrency(
+                                    currency,
+                                    monthEarnings?.seedsLostForMonthInCurrency
+                                  )}
+                                </td>
+                              )}
                               <td>
                                 {formatCurrency(
                                   currency,

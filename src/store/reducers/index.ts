@@ -15,6 +15,7 @@ import general, {
   GeneralAction,
   initialState as generalInitialState,
 } from "./general";
+import price, { initialState as priceInitialState } from "./price";
 import { AppState } from "../types";
 import { CleanAllDataAction, CLEAN_ALL_DATA } from "../actions/general";
 
@@ -24,6 +25,7 @@ function createRootReducer() {
     settings,
     plans,
     general,
+    price,
   });
   return (
     state: AppState | undefined,
@@ -68,6 +70,7 @@ export function initialState(): AppState {
     settings: settingsInitialState(),
     plans: plansInitialState(),
     general: generalInitialState(),
+    price: priceInitialState(),
   };
 }
 

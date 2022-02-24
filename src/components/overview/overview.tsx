@@ -4,6 +4,7 @@ import { useContext } from "react";
 import { useSelector } from "react-redux";
 
 import ContentContext from "../../contexts/content";
+import FeatureTogglesContext from "../../contexts/feature-toggles";
 import { AppState } from "../../store/types";
 import formatCurrency from "../../utils/currency";
 import { findLastYearForWallet } from "../../utils/wallets";
@@ -14,20 +15,23 @@ import "./overview.css";
 function Overview() {
   const { overview: overviewContent } = useContext(ContentContext);
 
-  const { calculatedEarnings, wallets, currency } = useSelector(
-    (state: AppState) => {
-      const currentPlanId = state.plans.current;
-      const currentPlan = state.plans.plans.find(
-        (plan) => plan.id === currentPlanId
-      );
-      return {
-        ...state.general,
-        calculatedEarnings: state.general.calculatedEarnings[currentPlanId],
-        currency: state.settings[currentPlanId].currency,
-        wallets: currentPlan?.wallets ?? [],
-      };
-    }
-  );
+  const {
+    calculatedEarnings,
+    wallets,
+    currency,
+    fiatMode: fiatModeInState,
+  } = useSelector((state: AppState) => {
+    const currentPlanId = state.plans.current;
+    const currentPlan = state.plans.plans.find(
+      (plan) => plan.id === currentPlanId
+    );
+    return {
+      ...state.general,
+      calculatedEarnings: state.general.calculatedEarnings[currentPlanId],
+      currency: state.settings[currentPlanId].currency,
+      wallets: currentPlan?.wallets ?? [],
+    };
+  });
   const lastWalletYears = wallets.map(
     (wallet) => findLastYearForWallet(wallet.id, calculatedEarnings) ?? 0
   );
@@ -45,6 +49,12 @@ function Overview() {
           )
         ).format("MMMM YYYY")
       : "Not Covered";
+
+  const featureToggles = useContext(FeatureTogglesContext);
+
+  const fiatMode =
+    (featureToggles.dripFiatModeToggle && fiatModeInState) ||
+    !featureToggles.dripFiatModeToggle;
 
   return (
     <div className="overview-container">
@@ -91,20 +101,22 @@ function Overview() {
           <strong>DRIP: </strong>
           {calculatedEarnings?.info.totalClaimed.toFixed(4)}
         </p>
-        <Help
-          helpContent={
-            <div className="overview-info">
-              {overviewContent.totalClaimedInCurrencyHelpText(currency)}
-            </div>
-          }
-        >
-          <span>
-            {formatCurrency(
-              currency,
-              calculatedEarnings?.info.totalClaimedInCurrency
-            )}
-          </span>
-        </Help>
+        {fiatMode && (
+          <Help
+            helpContent={
+              <div className="overview-info">
+                {overviewContent.totalClaimedInCurrencyHelpText(currency)}
+              </div>
+            }
+          >
+            <span>
+              {formatCurrency(
+                currency,
+                calculatedEarnings?.info.totalClaimedInCurrency
+              )}
+            </span>
+          </Help>
+        )}
       </Card>
       <Card
         className="overview-card"
@@ -146,40 +158,42 @@ function Overview() {
           %
         </p>
       </Card>
-      <Card
-        className="overview-card"
-        interactive={false}
-        elevation={Elevation.TWO}
-      >
-        <Help
-          helpContent={
-            <div className="overview-info">
-              {overviewContent.depositsOutOfPocketHelpText}
-            </div>
-          }
+      {fiatMode && (
+        <Card
+          className="overview-card"
+          interactive={false}
+          elevation={Elevation.TWO}
         >
-          <h3>{overviewContent.depositsOutOfPocketText}</h3>
-        </Help>
-        <p>
-          {formatCurrency(
-            currency,
-            calculatedEarnings?.info.depositsOutOfPocket
-          )}
-        </p>
-        <Help
-          helpContent={
-            <div className="overview-info">
-              {overviewContent.depositsOutOfPocketDateHelpText}
-            </div>
-          }
-        >
-          <span>
-            {depositsOutOfPocketCoveredByFormatted !== "Not Covered" &&
-              overviewContent.depositsOutOfPocketValuePrefixText}
-            {depositsOutOfPocketCoveredByFormatted}
-          </span>
-        </Help>
-      </Card>
+          <Help
+            helpContent={
+              <div className="overview-info">
+                {overviewContent.depositsOutOfPocketHelpText}
+              </div>
+            }
+          >
+            <h3>{overviewContent.depositsOutOfPocketText}</h3>
+          </Help>
+          <p>
+            {formatCurrency(
+              currency,
+              calculatedEarnings?.info.depositsOutOfPocket
+            )}
+          </p>
+          <Help
+            helpContent={
+              <div className="overview-info">
+                {overviewContent.depositsOutOfPocketDateHelpText}
+              </div>
+            }
+          >
+            <span>
+              {depositsOutOfPocketCoveredByFormatted !== "Not Covered" &&
+                overviewContent.depositsOutOfPocketValuePrefixText}
+              {depositsOutOfPocketCoveredByFormatted}
+            </span>
+          </Help>
+        </Card>
+      )}
     </div>
   );
 }

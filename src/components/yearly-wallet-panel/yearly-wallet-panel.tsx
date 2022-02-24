@@ -4,6 +4,7 @@ import { useSelector } from "react-redux";
 import { AppState } from "../../store/types";
 
 import ContentContext from "../../contexts/content";
+import FeatureTogglesContext from "../../contexts/feature-toggles";
 import { Tooltip2 } from "@blueprintjs/popover2";
 import formatCurrency from "../../utils/currency";
 
@@ -12,7 +13,11 @@ type Props = {
 };
 
 function YearlyWalletPanel({ walletId }: Props) {
-  const { calculatedEarnings, currency } = useSelector((state: AppState) => {
+  const {
+    calculatedEarnings,
+    currency,
+    fiatMode: fiatModeInState,
+  } = useSelector((state: AppState) => {
     const currentPlanId = state.plans.current;
     return {
       ...state.general,
@@ -21,6 +26,12 @@ function YearlyWalletPanel({ walletId }: Props) {
     };
   });
   const { results: resultsContent } = useContext(ContentContext);
+
+  const featureToggles = useContext(FeatureTogglesContext);
+
+  const fiatMode =
+    (featureToggles.dripFiatModeToggle && fiatModeInState) ||
+    !featureToggles.dripFiatModeToggle;
 
   const earningsTuple = Object.entries(
     calculatedEarnings?.walletEarnings ?? {}
@@ -58,17 +69,19 @@ function YearlyWalletPanel({ walletId }: Props) {
                   {resultsContent.yearEarningsLabel}
                 </Tooltip2>
               </th>
-              <th>
-                <Tooltip2
-                  content={resultsContent.yearEarningsInCurrencyHelpText(
-                    currency
-                  )}
-                  position={Position.BOTTOM}
-                  openOnTargetFocus={false}
-                >
-                  {resultsContent.yearEarningsInCurrencyLabel(currency)}
-                </Tooltip2>
-              </th>
+              {fiatMode && (
+                <th>
+                  <Tooltip2
+                    content={resultsContent.yearEarningsInCurrencyHelpText(
+                      currency
+                    )}
+                    position={Position.BOTTOM}
+                    openOnTargetFocus={false}
+                  >
+                    {resultsContent.yearEarningsInCurrencyLabel(currency)}
+                  </Tooltip2>
+                </th>
+              )}
               <th>
                 <Tooltip2
                   content={resultsContent.yearClaimedHelpText}
@@ -78,17 +91,19 @@ function YearlyWalletPanel({ walletId }: Props) {
                   {resultsContent.yearClaimedLabel}
                 </Tooltip2>
               </th>
-              <th>
-                <Tooltip2
-                  content={resultsContent.yearClaimedInCurrencyHelpText(
-                    currency
-                  )}
-                  position={Position.BOTTOM}
-                  openOnTargetFocus={false}
-                >
-                  {resultsContent.yearClaimedInCurrencyLabel(currency)}
-                </Tooltip2>
-              </th>
+              {fiatMode && (
+                <th>
+                  <Tooltip2
+                    content={resultsContent.yearClaimedInCurrencyHelpText(
+                      currency
+                    )}
+                    position={Position.BOTTOM}
+                    openOnTargetFocus={false}
+                  >
+                    {resultsContent.yearClaimedInCurrencyLabel(currency)}
+                  </Tooltip2>
+                </th>
+              )}
               <th>
                 <Tooltip2
                   content={resultsContent.accumClaimedHelpText}
@@ -98,17 +113,19 @@ function YearlyWalletPanel({ walletId }: Props) {
                   {resultsContent.accumClaimedLabel}
                 </Tooltip2>
               </th>
-              <th>
-                <Tooltip2
-                  content={resultsContent.accumClaimedInCurrencyHelpText(
-                    currency
-                  )}
-                  position={Position.BOTTOM}
-                  openOnTargetFocus={false}
-                >
-                  {resultsContent.accumClaimedInCurrencyLabel(currency)}
-                </Tooltip2>
-              </th>
+              {fiatMode && (
+                <th>
+                  <Tooltip2
+                    content={resultsContent.accumClaimedInCurrencyHelpText(
+                      currency
+                    )}
+                    position={Position.BOTTOM}
+                    openOnTargetFocus={false}
+                  >
+                    {resultsContent.accumClaimedInCurrencyLabel(currency)}
+                  </Tooltip2>
+                </th>
+              )}
               <th>
                 <Tooltip2
                   content={resultsContent.consumedRewardsHelpText}
@@ -146,28 +163,34 @@ function YearlyWalletPanel({ walletId }: Props) {
                         )}
                       </td>
                       <td>{yearEarnings?.totalYearEarnings.toFixed(4)}</td>
-                      <td>
-                        {formatCurrency(
-                          currency,
-                          yearEarnings?.totalYearEarningsInCurrency
-                        )}
-                      </td>
+                      {fiatMode && (
+                        <td>
+                          {formatCurrency(
+                            currency,
+                            yearEarnings?.totalYearEarningsInCurrency
+                          )}
+                        </td>
+                      )}
                       <td>
                         {yearEarnings?.totalYearClaimedAfterTax.toFixed(4)}
                       </td>
-                      <td>
-                        {formatCurrency(
-                          currency,
-                          yearEarnings?.totalYearClaimedInCurrency
-                        )}
-                      </td>
+                      {fiatMode && (
+                        <td>
+                          {formatCurrency(
+                            currency,
+                            yearEarnings?.totalYearClaimedInCurrency
+                          )}
+                        </td>
+                      )}
                       <td>{lastMonthEarnings?.accumClaimed.toFixed(4)}</td>
-                      <td>
-                        {formatCurrency(
-                          currency,
-                          lastMonthEarnings?.accumClaimedInCurrency
-                        )}
-                      </td>
+                      {fiatMode && (
+                        <td>
+                          {formatCurrency(
+                            currency,
+                            lastMonthEarnings?.accumClaimedInCurrency
+                          )}
+                        </td>
+                      )}
                       <td>
                         {lastMonthEarnings?.accumConsumedRewards.toFixed(4)}
                       </td>
