@@ -700,7 +700,7 @@ function calculateGardenDayEarnings(
           prevDayEarningsData.lastSowTimestamp,
         lastHarvestTimestamp:
           getLastTimestamp(daySchedule, "harvest") ??
-          prevDayEarningsData.lastDepositTimestamp,
+          prevDayEarningsData.lastHarvestTimestamp,
         // deposits today are sorted!
         lastDepositTimestamp:
           depositsToday.length > 0
@@ -1413,12 +1413,6 @@ function calculateSowScheduleForDay(
 
       // Reset seeds accumulated as the initial seeds accumulated have contributed to growing whole plants.
       seedsAccumulated = 0;
-    } else {
-      seedsAccumulated += getSeedsBetweenTimestamps(
-        currentSeedsPerDay,
-        optimisedStartTimestamp,
-        timeWindow.endTimestamp
-      );
     }
   }
 

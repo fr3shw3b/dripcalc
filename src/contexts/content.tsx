@@ -462,9 +462,10 @@ export function content(): Content {
           <h3>Overview</h3>
           <p>
             This is a view where you can manage your DRIP/BUSD LP garden
-            strategy across over a significant period of time. You can configure
-            one off or monthly deposits (buying plants){fiatMode ? "," : " and"}{" "}
-            devise a reinvestment plan for a series of months
+            strategy across wallets over a significant period of time. You can
+            configure one off or monthly deposits (buying plants)
+            {fiatMode ? "," : " and"} devise a reinvestment plan for a series of
+            months
             {fiatMode
               ? " and fill in custom DRIP/BUSD LP values for months."
               : "."}
