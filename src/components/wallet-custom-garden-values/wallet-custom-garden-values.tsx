@@ -135,7 +135,7 @@ function WalletCustomGardenValues({
 
   const renderFiatTable = () => {
     return (
-      <Table2 numRows={gardenValues.length}>
+      <Table2 numRows={gardenValues.length} enableFocusedCell>
         <Column
           name={walletsContent.monthTableColumnLabel}
           cellRenderer={(rowIndex: number) => {
@@ -208,7 +208,7 @@ function WalletCustomGardenValues({
   // The code duplication here is not ideal but the blueprintjs tables don't allow for conditional columns!
   const renderNonFiatTable = () => {
     return (
-      <Table2 numRows={gardenValues.length}>
+      <Table2 numRows={gardenValues.length} enableFocusedCell>
         <Column
           name={walletsContent.monthTableColumnLabel}
           cellRenderer={(rowIndex: number) => {

@@ -79,7 +79,7 @@ function WalletCustomDripValues({
               <p className="block block-bottom-lg">
                 {walletsContent.customDripValuesTableHelpText(currency)}
               </p>
-              <Table2 numRows={dripValues.length}>
+              <Table2 numRows={dripValues.length} enableFocusedCell>
                 <Column
                   name={walletsContent.monthTableColumnLabel}
                   cellRenderer={(rowIndex: number) => {

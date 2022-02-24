@@ -127,6 +127,7 @@ function WalletReinvestmentPlan({
                 // Disables optimised rendering so changes in the hydrate strategy dropdowns
                 // reflect without having to change focus of cells in the table!
                 renderMode={RenderMode.NONE}
+                enableFocusedCell
               >
                 <Column
                   name={walletsContent.monthTableColumnLabel}
