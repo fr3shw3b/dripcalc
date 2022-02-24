@@ -535,7 +535,7 @@ export function content(): Content {
       ) => (
         <>
           <p>
-            Edit the {fiatMode ? '"DRIP/BUSD LP Value {currency}",' : ""}"Plant
+            Edit the {fiatMode ? `"DRIP/BUSD LP Value ${currency}",` : ""}"Plant
             LP Token %" and "Average Garden Daily Yield %" columns for each
             month and then save your changes. You can add more months if you
             need to.

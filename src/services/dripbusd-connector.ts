@@ -23,7 +23,6 @@ function dripBUSDConnector(
 
   return {
     getDripBUSDLPPrice: async () => {
-      // 1. get total supply (totalSupply)
       const totalSupply = await promisify(methods.totalSupply().call);
       const reserves = await promisify(methods.getReserves().call);
       const token0 = await promisify(methods.token0().call);
