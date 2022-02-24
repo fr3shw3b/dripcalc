@@ -28,7 +28,11 @@ function App() {
     if (featureToggles.dripFiatModeToggle) {
       dispatch(initialiseApp(appConfig.priceRefreshInterval));
     }
-  }, []);
+  }, [
+    appConfig.priceRefreshInterval,
+    featureToggles.dripFiatModeToggle,
+    dispatch,
+  ]);
 
   return (
     <div className="app bp3-dark">

@@ -15,7 +15,7 @@ function useScreenSizeCheck(
     };
     mediaQueryList.addEventListener("change", listener);
     return () => mediaQueryList.removeEventListener("change", listener);
-  }, []);
+  }, [lessThanOrEqualThresholdBreakpoint]);
   return mQuery.matches;
 }
 
