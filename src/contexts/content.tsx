@@ -554,11 +554,13 @@ export function content(): Content {
           <h3>Plant LP Token %</h3>
           <p>
             "Plant LP Token %" is the percentage of the LP token that a plant is
-            worth where a plant is 2,592,000 seeds in the garden. The garden
-            contract uses time and contract balance multipliers to give fair
-            share to all players over time incentivising new capital. What this
-            means is over time the "Plant LP Token %" reduces so factor this in
-            when providing custom values!
+            worth where a plant is 2,592,000 seeds in the garden. A plant is
+            merely a placeholder for 2,592,000 seeds where seeds are the
+            tradeable asset that you can claim from the system in LP tokens. The
+            garden contract uses time and contract balance multipliers to give
+            fair share to all players over time incentivising new capital. What
+            this means is over time the "Plant LP Token %" reduces so factor
+            this in when providing custom values!
           </p>
           <strong>Inflation</strong>
           <p>
