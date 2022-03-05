@@ -1,7 +1,8 @@
-import { Tab, Tabs } from "@blueprintjs/core";
-import React, { useCallback, useContext, useState } from "react";
+import { Button, Tab, Tabs } from "@blueprintjs/core";
+import { useCallback, useContext, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import moment from "moment";
+import { useNavigate } from "react-router-dom";
 
 import ConfigContext, { Config } from "../../contexts/config";
 import FeatureTogglesContext from "../../contexts/feature-toggles";
@@ -42,6 +43,7 @@ type MonthInputsState = {
 
 function GardenWalletsPanel() {
   const isMobile = useMobileCheck();
+  const navigate = useNavigate();
   const [monthInputsState, setMonthInputsState] = useState<MonthInputsState>({
     isDepositsOpen: false,
     isReinvestmentPlanOpen: false,
@@ -462,6 +464,10 @@ function GardenWalletsPanel() {
     });
   };
 
+  const handleManageWalletClick = () => {
+    navigate({ pathname: "/", search: "?tab=dashboard-manage-wallets" });
+  };
+
   const monthInputsCurrentWallet = wallets.find(
     ({ id }) => id === monthInputsState.walletId
   );
@@ -495,6 +501,12 @@ function GardenWalletsPanel() {
             }
           />
         ))}
+        <Button
+          className="wallet-tabs-manage"
+          onClick={handleManageWalletClick}
+        >
+          manage wallets
+        </Button>
         <WalletDeposits
           walletId={monthInputsState.walletId}
           isOpen={monthInputsState.isDepositsOpen}

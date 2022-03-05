@@ -1,9 +1,10 @@
-import { Tab, Tabs } from "@blueprintjs/core";
+import { Button, Tab, Tabs } from "@blueprintjs/core";
 import { nanoid } from "nanoid";
 
-import React, { useCallback, useContext, useState } from "react";
+import { useCallback, useContext, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import moment from "moment";
+import { useNavigate } from "react-router-dom";
 
 import ConfigContext, { Config } from "../../contexts/config";
 import {
@@ -48,6 +49,7 @@ type MonthInputsState = {
 function FaucetWalletsPanel() {
   const isMobile = useMobileCheck();
   const featureToggles = useContext(FeatureTogglesContext);
+  const navigate = useNavigate();
   const [editorState, setEditorState] = useState<EditorState>({
     isOpen: false,
     action: "create",
@@ -525,6 +527,10 @@ function FaucetWalletsPanel() {
     ({ id }) => id === monthInputsState.walletId
   );
 
+  const handleManageWalletClick = () => {
+    navigate({ pathname: "/", search: "?tab=dashboard-manage-wallets" });
+  };
+
   return (
     <>
       <Tabs
@@ -558,6 +564,12 @@ function FaucetWalletsPanel() {
             }
           />
         ))}
+        <Button
+          className="wallet-tabs-manage"
+          onClick={handleManageWalletClick}
+        >
+          manage wallets
+        </Button>
         <WalletEditor
           walletId={editorState.walletId}
           isOpen={editorState.isOpen}

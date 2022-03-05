@@ -1,7 +1,7 @@
 import { Button, Card, Elevation, Tab, Tabs } from "@blueprintjs/core";
-import { MouseEventHandler, useContext, useState } from "react";
+import { MouseEventHandler, useContext, useEffect, useState } from "react";
 import { useSelector } from "react-redux";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import moment from "moment";
 
 import {
@@ -22,6 +22,8 @@ import ManageWallets from "../manage-wallets";
 
 function Dashboard() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+
   const isMobile = useMobileCheck();
 
   const { dashboard: dashboardContent } = useContext(ContentContext);
@@ -76,6 +78,13 @@ function Dashboard() {
     !featureToggles.dripFiatModeToggle;
 
   const [selectedTab, setSelectedTab] = useState("dashboard-daily-actions");
+
+  useEffect(() => {
+    const tabFromUrl = searchParams.get("tab");
+    if (tabFromUrl) {
+      setSelectedTab(tabFromUrl);
+    }
+  }, [searchParams]);
 
   const handleGetStartedFaucetClick: MouseEventHandler = (evt) => {
     evt.preventDefault();
