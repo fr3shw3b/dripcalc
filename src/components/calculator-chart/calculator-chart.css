@@ -1,0 +1,4 @@
+.calculator-chart {
+  height: calc(100vh - 450px);
+  cursor: grab;
+}

@@ -8,8 +8,8 @@ import {
 } from "@blueprintjs/core";
 import { Tooltip2 } from "@blueprintjs/popover2";
 import { useDispatch, useSelector } from "react-redux";
-import useMobileCheck from "../../hooks/use-mobile-check";
 
+import useMobileCheck from "../../hooks/use-mobile-check";
 import { setNotFirstTime } from "../../store/actions/general";
 import {
   hideSettingsPanel,
@@ -28,6 +28,7 @@ import "./faucet-dashboard.css";
 const tabs = {
   [ShowTabView.Overview]: "overview",
   [ShowTabView.Wallets]: "wallets",
+  [ShowTabView.Charts]: "charts",
 };
 
 function Faucet() {

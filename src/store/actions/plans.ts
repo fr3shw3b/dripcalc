@@ -9,13 +9,20 @@ export type AddWalletAction = Action<typeof ADD_WALLET> & {
   planId: string;
   label: string;
   startDate: number;
+  walletAddress?: string;
+  meta: {
+    chain: {
+      importFrom?: string;
+    };
+  };
 };
 
 export function addWallet(
   id: string,
   planId: string,
   label: string,
-  startDate: number
+  startDate: number,
+  walletAddress?: string
 ): AddWalletAction {
   return {
     type: ADD_WALLET,
@@ -23,6 +30,12 @@ export function addWallet(
     planId,
     label,
     startDate,
+    walletAddress,
+    meta: {
+      chain: {
+        importFrom: walletAddress,
+      },
+    },
   };
 }
 
@@ -48,12 +61,16 @@ export type UpdateWalletAction = Action<typeof UPDATE_WALLET> & {
   id: string;
   planId: string;
   label: string;
+  walletAddress?: string;
   startDate: number;
   // Start date changes should cause recalculation!
   meta: {
     calculator: {
       recalculate: boolean;
       set: CalculationSet;
+    };
+    chain: {
+      importFrom?: string;
     };
   };
 };
@@ -62,7 +79,8 @@ export function updateWallet(
   id: string,
   planId: string,
   label: string,
-  startDate: number
+  startDate: number,
+  walletAddress?: string
 ): UpdateWalletAction {
   return {
     type: UPDATE_WALLET,
@@ -70,10 +88,14 @@ export function updateWallet(
     planId,
     label,
     startDate,
+    walletAddress,
     meta: {
       calculator: {
         recalculate: true,
         set: "faucet",
+      },
+      chain: {
+        importFrom: walletAddress,
       },
     },
   };

@@ -1,7 +1,9 @@
-import { Button, Card, Elevation } from "@blueprintjs/core";
-import { MouseEventHandler, useContext } from "react";
+import { Button, Card, Elevation, Tab, Tabs } from "@blueprintjs/core";
+import { MouseEventHandler, useContext, useState } from "react";
 import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
+import moment from "moment";
+
 import {
   DayEarnings,
   EarningsAndInfo,
@@ -15,10 +17,12 @@ import FeatureTogglesContext from "../../contexts/feature-toggles";
 
 import "./dashboard.css";
 import { GardenDayAction } from "../../store/reducers/plans";
-import moment from "moment";
+import useMobileCheck from "../../hooks/use-mobile-check";
+import ManageWallets from "../manage-wallets";
 
 function Dashboard() {
   const navigate = useNavigate();
+  const isMobile = useMobileCheck();
 
   const { dashboard: dashboardContent } = useContext(ContentContext);
   const featureToggles = useContext(FeatureTogglesContext);
@@ -71,6 +75,8 @@ function Dashboard() {
     (featureToggles.dripFiatModeToggle && fiatModeInState) ||
     !featureToggles.dripFiatModeToggle;
 
+  const [selectedTab, setSelectedTab] = useState("dashboard-daily-actions");
+
   const handleGetStartedFaucetClick: MouseEventHandler = (evt) => {
     evt.preventDefault();
     navigate("/faucet/dashboard");
@@ -85,6 +91,10 @@ function Dashboard() {
   //   evt.preventDefault();
   //   navigate("/animal-farm/dashboard");
   // };
+
+  const handleTabChange = (newTabId: string) => {
+    setSelectedTab(newTabId);
+  };
 
   const renderFirstTimeView = () => {
     return (
@@ -352,7 +362,25 @@ function Dashboard() {
   return (
     <div className="dashboard">
       {isFirstTime && renderFirstTimeView()}
-      {!isFirstTime && renderStatsView()}
+      {!isFirstTime && (
+        <Tabs
+          id="dashboard-tabs"
+          onChange={handleTabChange}
+          vertical={!isMobile}
+          selectedTabId={selectedTab}
+        >
+          <Tab
+            id="dashboard-daily-actions"
+            title="Actions for Today"
+            panel={renderStatsView()}
+          />
+          <Tab
+            id="dashboard-manage-wallets"
+            title="Manage Wallets"
+            panel={<ManageWallets />}
+          />
+        </Tabs>
+      )}
     </div>
   );
 }

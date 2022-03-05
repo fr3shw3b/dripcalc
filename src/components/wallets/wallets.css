@@ -2,3 +2,11 @@
   display: flex;
   margin-top: 2em;
 }
+
+.wallet-panel-container {
+  flex-grow: 1;
+}
+
+.wallets-container .bp3-tabs.bp3-vertical > .bp3-tab-panel {
+  flex-grow: 1;
+}

@@ -22,6 +22,7 @@ import GardenMonthlyWalletPanel from "../garden-monthly-wallet-panel";
 import GardenStrategyPanel from "../garden-strategy-panel";
 import { updateWalletMonthInputs } from "../../store/actions/plans";
 import GardenYearlyWalletPanel from "../garden-yearly-wallet-panel";
+import CalculatorChart from "../calculator-chart";
 
 type Props = {
   walletId: string;
@@ -201,6 +202,11 @@ function WalletView({
                   onSaveActionForDayOverride={handleSaveActionForDayOverride}
                 />
               }
+            />
+            <Tab
+              id={`chart-${walletId}`}
+              title="Chart"
+              panel={<CalculatorChart forCalculator={forCalculator} />}
             />
           </Tabs>
         </div>

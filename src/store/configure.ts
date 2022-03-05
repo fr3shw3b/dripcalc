@@ -5,6 +5,7 @@ import { featureToggles } from "../contexts/feature-toggles";
 import storage from "../services/storage";
 import createDripCalcApi from "../services/dripcalcapi";
 import createDripBUSDConnector from "../services/dripbusd-connector";
+import createFaucetConnector from "../services/faucet-connector";
 import createPancakeSwapApi from "../services/pancakeswap-api";
 import { CleanAllDataAction } from "./actions/general";
 import calculator from "./middleware/calculator";
@@ -25,6 +26,7 @@ import {
   FETCH_CURRENT_DRIPBUSD_LP_PRICE_SUCCESS,
   FETCH_CURRENT_NATIVE_DEX_PRICE_SUCCESS,
 } from "./middleware/price-actions";
+import chain from "./middleware/chain";
 
 /**
  * Configures the redux store to be used for the application.
@@ -57,7 +59,17 @@ export default async function configure(): Promise<
     pancakeSwapApi,
     web3
   );
+  const faucetConnector = createFaucetConnector(
+    appConfig,
+    pancakeSwapApi,
+    web3
+  );
   const middlewares = applyMiddleware(
+    chain({
+      dripBUSDConnector,
+      faucetConnector,
+      dripCalcApi,
+    }),
     calculator(appConfig, appFeatureToggles),
     persistence(persistedStorage),
     price({

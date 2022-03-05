@@ -1,0 +1,31 @@
+.manage-wallets {
+}
+
+.manage-wallets-card-title {
+  margin: 5px 0 10px;
+}
+
+.manage-wallets-card-info-item {
+  margin-bottom: 10px;
+}
+
+.manage-wallets-card-info-item-label {
+  margin-bottom: 5px;
+}
+
+.manage-wallets-card {
+  width: 100%;
+  margin-bottom: 15px;
+}
+
+.manage-wallets-cards {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+@media screen and (min-width: 768px) {
+  .manage-wallets-card {
+    width: calc(50% - 20px);
+    margin-right: 20px;
+  }
+}

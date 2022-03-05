@@ -17,6 +17,7 @@ import {
 export enum ShowTabView {
   Overview = 1,
   Wallets,
+  Charts,
 }
 
 export enum ShowGardenTabView {

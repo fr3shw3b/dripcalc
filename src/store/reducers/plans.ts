@@ -36,6 +36,7 @@ export type WalletState = {
   startDate: number;
   // [date] -> [value] (e.g. "01/01/2022" -> [value])
   monthInputs: Record<string, MonthInput>;
+  address?: string;
 };
 
 export type MonthInput = {

@@ -1,11 +1,10 @@
-import { Tab, Tabs, Button } from "@blueprintjs/core";
+import { Tab, Tabs } from "@blueprintjs/core";
 import { nanoid } from "nanoid";
 
 import React, { useCallback, useContext, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import moment from "moment";
 
-import ContentContext from "../../contexts/content";
 import ConfigContext, { Config } from "../../contexts/config";
 import {
   addWallet,
@@ -82,7 +81,6 @@ function FaucetWalletsPanel() {
   const fiatMode =
     (featureToggles.dripFiatModeToggle && fiatModeInState) ||
     !featureToggles.dripFiatModeToggle;
-  const { wallets: walletsContent } = useContext(ContentContext);
   const config = useContext(ConfigContext);
 
   const handleWalletChange = (newTabId: string) => {
@@ -92,17 +90,6 @@ function FaucetWalletsPanel() {
   const handleEditorClose = () => {
     setEditorState({
       isOpen: false,
-      action: "create",
-      walletId: null,
-    });
-  };
-
-  const handleAddNewWalletClick: React.MouseEventHandler = (evt) => {
-    evt.preventDefault();
-    setEditorWalletName("");
-    setEditorWalletDate(new Date());
-    setEditorState({
-      isOpen: true,
       action: "create",
       walletId: null,
     });
@@ -555,7 +542,7 @@ function FaucetWalletsPanel() {
               <WalletView
                 walletId={id}
                 label={label}
-                editMode
+                editMode={false}
                 forCalculator="faucet"
                 startDate={startDate}
                 monthInputs={monthInputs}
@@ -571,13 +558,6 @@ function FaucetWalletsPanel() {
             }
           />
         ))}
-        <Button
-          className="wallet-tabs-add-new"
-          icon="plus"
-          onClick={handleAddNewWalletClick}
-        >
-          {walletsContent.createNewWalletButtonText}
-        </Button>
         <WalletEditor
           walletId={editorState.walletId}
           isOpen={editorState.isOpen}

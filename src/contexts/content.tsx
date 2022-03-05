@@ -111,6 +111,11 @@ export type WalletsContent = {
   dripBUSDLPValueColumnLabel: (currency: string) => string;
   plantLPFractionColumnLabel: string;
   averageGardenDailyYieldColumnLabel: string;
+  // Wallet management.
+  useWalletAddressCheckboxLabel: string;
+  useWalletAddressCheckboxHelpText: string;
+  walletAddressFieldLabel: string;
+  walletAddressFieldHelpText: string;
 };
 
 export type ResultsContent = {
@@ -584,6 +589,13 @@ export function content(): Content {
         `DRIP/BUSD LP Value ${currency}`,
       plantLPFractionColumnLabel: "Plant LP Token %",
       averageGardenDailyYieldColumnLabel: "Average Garden Daily Yield %",
+      useWalletAddressCheckboxLabel: "Use Public Wallet Address?",
+      useWalletAddressCheckboxHelpText:
+        "Check to use your public wallet address on the binance chain (BEP20)." +
+        " The start date and your transactions so far will automatically be pulled into the calculators.",
+      walletAddressFieldLabel: "Public Wallet Address",
+      walletAddressFieldHelpText:
+        "Input the public wallet address to be used to populate historical data in the calculators (up to the last 10,000 transactions).",
     },
     results: {
       earningsMonthLabel: "Earnings (DRIP)",
