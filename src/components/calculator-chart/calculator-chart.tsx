@@ -115,7 +115,13 @@ function CalculatorChart({ forCalculator }: Props) {
             style={{
               grid: { stroke: "grey" },
             }}
-            tickFormat={(tick) => formatCurrency(currency, tick)}
+            tickFormat={(tick) =>
+              fiatChart
+                ? formatCurrency(currency, tick)
+                : new Intl.NumberFormat("en-US", {
+                    maximumSignificantDigits: 3,
+                  }).format(tick)
+            }
           />
           <VictoryAxis
             style={{
