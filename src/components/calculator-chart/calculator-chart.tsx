@@ -10,7 +10,11 @@ import {
   VictoryLegend,
   VictoryLine,
   VictoryTooltip,
+  VictoryVoronoiContainerProps,
+  VictoryZoomContainerProps,
 } from "victory";
+import type { DomainTuple } from "victory-core";
+
 import {
   GardenMonthEarningsAndInfo,
   GardenYearEarnings,
@@ -67,10 +71,19 @@ function CalculatorChart({ forCalculator }: Props) {
     tokenReinvested: [],
   });
 
+  const [zoomDomain, setZoomDomain] = useState<
+    | {
+        x?: DomainTuple;
+        y?: DomainTuple;
+      }
+    | undefined
+  >(undefined);
+
   useEffect(() => {
     if (walletEarnings) {
       const newDatasets = toDataPoints(walletEarnings, fiatChart, currency);
       setDatasets(newDatasets);
+      setZoomDomain(undefined);
     }
   }, [walletEarnings, fiatChart, currency]);
 
@@ -107,7 +120,12 @@ function CalculatorChart({ forCalculator }: Props) {
       <div className="calculator-chart">
         <VictoryChart
           theme={chartTheme}
-          containerComponent={<VictoryZoomVoronoiContainer />}
+          containerComponent={
+            <VictoryZoomVoronoiContainer
+              zoomDomain={zoomDomain}
+              onZoomDomainChange={(domain) => setZoomDomain(domain)}
+            />
+          }
           scale={{ x: "time", y: "linear" }}
         >
           <VictoryAxis
@@ -176,7 +194,10 @@ function CalculatorChart({ forCalculator }: Props) {
   );
 }
 
-const VictoryZoomVoronoiContainer = createContainer("zoom", "voronoi");
+const VictoryZoomVoronoiContainer = createContainer<
+  VictoryZoomContainerProps,
+  VictoryVoronoiContainerProps
+>("zoom", "voronoi");
 
 const tokenLabels = {
   garden: "DRIP/BUSD LP",
