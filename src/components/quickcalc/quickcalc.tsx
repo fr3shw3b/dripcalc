@@ -45,7 +45,7 @@ function QuickCalc({ forCalculator, currency }: Props) {
   const handleTokenValueChange: React.ChangeEventHandler<HTMLInputElement> = (
     evt
   ) => {
-    setTokenValue(Number.parseInt(evt.currentTarget.value));
+    setTokenValue(Number.parseFloat(evt.currentTarget.value));
   };
 
   const renderQuickCalcInPopover = () => {
