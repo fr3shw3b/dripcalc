@@ -791,21 +791,14 @@ function monthInputsFromReinvestments(
     seedGrouped
   );
 
-  const monthInputsNotReinvestment = Object.entries(wallet.monthInputs).reduce(
-    (accum, [key, value]) => {
-      if (
-        typeof value.gardenReinvest === "undefined" ||
-        typeof value.sowStrategy === "undefined"
-      ) {
-        return {
-          ...accum,
-          [key]: value,
-        };
-      }
-      return accum;
-    },
-    {} as Record<string, MonthInput>
-  );
+  const monthInputsReinvestmentReset = Object.entries(
+    wallet.monthInputs
+  ).reduce((accum, [key, value]) => {
+    return {
+      ...accum,
+      [key]: { ...value, gardenReinvest: undefined, sowStrategy: undefined },
+    };
+  }, {} as Record<string, MonthInput>);
 
   const seedMonthInputs: Record<string, MonthInput> = {};
   const updatedMonthInputs = Object.entries(reinvestGroupedByMonth).reduce(
@@ -823,7 +816,7 @@ function monthInputsFromReinvestments(
   );
 
   return {
-    ...monthInputsNotReinvestment,
+    ...monthInputsReinvestmentReset,
     ...updatedMonthInputs,
   };
 }
@@ -853,18 +846,17 @@ function monthInputsFromGardenValues(
     seedGrouped
   );
 
-  const monthInputsNotGardenValues = Object.entries(wallet.monthInputs).reduce(
-    (accum, [key, value]) => {
-      if (typeof value.gardenValues === "undefined") {
-        return {
-          ...accum,
-          [key]: value,
-        };
-      }
-      return accum;
-    },
-    {} as Record<string, MonthInput>
-  );
+  const monthInputsResetGardenValues = Object.entries(
+    wallet.monthInputs
+  ).reduce((accum, [key, value]) => {
+    return {
+      ...accum,
+      [key]: {
+        ...value,
+        gardenValues: undefined,
+      },
+    };
+  }, {} as Record<string, MonthInput>);
 
   const seedMonthInputs: Record<string, MonthInput> = {};
   const updatedMonthInputs = Object.entries(gardenValuesGroupedByMonth).reduce(
@@ -881,7 +873,7 @@ function monthInputsFromGardenValues(
   );
 
   return {
-    ...monthInputsNotGardenValues,
+    ...monthInputsResetGardenValues,
     ...updatedMonthInputs,
   };
 }
