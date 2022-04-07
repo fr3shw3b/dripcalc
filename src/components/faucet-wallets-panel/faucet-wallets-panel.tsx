@@ -873,6 +873,22 @@ function monthInputsFromReinvestments(
     seedGrouped
   );
 
+  const monthInputsNotReinvest = Object.entries(wallet.monthInputs).reduce(
+    (accum, [key, value]) => {
+      if (
+        typeof value.hydrateStrategy === "undefined" ||
+        typeof value.reinvest === "undefined"
+      ) {
+        return {
+          ...accum,
+          [key]: value,
+        };
+      }
+      return accum;
+    },
+    {} as Record<string, MonthInput>
+  );
+
   const seedMonthInputs: Record<string, MonthInput> = {};
   const updatedMonthInputs = Object.entries(reinvestGroupedByMonth).reduce(
     (monthInputs, [monthKey, reinvestment]) => {
@@ -888,7 +904,7 @@ function monthInputsFromReinvestments(
     seedMonthInputs
   );
   return {
-    ...wallet.monthInputs,
+    ...monthInputsNotReinvest,
     ...updatedMonthInputs,
   };
 }
@@ -917,6 +933,19 @@ function monthInputsFromDripValues(
     seedGrouped
   );
 
+  const monthInputsNotDripValue = Object.entries(wallet.monthInputs).reduce(
+    (accum, [key, value]) => {
+      if (typeof value.dripValue === "undefined") {
+        return {
+          ...accum,
+          [key]: value,
+        };
+      }
+      return accum;
+    },
+    {} as Record<string, MonthInput>
+  );
+
   const seedMonthInputs: Record<string, MonthInput> = {};
   const updatedMonthInputs = Object.entries(dripValuesGroupedByMonth).reduce(
     (monthInputs, [monthKey, dripValue]) => {
@@ -931,7 +960,7 @@ function monthInputsFromDripValues(
     seedMonthInputs
   );
   return {
-    ...wallet.monthInputs,
+    ...monthInputsNotDripValue,
     ...updatedMonthInputs,
   };
 }
