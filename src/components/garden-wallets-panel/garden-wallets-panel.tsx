@@ -792,7 +792,7 @@ function monthInputsFromReinvestments(
   );
 
   const seedMonthInputs: Record<string, MonthInput> = {};
-  return Object.entries(reinvestGroupedByMonth).reduce(
+  const updatedMonthInputs = Object.entries(reinvestGroupedByMonth).reduce(
     (monthInputs, [monthKey, reinvestment]) => {
       return {
         ...monthInputs,
@@ -805,6 +805,11 @@ function monthInputsFromReinvestments(
     },
     seedMonthInputs
   );
+
+  return {
+    ...wallet.monthInputs,
+    ...updatedMonthInputs,
+  };
 }
 
 function monthInputsFromGardenValues(
@@ -833,18 +838,23 @@ function monthInputsFromGardenValues(
   );
 
   const seedMonthInputs: Record<string, MonthInput> = {};
-  return Object.entries(gardenValuesGroupedByMonth).reduce(
-    (monthInputs, [monthKey, gardenValues]) => {
+  const updatedMonthInputs = Object.entries(gardenValuesGroupedByMonth).reduce(
+    (monthInputs, [monthKey, monthGardenValues]) => {
       return {
         ...monthInputs,
         [monthKey]: {
           ...(wallet.monthInputs[monthKey] ?? {}),
-          gardenValues,
+          gardenValues: monthGardenValues,
         },
       };
     },
     seedMonthInputs
   );
+
+  return {
+    ...wallet.monthInputs,
+    ...updatedMonthInputs,
+  };
 }
 
 function gardenValuesFromMonthInputs(
